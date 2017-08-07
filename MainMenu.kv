@@ -2,9 +2,28 @@
 	color: 1,1,1,1
 	font_size: 20
 	markup: True
+	size: self.texture_size
+
+<ExpertMenu>:
+	BoxLayout:
+		padding: 40
+		size: root.width/2, root.height
+		center_x: root.width/2
+		orientation: 'vertical'
+		Label:
+			text: 'Gérez les bases de données'
+		GridLayout:
+			spacing: 10
+			cols: 2
+			MenuButton:
+				text: 'Élèves'
+			MenuButton:
+				text: 'Formateurs'
+			MenuButton:
+				text: 'Lieux de formation'
 
 <MainMenu>:
-	name: 'MainMenu'
+	menu_cours: coursgrid
 	BoxLayout:
 		padding: 40
 		size: root.width/2, root.height
@@ -15,9 +34,4 @@
 		GridLayout:
 			spacing: 10
 			cols: 2
-			MenuButton:
-				text: "Piscine"
-			MenuButton:
-				text: "Yoga"
-			MenuButton:
-				text: "SRR"
+			id: coursgrid

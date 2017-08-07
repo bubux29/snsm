@@ -2,23 +2,29 @@
 
 <Notebook@TabbedPanel>:
 	main_window: content_en_cours.__self__
+	menu_cours: mainmenu.menu_cours
 	cols: 1
 	spacing: 10
 	padding: 20
 	do_default_tab: False
-	tab_width: self.width / 11 * 3
+	tab_width: self.width / 17 * 3
 	TabbedPanelItem:
 		text: 'Accueil'
 		MainMenu:
+			id: mainmenu
 	TabbedPanelItem:
 		text: 'En cours'
 		id: content_en_cours
+	TabbedPanelItem:
+		text: 'Gérer'
+		ExpertMenu:
 	TabbedPanelItem:
 		text: 'A propos'
 		Apropos:
 
 <Main>:
 	main: nb.main_window
+	menu_cours: nb.menu_cours
 	BoxLayout:
 		size: root.width, root.height
 		orientation: 'vertical'
