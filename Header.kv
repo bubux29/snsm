@@ -1,0 +1,27 @@
+#: import App kivy.app
+#: import Label kivy.uix.label
+#: import GridLayout kivy.uix.gridlayout
+#: import Button kivy.uix.button
+#: import Widget kivy.uix.widget
+#: import Builder kivy.lang
+
+<Header_Button@Button>:
+	color: 0,1,0,1
+	font_size: 20
+	markup: True
+
+<Head>:
+	GridLayout:
+		padding: 10
+		size: root.width, root.height/3
+		pos: root.x, root.top - self.height
+		rows: 1
+		cols: 3
+		Header_Button:
+			text: "Accueil"
+			on_release: app.root.current = 'MainMenu'
+		Header_Button:
+			text: "En Cours"
+		Header_Button:
+			text: "A propos"
+			on_release: app.root.main = 'Aproposito'

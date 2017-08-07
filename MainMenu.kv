@@ -1,0 +1,23 @@
+<MenuButton@Button>:
+	color: 1,1,1,1
+	font_size: 20
+	markup: True
+
+<MainMenu>:
+	name: 'MainMenu'
+	BoxLayout:
+		padding: 40
+		size: root.width/2, root.height
+		center_x: root.width/2
+		orientation: 'vertical'
+		Label:
+			text: "Sélectionnez un cours"
+		GridLayout:
+			spacing: 10
+			cols: 2
+			MenuButton:
+				text: "Piscine"
+			MenuButton:
+				text: "Yoga"
+			MenuButton:
+				text: "SRR"

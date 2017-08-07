@@ -1,0 +1,26 @@
+#: import TabbedPanel kivy.uix.tabbedpanel
+
+<Notebook@TabbedPanel>:
+	main_window: content_en_cours.__self__
+	cols: 1
+	spacing: 10
+	padding: 20
+	do_default_tab: False
+	tab_width: self.width / 11 * 3
+	TabbedPanelItem:
+		text: 'Accueil'
+		MainMenu:
+	TabbedPanelItem:
+		text: 'En cours'
+		id: content_en_cours
+	TabbedPanelItem:
+		text: 'A propos'
+		Apropos:
+
+<Main>:
+	main: nb.main_window
+	BoxLayout:
+		size: root.width, root.height
+		orientation: 'vertical'
+		Notebook:
+			id: nb
