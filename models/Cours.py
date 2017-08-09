@@ -112,8 +112,8 @@ class JourneeFormation (peewee.Model):
                                    null=True,
                                    related_name="formateur_sur",
                                    verbose_name="Nom du formateur présent pour la journée (un seul nom autorisé)",)
-     participants = ManyToManyField(Eleve, related_name="a_participe_a")
-     modules_vus = ManyToManyField(ModuleFormation, related_name="modules")
+     participants = ManyToManyField(Eleve, related_name="a_participe_le")
+     modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
      class Meta:
         order_by = ('date',)
      def __str__(self):

@@ -27,13 +27,13 @@ def ajouter_eleve_db(nom, prenom, date, is_form, embauche):
     eleve = Eleve.create(nom=nom, prenom=prenom, date_naissance=date, is_formateur=is_form, date_entree=embauche)
     eleve.save()
 
-def ajouter_journee_formation_db():
-     date = peewee.DateTimeField(verbose_name="Date du jour de la formation")
-     lieu = peewee.ForeignKeyField(Lieu, related_name="activites")
-     cours = peewee.ForeignKeyField(Cours, related_name="journees")
-     formateur = peewee.ForeignKeyField(Eleve,
-                                   null=True,
-                                   related_name="formateur_sur",
-                                   verbose_name="Nom du formateur présent pour la journée (un seul nom autorisé)",)
-     participants = ManyToManyField(Eleve, related_name="a_participe_a")
-     modules_vus = ManyToManyField(ModuleFormation, related_name="modules")
+def ajouter_journee_formation_db(date, lieu, cours, formateur, participants, modules_vus):
+     journee = JourneeFormation.create(date=date)
+     lieu.activities.add(journee)
+     cours.journees.add(journee)
+     formateur.formateur_sur.add(journee)
+     for p in participants:
+         p.a_participe_le.add(journee)
+     for m in modules_vus:
+         m.etudie_le.add(journee)
+     journee.save()
