@@ -1,6 +1,7 @@
 #: import TabbedPanel kivy.uix.tabbedpanel
 
 <Notebook@TabbedPanel>:
+	expert: exm
 	main_window: content_en_cours.__self__
 	menu_cours: mainmenu.menu_cours
 	cols: 1
@@ -17,7 +18,8 @@
 		id: content_en_cours
 	TabbedPanelItem:
 		text: 'Gérer'
-		ExpertMenu:
+		ExpertMenuLayout:
+			id: exm
 	TabbedPanelItem:
 		text: 'A propos'
 		Apropos:
@@ -25,6 +27,7 @@
 <Main>:
 	main: nb.main_window
 	menu_cours: nb.menu_cours
+	expert: nb.expert
 	BoxLayout:
 		size: root.width, root.height
 		orientation: 'vertical'

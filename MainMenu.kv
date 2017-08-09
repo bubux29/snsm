@@ -1,26 +1,45 @@
+#: import CalendarWidget KivyCalendar
+
 <MenuButton@Button>:
 	color: 1,1,1,1
 	font_size: 20
 	markup: True
 	size: self.texture_size
 
-<ExpertMenu>:
+<ExpertMenuEleves>:
+	Label:
+		text: 'On gère les élèves maintenant'
+
+<ExpertMenuMain>:
+	padding: 40
+	size: self.size
+	center_x: self.center_x
+	orientation: 'vertical'
+	eleves_bouton: eleves_modif
+
+	Label:
+		text: 'Gérez les bases de données'
+	CalendarWidget:
+	GridLayout:
+		spacing: 10
+		id: grigrid
+		cols: 2
+		MenuButton:
+			text: 'Élèves'
+			id: eleves_modif
+		MenuButton:
+			text: 'Formateurs'
+			id: formateur_modif
+		MenuButton:
+			text: 'Lieux de formation'
+			id: lieu_modif
+
+<ExpertMenuLayout>:
+	mainLayout: main
 	BoxLayout:
-		padding: 40
 		size: root.width/2, root.height
 		center_x: root.width/2
-		orientation: 'vertical'
-		Label:
-			text: 'Gérez les bases de données'
-		GridLayout:
-			spacing: 10
-			cols: 2
-			MenuButton:
-				text: 'Élèves'
-			MenuButton:
-				text: 'Formateurs'
-			MenuButton:
-				text: 'Lieux de formation'
+		id: main
 
 <MainMenu>:
 	menu_cours: coursgrid
