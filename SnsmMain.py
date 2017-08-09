@@ -21,6 +21,7 @@ def info(text):
 class Main(Widget):
 	current_cours = ""
 	menu_cours = ObjectProperty(None)
+	expert = ObjectProperty(None)
 
 	def bouton_presse(self, instance):
 		info('On passe à %s' % instance.text)	
@@ -29,6 +30,7 @@ class Main(Widget):
 	#def __init__(self, **kwargs):
 		#super(Main, self).__init__(**kwargs)
 	def creer(self):
+		self.expert.creer()
 		menu_cours = self.menu_cours
 		for cours in formation_db.liste_cours_all():
 			button = Button(text=str(cours),
