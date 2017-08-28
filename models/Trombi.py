@@ -12,6 +12,8 @@ class Eleve(peewee.Model):
         nom = peewee.CharField(max_length=50, verbose_name="Nom de famille")
         prenom = peewee.CharField(max_length=50, verbose_name="Prénom")
         date_naissance = peewee.DateTimeField( verbose_name="Date de naissance")
+        telephone = peewee.CharField(max_length=16, verbose_name="Numéro de téléphone")
+        courriel = peewee.CharField(max_length=64, verbose_name="Adresse courrier électronique")
         is_formateur = peewee.BooleanField(null=False, default=False)
         date_entree = peewee.DateTimeField(verbose_name="Date de première adhésion")
         class Meta:

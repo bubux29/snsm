@@ -1,35 +1,29 @@
 #: import TabbedPanel kivy.uix.tabbedpanel
 
 <Notebook@TabbedPanel>:
-	expert: exm
-	main_window: content_en_cours.__self__
-	menu_cours: mainmenu.menu_cours
-	cols: 1
-	spacing: 10
-	padding: 20
-	do_default_tab: False
-	tab_width: self.width / 17 * 3
-	TabbedPanelItem:
-		text: 'Accueil'
-		MainMenu:
-			id: mainmenu
-	TabbedPanelItem:
-		text: 'En cours'
-		id: content_en_cours
-	TabbedPanelItem:
-		text: 'Gérer'
-		ExpertMenuLayout:
-			id: exm
-	TabbedPanelItem:
-		text: 'A propos'
-		Apropos:
+    cols: 1
+    spacing: 10
+    padding: 20
+    do_default_tab: False
+    tab_width: self.width / 17 * 3
+
+
+<Menu_Principal>:
+    cours: coursgrid
+    BoxLayout:
+        padding: 40
+        size: root.width/2, root.height
+        center_x: root.width/2
+        orientation: 'vertical'
+        Label:
+            text: "Sélectionnez un cours"
+        GridLayout:
+            id: coursgrid
 
 <Main>:
-	main: nb.main_window
-	menu_cours: nb.menu_cours
-	expert: nb.expert
-	BoxLayout:
-		size: root.width, root.height
-		orientation: 'vertical'
-		Notebook:
-			id: nb
+    notebook: nb
+    BoxLayout:
+        size: root.width, root.height
+        orientation: 'vertical'
+        Notebook:
+            id: nb

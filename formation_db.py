@@ -16,6 +16,10 @@ def ajouter_cours(name):
     cours = Cours.create(nom=name)
     cours.save()
 
+def trouver_cours(name):
+    cours = Cours.get(Cours.nom == name)
+    return cours
+
 def liste_cours_all():
     return Cours.select()
 

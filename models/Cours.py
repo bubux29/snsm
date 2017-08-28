@@ -75,7 +75,7 @@ class Test (peewee.Model):
         return self.nom
 
 # Un module de formation c'est:
-# - un nom
+# - un nom
 # - une description
 class ModuleFormation (peewee.Model):
     nom = peewee.CharField(max_length=32, null=False, unique=True)
@@ -95,6 +95,12 @@ class Lieu (peewee.Model):
     def __str__(self):
         return self.lieu
 
+class Groupe (peewee.Model):
+     nom = peewee.CharField(unique=True)
+     date_creation = peewee.DateTimeField(verbose_name="Date de création du groupe")
+     participants = ManyToManyField(Eleve, related_name="fait_partie")
+     cours = ManyToManyField(Cours, related_name="groupes_attaches")
+     
 # Une journée de formation c'est:
 # - une date
 # - un lieu
@@ -112,7 +118,7 @@ class JourneeFormation (peewee.Model):
                                    null=True,
                                    related_name="formateur_sur",
                                    verbose_name="Nom du formateur présent pour la journée (un seul nom autorisé)",)
-     participants = ManyToManyField(Eleve, related_name="a_participe_le")
+     groupe_participants = ManyToManyField(Groupe, related_name="a_participe_le")
      modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
      class Meta:
         order_by = ('date',)
