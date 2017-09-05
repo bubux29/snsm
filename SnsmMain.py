@@ -12,7 +12,8 @@ from kivy.properties import ObjectProperty
 
 from Apropos import Apropos
 from MainMenu import ExpertMenuLayout
-from Cours import MainCoursMenu
+#from Cours import MainCoursMenu
+from Cours import MainCoursScreenManager
 
 import formation_db
 import log
@@ -30,15 +31,22 @@ class Main(Widget):
     notebook = ObjectProperty(None)
 
     def bouton_presse(self, instance):
-        info('On passe à %s' % instance.text)
         nom_cours = instance.text
         self.current_cours = nom_cours
         if not self.cours_sm.has_screen(nom_cours):
             cours = Screen(name=nom_cours)
-            cours.add_widget(MainCoursMenu(nom_cours))
+            #cours.add_widget(MainCoursMenu(nom_cours, self.retour_accueil))
+            cours.add_widget(MainCoursScreenManager(nom_cours, self.retour_accueil))
             self.cours_sm.add_widget(cours)
+        self.cours_sm.transition.direction = 'left'
         self.cours_sm.current = nom_cours
-        
+        self.accueil_tab.text = nom_cours
+ 
+    def retour_accueil(self, instance):
+        info('Retour accueil')
+        self.cours_sm.transition.direction = 'right'
+        self.cours_sm.current = 'menu_principal'
+        self.accueil_tab.text = 'Accueil'
 
     #def __init__(self, **kwargs):
         #super(Main, self).__init__(**kwargs)
@@ -67,18 +75,21 @@ class Main(Widget):
         tab.add_widget(self.cours_sm)
         self.notebook.add_widget(tab)
         self.notebook.set_def_tab(tab)
+        self.accueil_tab = tab
 
         # Ajout de l'écran de gestion aux onglets
         tab = TabbedPanelItem()
         tab.text = "Gérer"
         tab.add_widget(ExpertMenuLayout().creer())
         self.notebook.add_widget(tab)
+        self.gestion_tab = tab
 
         # Ajout de l'écran d'Apropos aux onglets
         tab = TabbedPanelItem()
         tab.text = "A propos"
         tab.add_widget(Label(text="Bienvenue à la SNSM"))
         self.notebook.add_widget(tab)
+        self.apropos_tab = tab
         
         return self
 

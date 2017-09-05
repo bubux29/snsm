@@ -13,8 +13,7 @@ class PopupList(TextInput):
         super(PopupList, self).__init__(*args, **kwargs)
         self.apres_reponse = apres_reponse
         self.selections = selections
-        self.reponse = -1
-        self.listeBoutons = ListeBoutons(selections, self.reponse)
+        self.listeBoutons = ListeBoutons(selections)
         self.popup = Popup(content=self.listeBoutons,
                            on_dismiss=self.update_value, title=titre)
         self.popup.size_hint = (.9,.9)
@@ -23,36 +22,31 @@ class PopupList(TextInput):
         self.bind(focus=self.show_popup)
 
     def show_popup(self, inst, val):
-        self.listeBoutons.size = self.popup.size
+        #self.listeBoutons.size = self.popup.size
         if val:
             # On laisse béton les éventuelles appui clavier
             Window.release_all_keyboards()
             self.popup.open()
 
     def update_value(self, instance):
-        self.text = self.selections[self.reponse]
+        self.text = self.selections[self.listeBoutons.reponse_index]
         self.focus = False
         # on appelle la fonction passé par le client avec l'index de la 
         # sélection
         if self.apres_reponse:
-            self.apres_reponse(self.reponse)
+            self.apres_reponse(self.listeBoutons.reponse_index)
 
 class ListeBoutons(BoxLayout):
-
-    def __init__(self, selections, reponse_index, **kwargs):
+    def __init__(self, selections, **kwargs):
+        kwargs['orientation'] = 'vertical'
         super(ListeBoutons, self).__init__(**kwargs)
-        self.orientation = 'vertical'
-        #self.size = (Window.width*.8, Window.height*.8)
-        #self.size_hint = (None, None)
-        self.pos_hint = {"top": 1, "right": .5}#, "center_x": .5}
-        sc = ScrollView(size_hint=(None, None), size=self.size,
-                        pos_hint={'top': 1, 'center_x': .5}, do_scroll_x=False)
+        self.reponse_index = -1
 
+        sc = ScrollView(do_scroll_x=False, size_hint=(.9,.9), pos_hint={'center_x': .5})
         self.add_widget(sc)
-        bit = GridLayout(cols=1, size=self.size, size_hint=(None,None))
-        bit.bind(minimum_height=bit.setter('height'))
-        sc.add_widget(bit)
 
+        bit = BoxLayout(orientation='vertical')
+        sc.add_widget(bit)
         index = 0
         for text in selections:
             button = Button(text=str(text),
@@ -63,8 +57,8 @@ class ListeBoutons(BoxLayout):
             button.bind(on_press=self.bouton_presse)
             button.index = index
             index += 1
-
     def bouton_presse(self, instance):
         self.reponse_index = instance.index
         if self.parent_popup:
             self.parent_popup.dismiss()
+        

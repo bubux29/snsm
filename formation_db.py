@@ -1,5 +1,5 @@
 
-from models.Cours import Cours
+from models.Cours import *
 from models.Cours import _connect_to_db, _disconnect_db, _create_tables
 from models.Trombi import Eleve
 
@@ -22,6 +22,12 @@ def trouver_cours(name):
 
 def liste_cours_all():
     return Cours.select()
+
+def liste_lieux_all():
+    return Lieu.select()
+
+def liste_groupes_all():
+    return Groupe.select()
 
 def ajouter_lieu_db(nom, desc):
     lieu = Lieu.create(lieu=nom, description=desc)

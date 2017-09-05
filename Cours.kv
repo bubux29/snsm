@@ -1,28 +1,132 @@
-<MainCoursMenu_>:
-    canvas:
-        Color:
-            rgb: 1, 0, 0
-        Rectangle:
-            size: self.size
-    orientation: 'vertical'
-    size: root.width, root.height
-    size_hint: (1, 1)
-    pos_hint: {"top": 1, "center_x": .5}
-    Label:
-        text: "bienvenue"
+#: import CalendarWidget KivyCalendar
+#: import ComboEdit ComboEdit
 
+<MenuBouton@Button>:
+    size_hint: (.5,1)
+    pos_hint: { 'center_x': .5 }
+    canvas:
+        Line:
+            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+
+
+<CoursGroupeNouveau>:
+    #choix_cours: bl.choix_cours
+    choix_cours: bl.gd.choix_cours
+    BoxLayout:
+        orientation: 'vertical'
+        id: bl
+        gd: gd
+        #choix_cours: gd.choix_cours
+        Label:
+            titre: "Création d'un nouveau groupe"
+            size_hint: (.5, .1)
+            pos_hint: {'right': .5}
+        GridLayout:
+            orientation: 'horizontal'
+            cols: 2
+            id: gd
+            choix_cours: choix_cours
+            Label:
+                text: 'Nom du nouveau groupe'
+            TextInput:
+                multiline: False
+            Label:
+                text: 'Cours relatif'
+            ComboEdit:
+                id: choix_cours
+           
+<CoursChoixGroupe>:
+    existant: bx.existant
+    temporaire: bx.temporaire
+    nouveau: bx.nouveau
+    retour: bx.retour
+    BoxLayout:
+        # Objets
+        id: bx
+        existant: existant
+        temporaire: temporaire
+        nouveau: nouveau
+        retour: bl.retour
+        # Caractéristiques
+        orientation: 'vertical'
+        spacing: 10
+        BoxLayout:
+            id: bl
+            retour: retour
+            size_hint: (.5,.2)
+            pos_hint: {'top': 1, 'right': .5}
+            orientation: 'horizontal'
+            Button:
+                text: 'Accueil'
+                id: retour
+            Button:
+                text: 'Formation'
+                on_press:
+                    root.manager.transition.direction = 'right'
+                    root.manager.current = root.titre
+        MenuBouton:
+            text: 'Choix d\'un groupe existant'
+            id: existant
+        MenuBouton:
+            text: 'Création d\'un groupe pour la journée'
+            id: temporaire
+            on_press:
+                root.manager.transition.direction = 'left'
+                root.manager.current = 'ng'
+        MenuBouton:
+            text: 'Création d\'un nouveau groupe'
+            id: nouveau
+
+<CoursFormation>:
+    date: gd.date
+    GridLayout:
+        id: gd
+        date: date
+        cols: 2
+        Label:
+            text: 'Date du début de la journée de formation :'
+        DatePicker:
+            id: date
+            multiline: 'False'
+            size_hint: None, .1
+            pHint: 0.4, 0.4
+        
+       
+        
 <MainCoursMenu>:
-    titre: main.titre
+    #titre: main.titre
+    retour: main.retour
+    demarrer_formation: main.demarrer_formation
+    gerer_groupes: main.gerer_groupes
+    demarrer_evaluation: main.demarrer_evaluation
+    consulter_evaluation: main.consulter_evaluation
+    consulter_fiches: main.consulter_fiches
     BoxLayout:
         id: main
-        titre: titre
+        #titre: bx.titre
+        demarrer_formation: gd.demarrer_formation
+        gerer_groupes: gd.gerer_groupes
+        demarrer_evaluation: gd.demarrer_evaluation
+        consulter_evaluation: gd.consulter_evaluation
+        consulter_fiches: gd.consulter_fiches
+        retour: retour
         size: root.width, root.height
         pos_hint: {"top": 1}
         orientation: 'vertical'
-        Label:
-            id: titre
-            pos_hint: {"top": 1}
-            size_hint: 1, .1
+        Button:
+            id: retour
+            text: 'Retour'
+            size_hint: .1, .1
+            pos_hint: {'center_x': .5}
+        #BoxLayout:
+            #id: bx
+            #titre: titre
+            #retour: retour
+            #orientation: 'horizontal'
+            #size_hint: 1, .1
+            #Label:
+                #id: titre
+                #pos_hint: {"center_y": .5}
         GridLayout:
             id: gd
             pos: 0, 0
@@ -30,13 +134,24 @@
             spacing: 10
             pos_hint: {"top": 1, "center_x": .5}
             size_hint: .9, 1
+            demarrer_formation: demarrer_formation
+            gerer_groupes: gerer_groupes
+            demarrer_evaluation: demarrer_evaluation
+            consulter_evaluation: consulter_evaluation
+            consulter_fiches: consulter_fiches
             Button:
                 text: "Démarrer une formation"
+                id: demarrer_formation
+                on_press: root.manager.current = 'df'
             Button:
                 text: "Gérer les groupes"
+                id: gerer_groupes
             Button:
                 text: "Démarrer une évaluation"
+                id: demarrer_evaluation
             Button:
                 text: "Consulter les évaluations"
+                id: consulter_evaluation
             Button:
                 text: "Consulter les fiches de cours"
+                id: consulter_fiches
