@@ -27,11 +27,32 @@ def err(text):
 def info(text):
     log.info("COURS", text)
 
-class CoursGroupeNouveau(Screen):
-    choix_cours = ObjectProperty(None)
+class CoursRetourBox(BoxLayout):
+    cours_bl = ObjectProperty(None)
+    retour = ObjectProperty(None)
+    #retour_accueil = ObjectProperty(None)
+    #manager = ObjectProperty(None)
+    #titre = ObjectProperty(None)
     def __init__(self, **kwargs):
-        self.choix_cours.options = [Button(text=str(x)) for x in formation_db.liste_cours_all()]
-        
+        #self.fbind('retour_accueil', self.updates, 'retour_accueil')
+        #self.fbind('titre', self.updates, 'titre')
+        #self.fbind('manager', self.updates, 'manager')
+        super(CoursRetourBox, self).__init__(**kwargs)
+
+    def updates(self, name=None, source=None, value=None):
+        if name == 'retour_accueil':
+            self.retour_accueil = value
+        elif name == 'titre':
+            self.titre = value
+        elif name == 'manager':
+            self.manager = value
+
+    def init(self, retour_accueil, titre, manager):
+        #self.retour.bind(on_press=retour_accueil)
+        self.retour_accueil = retour_accueil
+        self.titre = titre
+        self.manager = manager
+
 class CoursGroupeExistant:
     def on_choix_groupe(self, index):
         print ("Voici l'index: " + self.nom_de_lieux[index])
@@ -44,16 +65,38 @@ class CoursGroupeExistant:
                                "Groupes existants",
                                self.on_choix_groupe)
 
+def init_liste_cours_popup(popuplist, on_choix):
+    nom_de_cours = list()
+    for cours in formation_db.liste_cours_all():
+        nom_de_cours.append(cours.nom)
+    popuplist.init(nom_de_cours, "Cours existants", on_choix)
+    popuplist.hint_xy = (.3,.3)
+
+class CoursGroupeNouveau(Screen):
+    choix_cours = ObjectProperty(None)
+    retour = ObjectProperty(None)
+    def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
+        # On positionne l'environnement nécessaire pour que tous les attributs
+        # soient vus initialisé par les classes sous-jacentes
+        self.titre = titre
+        self.retour_accueil = retour_accueil
+        self.parent_scm = parent_scm
+        super(CoursGroupeNouveau, self).__init__(**kwargs)
+        self.retour.init(retour_accueil, titre, parent_scm)
+        init_liste_cours_popup(self.choix_cours, None)
+ 
 class CoursChoixGroupe(Screen):
     existant = ObjectProperty(None)
     temporaire = ObjectProperty(None)
     nouveau = ObjectProperty(None)
     retour = ObjectProperty(None)
     def __init__(self, titre, retour_accueil, parent_scm, **kwargs):
-        super(CoursChoixGroupe, self).__init__(**kwargs)
-        self.retour.bind(on_press=retour_accueil)
         self.titre = titre
-        parent_scm.add_widget(CoursGroupeNouveau(name='ng'))
+        self.retour_accueil = retour_accueil
+        self.parent_scm = parent_scm
+        super(CoursChoixGroupe, self).__init__(**kwargs)
+        self.retour.init(retour_accueil, titre, parent_scm)
+        parent_scm.add_widget(CoursGroupeNouveau(name='ng', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
 
 #class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):

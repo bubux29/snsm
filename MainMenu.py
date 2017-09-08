@@ -98,9 +98,9 @@ class ExpertMenuLieux(BoxLayout):
         self.nom_de_lieux = list()
         for lieu in formation_db.liste_lieux_all():
             self.nom_de_lieux.append(lieu.lieu)
-        pp = PopupList(self.nom_de_lieux, "Lieux de session de formation",
-                       self.on_choix_lieu)
-        self.add_widget(pp)
+        #pp = PopupList(self.nom_de_lieux, "Lieux de session de formation",
+                       #self.on_choix_lieu)
+        #self.add_widget(pp)
 
     def check_on_valid(self):
         if not self.lieu.text or not self.description.text:

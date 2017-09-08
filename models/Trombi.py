@@ -16,6 +16,7 @@ class Eleve(peewee.Model):
         courriel = peewee.CharField(max_length=64, verbose_name="Adresse courrier électronique")
         is_formateur = peewee.BooleanField(null=False, default=False)
         date_entree = peewee.DateTimeField(verbose_name="Date de première adhésion")
+        photo_path = peewee.CharField(max_length=256, verbose_name="Photo")
         class Meta:
                 database = database
         def __str__(self):

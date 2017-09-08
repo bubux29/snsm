@@ -1,5 +1,6 @@
 #: import CalendarWidget KivyCalendar
 #: import ComboEdit ComboEdit
+#: import PopupList liste_popup
 
 <MenuBouton@Button>:
     size_hint: (.5,1)
@@ -8,21 +9,43 @@
         Line:
             rectangle: self.x+1,self.y+1,self.width-1,self.height-1
 
+<CoursRetourBox>:
+    bl: bl
+    retour: bl.retour
+    BoxLayout:
+        id: bl
+        retour: retour
+        orientation: 'horizontal'
+        Button:
+            text: 'Accueil'
+            id: retour
+            on_press:
+                root.retour_accueil(self)
+        Button:
+            text: 'Formation'
+            on_press:
+                root.manager.transition.direction = 'right'
+                root.manager.current = root.titre
+
+[CoursTopLayout@CoursRetourBox]:
+    size_hint: (.5,.2)
+    pos_hint: {'top': 1, 'right': .5}
+
 
 <CoursGroupeNouveau>:
-    #choix_cours: bl.choix_cours
-    choix_cours: bl.gd.choix_cours
+    choix_cours: choix_cours
+    retour: retour
     BoxLayout:
         orientation: 'vertical'
-        id: bl
-        gd: gd
-        #choix_cours: gd.choix_cours
+        CoursTopLayout:
+            id: retour
         Label:
             titre: "Création d'un nouveau groupe"
-            size_hint: (.5, .1)
+            #size_hint: (.5, None)
             pos_hint: {'right': .5}
         GridLayout:
             orientation: 'horizontal'
+            pos_hint: {'top': 1}
             cols: 2
             id: gd
             choix_cours: choix_cours
@@ -32,10 +55,40 @@
                 multiline: False
             Label:
                 text: 'Cours relatif'
-            ComboEdit:
+            PopupList:
+                text: root.titre
                 id: choix_cours
-           
+            #ComboEdit:
+                #text: root.titre
+                #size_hint: .3,.3
+                #pos_hint: {'center': (.5,.5)}
+                #options:
+                    #[Button(text=str(x), size_hint_y=None, height=30) for x in formation_db.liste_cours_all()]
+        Widget:
+
 <CoursChoixGroupe>:
+    existant: existant
+    temporaire: temporaire
+    nouveau: nouveau
+    retour: retour
+    BoxLayout:
+        orientation: 'vertical'
+        CoursTopLayout:
+            id: retour
+        MenuBouton:
+            text: 'Choix d\'un groupe existant'
+            id: existant
+        MenuBouton:
+            text: 'Création d\'un groupe pour la journée'
+            id: temporaire
+        MenuBouton:
+            text: 'Création d\'un nouveau groupe'
+            id: nouveau
+            on_press:
+                root.manager.transition.direction = 'left'
+                root.manager.current = 'ng'
+
+<CoursChoixGroupe_>:
     existant: bx.existant
     temporaire: bx.temporaire
     nouveau: bx.nouveau
@@ -142,7 +195,9 @@
             Button:
                 text: "Démarrer une formation"
                 id: demarrer_formation
-                on_press: root.manager.current = 'df'
+                on_press:
+                    root.manager.transition.direction = 'left'
+                    root.manager.current = 'df'
             Button:
                 text: "Gérer les groupes"
                 id: gerer_groupes

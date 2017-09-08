@@ -8,20 +8,27 @@ from kivy.uix.button import Button
 from kivy.core.window import Window
 from kivy.uix.popup import Popup
 
+from kivy.properties import NumericProperty, ReferenceListProperty
+
 class PopupList(TextInput):
-    def __init__(self, selections, titre, apres_reponse, *args, **kwargs):
-        super(PopupList, self).__init__(*args, **kwargs)
+    hint_x = NumericProperty(0.9)
+    hint_y = NumericProperty(0.9)
+    hint_xy = ReferenceListProperty(hint_x, hint_y)
+    #def __init__(self, selections, titre, apres_reponse, *args, **kwargs):
+        #super(PopupList, self).__init__(*args, **kwargs)
+    def init(self, selections, titre, apres_reponse):
+        self.titre = titre
         self.apres_reponse = apres_reponse
         self.selections = selections
         self.listeBoutons = ListeBoutons(selections)
         self.popup = Popup(content=self.listeBoutons,
                            on_dismiss=self.update_value, title=titre)
-        self.popup.size_hint = (.9,.9)
         self.listeBoutons.parent_popup = self.popup
 
         self.bind(focus=self.show_popup)
 
     def show_popup(self, inst, val):
+        self.popup.size_hint = self.hint_xy
         #self.listeBoutons.size = self.popup.size
         if val:
             # On laisse béton les éventuelles appui clavier
