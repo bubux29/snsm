@@ -19,6 +19,7 @@ from kivy.properties import ObjectProperty
 import log
 import formation_db
 from ComboEdit import ComboEdit
+from rcv import ListeView
 
 MainCoursMenu = Builder.load_file("Cours.kv")
 
@@ -73,8 +74,11 @@ def init_liste_cours_popup(popuplist, on_choix):
     popuplist.hint_xy = (.3,.3)
 
 class CoursGroupeNouveau(Screen):
-    choix_cours = ObjectProperty(None)
+    bouton_choix_cours = ObjectProperty(None)
+    bouton_choix_eleves = ObjectProperty(None)
     retour = ObjectProperty(None)
+    def on_choix_groupes(self, index):
+        print("et mange cet index {0}".format(index))
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         # On positionne l'environnement nécessaire pour que tous les attributs
         # soient vus initialisé par les classes sous-jacentes
@@ -83,7 +87,15 @@ class CoursGroupeNouveau(Screen):
         self.parent_scm = parent_scm
         super(CoursGroupeNouveau, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
-        init_liste_cours_popup(self.choix_cours, None)
+        self.cours_db = formation_db.liste_cours_all()
+        liste_cours = [{'text': cour.nom} for cour in self.cours_db]
+        self.liste_choix_cours = ListeView(liste_cours, True)
+        popup_grp = Popup(content=self.liste_choix_cours, title='Liste des cours')
+        popup_grp.size_hint = (.3,.3)
+        self.bouton_choix_cours.bind(on_press=popup_grp.open)
+        #self.eleves_db = formation_db.liste_eleves_all()
+        #liste_eleves = [{'text': eleve.nom + " " + eleve.prenom} for eleve in self.eleves_db]
+        
  
 class CoursChoixGroupe(Screen):
     existant = ObjectProperty(None)

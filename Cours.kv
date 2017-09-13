@@ -33,7 +33,7 @@
 
 
 <CoursGroupeNouveau>:
-    choix_cours: choix_cours
+    bouton_choix_cours: bouton_choix_cours
     retour: retour
     BoxLayout:
         orientation: 'vertical'
@@ -48,16 +48,19 @@
             pos_hint: {'top': 1}
             cols: 2
             id: gd
-            choix_cours: choix_cours
+            #bouton_choix_cours: bouton_choix_cours
             Label:
                 text: 'Nom du nouveau groupe'
             TextInput:
                 multiline: False
             Label:
                 text: 'Cours relatif'
-            PopupList:
-                text: root.titre
-                id: choix_cours
+            Button:
+                text: 'Liste des cours'
+                id: bouton_choix_cours
+            #PopupList:
+                #text: root.titre
+                #id: choix_cours
             #ComboEdit:
                 #text: root.titre
                 #size_hint: .3,.3
