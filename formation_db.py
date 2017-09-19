@@ -29,6 +29,9 @@ def liste_lieux_all():
 def liste_groupes_all():
     return Groupe.select()
 
+def liste_eleves_all():
+    return Eleve.select()
+
 def ajouter_lieu_db(nom, desc):
     lieu = Lieu.create(lieu=nom, description=desc)
     lieu.save()

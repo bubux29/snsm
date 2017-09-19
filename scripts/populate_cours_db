@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+from peewee import *
+from playhouse.sqlite_ext import SqliteExtDatabase
+from models.Cours import *
+pp=Cours.create(nom="Piscine")
+pp.save
+pp.save()
+ss=Cours.create(nom="Secourisme")
+ss.save()

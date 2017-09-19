@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import peewee
 
 database = peewee.SqliteDatabase("snsm.db")
@@ -11,7 +12,7 @@ database = peewee.SqliteDatabase("snsm.db")
 class Eleve(peewee.Model):
         nom = peewee.CharField(max_length=50, verbose_name="Nom de famille")
         prenom = peewee.CharField(max_length=50, verbose_name="Prénom")
-        date_naissance = peewee.DateTimeField( verbose_name="Date de naissance")
+        date_naissance = peewee.DateTimeField(verbose_name="Date de naissance")
         telephone = peewee.CharField(max_length=16, verbose_name="Numéro de téléphone")
         courriel = peewee.CharField(max_length=64, verbose_name="Adresse courrier électronique")
         is_formateur = peewee.BooleanField(null=False, default=False)
@@ -20,4 +21,4 @@ class Eleve(peewee.Model):
         class Meta:
                 database = database
         def __str__(self):
-            return self.nom
+            return self.prenom + " " + self.nom

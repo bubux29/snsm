@@ -3,8 +3,6 @@ import peewee
 from playhouse.fields import ManyToManyField
 from models.Trombi import Eleve
 
-from log import *
-
 database = peewee.SqliteDatabase("snsm.db")
 
 # Relations:
