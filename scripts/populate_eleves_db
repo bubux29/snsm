@@ -4,8 +4,8 @@ from playhouse.sqlite_ext import SqliteExtDatabase
 from models.Cours import _create_tables
 from models.Trombi import *
 _create_tables()
-pp=Eleve.create(nom="Dette", prenom="Thomas", date_naissance="12/02/2012", is_formateur=False, date_entree="12/03/1990")
-#pp=Eleve.create(nom="Dette", prenom="Thomas", date_naissance="12/02/2012", telephone="06.22.33.14.55", courriel="thomas@patate.com", is_formateur=False, date_entree="12/03/1990", photo_path="./pics/portrait1.jpg")
+#pp=Eleve.create(nom="Dette", prenom="Thomas", date_naissance="12/02/2012", is_formateur=False, date_entree="12/03/1990")
+pp=Eleve.create(nom="Dette", prenom="Thomas", date_naissance="12/02/2012", telephone="06.22.33.14.55", courriel="thomas@patate.com", is_formateur=False, date_entree="12/03/1990", photo_path="./pics/portrait1.jpg")
 pp.save()
 pp=Eleve.create(nom="Ohjo", prenom="Oji", date_naissance="12/09/2000", telephone="06.12.23.34.45", courriel="dfff@sqdfze.com", is_formateur=False, date_entree="12/12/2012", photo_path="./pics/portrait2.jpg")
 pp.save()

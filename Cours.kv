@@ -32,8 +32,18 @@
     pos_hint: {'top': 1, 'right': .5}
 
 
+<CoursGroupeExistant>:
+    retour: retour
+    bl: bl
+    BoxLayout:
+        orientation: 'vertical'
+        id: bl
+        CoursTopLayout:
+            id: retour
+
 <CoursGroupeNouveau>:
     bouton_choix_cours: bouton_choix_cours
+    bouton_choix_eleves: bouton_choix_eleves
     retour: retour
     BoxLayout:
         orientation: 'vertical'
@@ -58,6 +68,11 @@
             Button:
                 text: 'Liste des cours'
                 id: bouton_choix_cours
+            Label:
+                text: 'Eleves'
+            Button:
+                text: 'Liste des élèves'
+                id: bouton_choix_eleves
             #PopupList:
                 #text: root.titre
                 #id: choix_cours
@@ -81,6 +96,9 @@
         MenuBouton:
             text: 'Choix d\'un groupe existant'
             id: existant
+            on_press:
+                root.manager.transition.direction = 'left'
+                root.manager.current = 'ex'
         MenuBouton:
             text: 'Création d\'un groupe pour la journée'
             id: temporaire

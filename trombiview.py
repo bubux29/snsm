@@ -47,7 +47,7 @@ Builder.load_string('''
             text: root.nom
             pos_hint: {'center_x': .5, 'top': .2}
 
-<ListeView>:
+<TrombiView>:
     viewclass: 'SelectableBox'
     SelectableRecycleBoxLayout:
         default_size: dp(150), dp(150)
@@ -97,7 +97,7 @@ class SelectableBox(RecycleDataViewBehavior, BoxLayout):
                 rv.liste_des_index.remove(index)
 
 
-class ListeView(RecycleView):
+class TrombiView(RecycleView):
     def __init__(self, selections, has_multi, **kwargs):
         if has_multi:
             self.multiselect = True
@@ -105,7 +105,7 @@ class ListeView(RecycleView):
         else:
             self.multiselect = False
             self.touch_multiselect = False
-        super(ListeView, self).__init__(**kwargs)
+        super(TrombiView, self).__init__(**kwargs)
         self.data =  selections
         self.liste_des_index = list()
 
@@ -113,7 +113,7 @@ class ListeView(RecycleView):
 class TestApp(App):
     def build(self):
         l = [{'nom': eleves.__str__(), 'photo': eleves.photo_path} for eleves in formation_db.liste_eleves_all()]
-        return ListeView(l, True)
+        return TrombiView(l, True)
 
 if __name__ == '__main__':
     TestApp().run()

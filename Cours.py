@@ -19,7 +19,8 @@ from kivy.properties import ObjectProperty
 import log
 import formation_db
 from ComboEdit import ComboEdit
-from rcv import ListeView
+from listeview import ListeView
+from trombiview import TrombiView
 
 MainCoursMenu = Builder.load_file("Cours.kv")
 
@@ -54,17 +55,22 @@ class CoursRetourBox(BoxLayout):
         self.titre = titre
         self.manager = manager
 
-class CoursGroupeExistant:
+class CoursGroupeExistant(Screen):
+    retour = ObjectProperty(None)
+    bl = ObjectProperty(None)
     def on_choix_groupe(self, index):
         print ("Voici l'index: " + self.nom_de_lieux[index])
 
-    def __init__(self, **kwargs):
-        self.nom_de_groupes = list()
-        for groupe in formation_db.liste_groupes_all():
-            self.nom_de_groupes.append(groupe.nom + ' (' + groupe.cours + ')')
-        self.popup = PopupList(self.nom_de_groupes,
-                               "Groupes existants",
-                               self.on_choix_groupe)
+    def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
+        self.titre = titre
+        self.retour_accueil = retour_accueil
+        self.parent_scm = parent_scm
+        super(CoursGroupeExistant, self).__init__(**kwargs)
+        self.retour.init(retour_accueil, titre, parent_scm)
+        liste_groupe = [{'text': groupe.nom} for groupe in formation_db.liste_groupes_all()]
+        self.liste_choix_groupe = ListeView(liste_groupe, False)
+        #popup_grp = Popup(content=self.liste_choix_groupe, title='Liste des groupe')
+        self.bl.add_widget(self.liste_choix_groupe)
 
 def init_liste_cours_popup(popuplist, on_choix):
     nom_de_cours = list()
@@ -77,11 +83,15 @@ class CoursGroupeNouveau(Screen):
     bouton_choix_cours = ObjectProperty(None)
     bouton_choix_eleves = ObjectProperty(None)
     retour = ObjectProperty(None)
-    def on_choix_groupes(self, index):
-        print("et mange cet index {0}".format(index))
+
+    def on_choix_groupes(self, instance):
+        print("et mange ces index :")
+        for i in self.liste_choix_cours.liste_des_index:
+            print(i)
+        
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         # On positionne l'environnement nécessaire pour que tous les attributs
-        # soient vus initialisé par les classes sous-jacentes
+        # soient vus initialisés par les classes sous-jacentes
         self.titre = titre
         self.retour_accueil = retour_accueil
         self.parent_scm = parent_scm
@@ -90,11 +100,14 @@ class CoursGroupeNouveau(Screen):
         self.cours_db = formation_db.liste_cours_all()
         liste_cours = [{'text': cour.nom} for cour in self.cours_db]
         self.liste_choix_cours = ListeView(liste_cours, True)
-        popup_grp = Popup(content=self.liste_choix_cours, title='Liste des cours')
+        popup_grp = Popup(content=self.liste_choix_cours, title='Liste des cours', on_dismiss=self.on_choix_groupes)
         popup_grp.size_hint = (.3,.3)
         self.bouton_choix_cours.bind(on_press=popup_grp.open)
-        #self.eleves_db = formation_db.liste_eleves_all()
-        #liste_eleves = [{'text': eleve.nom + " " + eleve.prenom} for eleve in self.eleves_db]
+        liste_eleves = [{'nom': eleves.__str__(), 'photo': eleves.photo_path} for eleves in formation_db.liste_eleves_all()]
+        self.liste_choix_eleves = TrombiView(liste_eleves, True)
+        popup_lvs = Popup(content=self.liste_choix_eleves, title='Trombi')
+        popup_lvs.size_hint = (.3,.9)
+        self.bouton_choix_eleves.bind(on_press=popup_lvs.open)
         
  
 class CoursChoixGroupe(Screen):
@@ -109,6 +122,7 @@ class CoursChoixGroupe(Screen):
         super(CoursChoixGroupe, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
         parent_scm.add_widget(CoursGroupeNouveau(name='ng', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
+        parent_scm.add_widget(CoursGroupeExistant(name='ex', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
 
 #class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):

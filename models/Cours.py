@@ -2,6 +2,7 @@
 import peewee
 from playhouse.fields import ManyToManyField
 from models.Trombi import Eleve
+import datetime
 
 database = peewee.SqliteDatabase("snsm.db")
 
@@ -14,14 +15,14 @@ database = peewee.SqliteDatabase("snsm.db")
 
 # Ainsi:
 # Si on souhaite connaître la liste des modules suivis par un élève, on parcourt
-# l'ensemble de la table des journées où l'élève est listé et on liste
+# l'ensemble de la table des journées où l'élève est listé et on liste
 # l'ensemble des modules vus ce jour-là!
-# Pour commencer une évaluation, pour chaque élève on liste l'ensemble des 
-# résultats (via un formulaire en supportant les déjà "passés").
+# Pour commencer une évaluation, pour chaque élève on liste l'ensemble des 
+# résultats (via un formulaire en supportant les déjà "passés").
 # Pour connaître les compétences d'un élève, on consulte la table des résultats
 # qui doit être remplie dès l'ajout de l'élève dans un cours. L'état par défaut
-# du résultat doit être "Non passé". Pour construire la liste des résultats
-# on se base sur la liste des tests (attention en cas de mise à jour de la base
+# du résultat doit être "Non passé". Pour construire la liste des résultats
+# on se base sur la liste des tests (attention en cas de mise à jour de la base
 # des tests...)
 # Un cours est un ensemble de modules de formation ainsi qu'un ensemble de
 # tests.
@@ -95,9 +96,12 @@ class Lieu (peewee.Model):
 
 class Groupe (peewee.Model):
      nom = peewee.CharField(unique=True)
-     date_creation = peewee.DateTimeField(verbose_name="Date de création du groupe")
+     date_creation = peewee.DateTimeField(verbose_name="Date de création du groupe", default=datetime.datetime.now)
      participants = ManyToManyField(Eleve, related_name="fait_partie")
      cours = ManyToManyField(Cours, related_name="groupes_attaches")
+
+     def __str__(self):
+         return self.nom
      
 # Une journée de formation c'est:
 # - une date
@@ -153,5 +157,7 @@ def _disconnect_db():
 
 def _create_tables():
     database.connect()
-    database.create_tables([Eleve, Cours, Resultat, JourneeFormation, Test, ModuleFormation, Lieu], True)
+    # Dans le cas de champs ManyToMany, il faut générer explicitement les
+    # bases de données transverses...
+    database.create_tables([Cours, Eleve, Test, ModuleFormation, Lieu, Groupe, Groupe.participants.get_through_model(), Groupe.cours.get_through_model(), JourneeFormation, ModuleFormation, JourneeFormation.groupe_participants.get_through_model(), JourneeFormation.modules_vus.get_through_model(), Resultat], True)
     database.close()
