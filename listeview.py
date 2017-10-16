@@ -69,7 +69,7 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
                 rv.liste_des_elem.append(rv.data[index]['elem'])
         else:
             print("selection removed for {0}".format(rv.data[index]['text']))
-            if index in rv.liste_des_textes:
+            if rv.liste_des_textes.count(rv.data[index]['text']):
                 rv.liste_des_textes.remove(rv.data[index]['text'])
                 if rv.data[index]['elem']:
                     rv.liste_des_elem.remove(rv.data[index]['elem'])
