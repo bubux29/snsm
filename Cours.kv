@@ -37,9 +37,16 @@
     bl: bl
     BoxLayout:
         orientation: 'vertical'
-        id: bl
         CoursTopLayout:
             id: retour
+        GridLayout:
+            orientation: 'horizontal'
+            cols: 2
+            id: bl
+            Label:
+                text: "Sélectionner un groupe"
+            Label:
+                text: "Sélectionner les absents"
 
 <CoursGroupeNouveau>:
     bouton_choix_cours: bouton_choix_cours
@@ -86,7 +93,6 @@
 
 <CoursChoixGroupe>:
     existant: existant
-    temporaire: temporaire
     nouveau: nouveau
     retour: retour
     BoxLayout:
@@ -94,14 +100,11 @@
         CoursTopLayout:
             id: retour
         MenuBouton:
-            text: 'Choix d\'un groupe existant'
+            text: 'Sélection des groupes du jour'
             id: existant
             on_press:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ex'
-        MenuBouton:
-            text: 'Création d\'un groupe pour la journée'
-            id: temporaire
         MenuBouton:
             text: 'Création d\'un nouveau groupe'
             id: nouveau

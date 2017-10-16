@@ -52,7 +52,7 @@ class Cours (BaseModel):
     def __unicode__(self):
         return self.nom
 
-class Categorie (peewee.Model):
+class Categorie (BaseModel):
     nom = peewee.CharField(max_length=64)
     class Meta:
         database = database
@@ -63,7 +63,7 @@ class Categorie (peewee.Model):
 # - un nom
 # - OneToOneField vers catégorie
 # - une description
-class Test (peewee.Model):
+class Test (BaseModel):
     nom = peewee.CharField(max_length=32, null=False)
     categorie = peewee.CharField(max_length=32, null=False)
     description = peewee.TextField(null=False, verbose_name="Détail du test à passer par l'évalué")
@@ -76,7 +76,7 @@ class Test (peewee.Model):
 # Un module de formation c'est:
 # - un nom
 # - une description
-class ModuleFormation (peewee.Model):
+class ModuleFormation (BaseModel):
     nom = peewee.CharField(max_length=32, null=False, unique=True)
     categorie = peewee.CharField(max_length=32, null=True)
     description = peewee.TextField(null=False, verbose_name="Détail du module de formation à réaliser")
@@ -86,7 +86,7 @@ class ModuleFormation (peewee.Model):
     def __str__(self):
         return self.nom
 
-class Lieu (peewee.Model):
+class Lieu (BaseModel):
     lieu = peewee.CharField(max_length=64, unique=True)
     description = peewee.TextField()
     class Meta:
@@ -94,7 +94,7 @@ class Lieu (peewee.Model):
     def __str__(self):
         return self.lieu
 
-class Groupe (peewee.Model):
+class Groupe (BaseModel):
      nom = peewee.CharField(unique=True)
      date_creation = peewee.DateTimeField(verbose_name="Date de création du groupe", default=datetime.datetime.now)
      participants = ManyToManyField(Eleve, related_name="fait_partie")
@@ -109,7 +109,7 @@ class Groupe (peewee.Model):
 # - un nom de formateur
 # - un ManyToManyField vers Eleve
 # - un ManyToManyField vers Module de Formation
-class JourneeFormation (peewee.Model):
+class JourneeFormation (BaseModel):
      # La date de la journée doit être renseignée automatiquement à la création
      # Par contre, on se fiche de mettre à jour la date quand on modifie
      # l'instance (auto_now_add & auto_now)
@@ -130,7 +130,7 @@ class JourneeFormation (peewee.Model):
 # Il faut créer une page qui crée automatiquement l'ensemble des résultats
 # d'un élève aux tests d'un cours
 # Elle peut s'appeler: "Inscription d'un élève à un cours" (par exemple)
-class Resultat (peewee.Model):
+class Resultat (BaseModel):
     SUCCES = 'OK'
     ECHEC = 'KO'
     NONFAIT = 'NT'
@@ -159,5 +159,25 @@ def _create_tables():
     database.connect()
     # Dans le cas de champs ManyToMany, il faut générer explicitement les
     # bases de données transverses...
-    database.create_tables([Cours, Eleve, Test, ModuleFormation, Lieu, Groupe, Groupe.participants.get_through_model(), Groupe.cours.get_through_model(), JourneeFormation, ModuleFormation, JourneeFormation.groupe_participants.get_through_model(), JourneeFormation.modules_vus.get_through_model(), Resultat], True)
+    database.create_tables([
+        Cours, 
+        Eleve,
+        Test, 
+        ModuleFormation, 
+        Lieu, 
+        Groupe, 
+        Groupe.participants.get_through_model(), 
+        Eleve.fait_partie.get_through_model(),
+        Cours.groupes_attaches.get_through_model(), 
+        Groupe.cours.get_through_model(), 
+        JourneeFormation, 
+        JourneeFormation.groupe_participants.get_through_model(),
+        Groupe.a_participe_le.get_through_model(),
+        JourneeFormation.modules_vus.get_through_model(),
+        ModuleFormation, 
+        ModuleFormation.etudie_le.get_through_model(),
+        Resultat
+    ],
+    safe=True)
+
     database.close()

@@ -7,8 +7,11 @@ from formation_db import *
 cours=liste_cours_all()
 eleves=liste_eleves_all()
 from datetime import *
-#Groupe.create( nom="bunnix").save()
-grp=Groupe.get(Groupe.nom=="tomate farcie")
+Groupe.create( nom="bunnix").save()
+Groupe.create(nom="tutu").save()
+Groupe.create(nom="Première année").save()
+Groupe.create(nom="toto").save()
+grp=Groupe.get(Groupe.nom=="toto")
 for e in eleves:
     print(e)
     e.fait_partie.add(grp)
@@ -16,3 +19,6 @@ for e in eleves:
 for c in cours:
     print(c)
     c.groupes_attaches.add(grp)
+
+grp=Groupe.get(Groupe.nom=="bunnix")
+grp.cours.add(Cours.get(Cours.nom=="Piscine"))

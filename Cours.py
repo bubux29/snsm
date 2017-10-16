@@ -58,8 +58,9 @@ class CoursRetourBox(BoxLayout):
 class CoursGroupeExistant(Screen):
     retour = ObjectProperty(None)
     bl = ObjectProperty(None)
-    def on_choix_groupe(self, index):
-        print ("Voici l'index: " + self.nom_de_lieux[index])
+    def on_choix_groupe(self, liste_noms, liste_groupes):
+        for groupe in liste_groupes:
+            self.liste_choix_absents.data = self.liste_choix_absents.data + [{'text': participant.nom, 'elem': participant} for participant in groupe.participants]
 
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         self.titre = titre
@@ -67,10 +68,11 @@ class CoursGroupeExistant(Screen):
         self.parent_scm = parent_scm
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
-        liste_groupe = [{'text': groupe.nom} for groupe in formation_db.liste_groupes_all()]
-        self.liste_choix_groupe = ListeView(liste_groupe, False)
-        #popup_grp = Popup(content=self.liste_choix_groupe, title='Liste des groupe')
+        liste_groupe = [{'text': groupe.nom, 'elem': groupe} for groupe in formation_db.liste_groupes_all()]
+        self.liste_choix_groupe = ListeView(liste_groupe, True, self.on_choix_groupe)
         self.bl.add_widget(self.liste_choix_groupe)
+        self.liste_choix_absents = ListeView([], True)
+        self.bl.add_widget(self.liste_choix_absents)
 
 def init_liste_cours_popup(popuplist, on_choix):
     nom_de_cours = list()
