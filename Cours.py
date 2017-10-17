@@ -58,17 +58,25 @@ class CoursRetourBox(BoxLayout):
 class CoursGroupeExistant(Screen):
     retour = ObjectProperty(None)
     bl = ObjectProperty(None)
+
+    def on_choix_absents(self, liste_noms, liste_eleves):
+        # A chaque fois, la liste des groupes (donc la liste complète des élèves
+        # peut avoir été augmentée, du coup, pour être sûr, on reprend cette
+        # liste
+        eleves = self.liste_complete_eleves[:]
+        for eleve in liste_eleves:
+            if eleves.count(eleve):
+                eleves.remove(eleve)
+
     def on_choix_groupe(self, liste_noms, liste_groupes):
-        eleves = list()
+        self.eleves = list()
         for groupe in liste_groupes:
-            print("Groupe: " + groupe.nom)
             for eleve in groupe.participants:
-                print("   - eleve: " + eleve.__str__())
-                if eleves.count(eleve) == 0:
-                    eleves.append(eleve)
-                else:
-                    print("Déjà pris mignon: " + eleve.__str__())
-        self.liste_choix_absents.data = [{'text': participant.prenom + ' ' + participant.nom, 'elem': participant} for participant in eleves]
+                if self.eleves.count(eleve) == 0:
+                    self.eleves.append(eleve)
+        self.liste_choix_absents.data = [{'text': participant.prenom + ' ' + participant.nom, 'elem': participant} for participant in self.eleves]
+        # Attention: même référence, du coup, une seule vraie liste en mémoire
+        self.liste_complete_eleves = self.eleves
 
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         self.titre = titre
@@ -79,7 +87,7 @@ class CoursGroupeExistant(Screen):
         liste_groupe = [{'text': groupe.nom, 'elem': groupe} for groupe in formation_db.liste_groupes_all()]
         self.liste_choix_groupe = ListeView(liste_groupe, True, self.on_choix_groupe)
         self.bl.add_widget(self.liste_choix_groupe)
-        self.liste_choix_absents = ListeView([{'text': eleve.nom + eleve.prenom, 'elem': eleve} for eleve in []], True)
+        self.liste_choix_absents = ListeView([{'text': eleve.nom + eleve.prenom, 'elem': eleve} for eleve in []], True, self.on_choix_absents)
         self.bl.add_widget(self.liste_choix_absents)
 
 def init_liste_cours_popup(popuplist, on_choix):
