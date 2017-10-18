@@ -1,0 +1,29 @@
+<MenuBouton@Button>:
+    size_hint: (.5,1)
+    pos_hint: { 'center_x': .5 }
+    canvas:
+        Line:
+            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+
+<Formation>:
+    colonne_eleves: colonne_eleves
+    colonne_groupes: colonne_groupes
+    BoxLayout:
+        id: bl
+        orientation: 'horizontal'
+        BoxLayout:
+            id: colonne_groupes
+            orientation: 'vertical'
+            size_hint: (.2,1)
+            Label:
+                size_hint: (1,.1)
+                text: 'Groupes'
+        BoxLayout:
+            id: colonne_eleves
+            orientation: 'vertical'
+            size_hint: (.2,1)
+            Label:
+                size_hint: (1,.1)
+                text: 'Elèves'
+        BoxLayout:
+            Widget:

@@ -43,6 +43,8 @@
             text: 'OK'
             size_hint: (.5,.1)
             pos_hint: {'top': 1, 'right': 1}
+            on_press:
+                root.on_selection()
         GridLayout:
             orientation: 'horizontal'
             cols: 2

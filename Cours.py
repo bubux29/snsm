@@ -18,6 +18,7 @@ from kivy.properties import ObjectProperty
 
 import log
 import formation_db
+from Formation import Formation
 from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
@@ -32,13 +33,7 @@ def info(text):
 class CoursRetourBox(BoxLayout):
     cours_bl = ObjectProperty(None)
     retour = ObjectProperty(None)
-    #retour_accueil = ObjectProperty(None)
-    #manager = ObjectProperty(None)
-    #titre = ObjectProperty(None)
     def __init__(self, **kwargs):
-        #self.fbind('retour_accueil', self.updates, 'retour_accueil')
-        #self.fbind('titre', self.updates, 'titre')
-        #self.fbind('manager', self.updates, 'manager')
         super(CoursRetourBox, self).__init__(**kwargs)
 
     def updates(self, name=None, source=None, value=None):
@@ -50,7 +45,6 @@ class CoursRetourBox(BoxLayout):
             self.manager = value
 
     def init(self, retour_accueil, titre, manager):
-        #self.retour.bind(on_press=retour_accueil)
         self.retour_accueil = retour_accueil
         self.titre = titre
         self.manager = manager
@@ -59,24 +53,45 @@ class CoursGroupeExistant(Screen):
     retour = ObjectProperty(None)
     bl = ObjectProperty(None)
 
+    def on_selection(self):
+        # Pour la formation, nous avons besoin de trier l'ensemble des présents
+        # par groupe...
+        self.dict_eleve = dict()
+        presents_set = set(self.liste_presents)
+        for groupe in self.liste_groupes:
+            eleves_set = set(groupe.participants)
+            self.dict_eleve[groupe.nom] = list(eleves_set & presents_set)
+        self.parent_scm.add_widget(Formation(name='fo', retour_accueil=self.retour_accueil, titre=self.titre, parent_scm=self.parent_scm, dict_eleves_par_groupe=self.dict_eleve))
+        self.parent.current = 'fo'
+
     def on_choix_absents(self, liste_noms, liste_eleves):
         # A chaque fois, la liste des groupes (donc la liste complète des élèves
         # peut avoir été augmentée, du coup, pour être sûr, on reprend cette
         # liste
-        eleves = self.liste_complete_eleves[:]
-        for eleve in liste_eleves:
-            if eleves.count(eleve):
-                eleves.remove(eleve)
+        eleves = set(self.liste_complete_eleves)
+        absents = set(liste_eleves)
+        self.liste_presents = list(eleves ^ absents)
+        #print("La liste définitive est:")
+        #for e in self.liste_presents:
+            #print(" - " + e.__str__())
 
     def on_choix_groupe(self, liste_noms, liste_groupes):
+        # Des qu'on sélectionne ou déselectionne un groupe, il faut mettre à
+        # jour la liste des élèves... cette liste permettra de choisir les
+        # absents.
         self.eleves = list()
+        self.liste_groupes = liste_groupes[:]
         for groupe in liste_groupes:
-            for eleve in groupe.participants:
-                if self.eleves.count(eleve) == 0:
-                    self.eleves.append(eleve)
-        self.liste_choix_absents.data = [{'text': participant.prenom + ' ' + participant.nom, 'elem': participant} for participant in self.eleves]
+            self.eleves = self.eleves[:] + groupe.participants[:]
+            #for eleve in groupe.participants:
+                #if self.eleves.count(eleve) == 0:
+                    #self.eleves.append(eleve)
+        # On gère l'unicité des noms d'élèves grâce au 'set' du python...
+        # Fort pratique!!
+        ll = list(set(self.eleves))
+        self.liste_choix_absents.data = [{'text': participant.prenom + ' ' + participant.nom, 'elem': participant} for participant in ll]
         # Attention: même référence, du coup, une seule vraie liste en mémoire
-        self.liste_complete_eleves = self.eleves
+        self.liste_complete_eleves = ll
 
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         self.titre = titre
@@ -103,7 +118,6 @@ class CoursGroupeNouveau(Screen):
     retour = ObjectProperty(None)
 
     def on_choix_groupes(self, instance):
-        print("et mange ces index :")
         for i in self.liste_choix_cours.liste_des_index:
             print(i)
         

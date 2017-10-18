@@ -65,13 +65,13 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
         if is_selected:
             print("selection changed to {0}".format(rv.data[index]))
             rv.liste_des_textes.append(rv.data[index]['text'])
-            if rv.data[index]['elem']:
+            if 'elem' in rv.data[index] and rv.data[index]['elem']:
                 rv.liste_des_elem.append(rv.data[index]['elem'])
         else:
             print("selection removed for {0}".format(rv.data[index]['text']))
             if rv.liste_des_textes.count(rv.data[index]['text']):
                 rv.liste_des_textes.remove(rv.data[index]['text'])
-                if rv.data[index]['elem']:
+                if 'elem' in rv.data[index] and rv.data[index]['elem']:
                     rv.liste_des_elem.remove(rv.data[index]['elem'])
         if rv.apply_callback:
             rv.apply_callback(rv.liste_des_textes, rv.liste_des_elem)
