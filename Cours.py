@@ -61,7 +61,7 @@ class CoursGroupeExistant(Screen):
         for groupe in self.liste_groupes:
             eleves_set = set(groupe.participants)
             self.dict_eleve[groupe.nom] = list(eleves_set & presents_set)
-        self.parent_scm.add_widget(Formation(name='fo', retour_accueil=self.retour_accueil, titre=self.titre, parent_scm=self.parent_scm, dict_eleves_par_groupe=self.dict_eleve))
+        self.parent_scm.add_widget(Formation(name='fo', retour_accueil=self.retour_accueil, titre=self.titre, parent_scm=self.parent_scm, dict_eleves_par_groupe=self.dict_eleve, liste_presents=self.liste_presents))
         self.parent.current = 'fo'
 
     def on_choix_absents(self, liste_noms, liste_eleves):

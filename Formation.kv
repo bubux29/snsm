@@ -1,3 +1,12 @@
+#: import TabbedPanel kivy.uix.tabbedpanel
+
+<Notebook@TabbedPanel>:
+    cols: 1
+    spacing: 10
+    padding: 20
+    do_default_tab: False
+    #tab_width: self.width
+
 <MenuBouton@Button>:
     size_hint: (.5,1)
     pos_hint: { 'center_x': .5 }
@@ -5,9 +14,23 @@
         Line:
             rectangle: self.x+1,self.y+1,self.width-1,self.height-1
 
+<EcranEleve>:
+    notebook: nb
+    Notebook:
+        id: nb
+        TabbedPanelItem:
+            text: 'Evaluation'
+        TabbedPanelItem:
+            text: 'Cours'
+        TabbedPanelItem:
+            text: 'Vidéo'
+        TabbedPanelItem:
+            text: 'Notes'
+
 <Formation>:
     colonne_eleves: colonne_eleves
     colonne_groupes: colonne_groupes
+    scm: scm
     BoxLayout:
         id: bl
         orientation: 'horizontal'
@@ -25,5 +48,5 @@
             Label:
                 size_hint: (1,.1)
                 text: 'Elèves'
-        BoxLayout:
-            Widget:
+        ScreenManager:
+            id: scm

@@ -39,22 +39,22 @@
         orientation: 'vertical'
         CoursTopLayout:
             id: retour
-        Button:
-            text: 'OK'
-            size_hint: (.5,.1)
-            pos_hint: {'top': 1, 'right': 1}
-            on_press:
-                root.on_selection()
         GridLayout:
             orientation: 'horizontal'
             cols: 2
             id: bl
             Label:
-                text: "Sélectionner un groupe"
+                text: "Sélectionner les groupes"
                 size_hint: (1, .1)
             Label:
                 text: "Sélectionner les absents"
                 size_hint: (1, .1)
+        Button:
+            text: 'OK'
+            size_hint: (.1,.1)
+            pos_hint: {'top': 1, 'right': .8}
+            on_press:
+                root.on_selection()
 
 <CoursGroupeNouveau>:
     bouton_choix_cours: bouton_choix_cours
