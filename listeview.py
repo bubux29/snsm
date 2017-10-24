@@ -64,14 +64,20 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
         self.selected = is_selected
         if is_selected:
             print("selection changed to {0}".format(rv.data[index]))
-            rv.liste_des_textes.append(rv.data[index]['text'])
-            if 'elem' in rv.data[index] and rv.data[index]['elem']:
-                rv.liste_des_elem.append(rv.data[index]['elem'])
+            if not rv.liste_des_textes.count(rv.data[index]['text']):
+                rv.liste_des_textes.append(rv.data[index]['text'])
+                if 'elem' in rv.data[index] and rv.data[index]['elem']:
+                    rv.liste_des_elem.append(rv.data[index]['elem'])
+            else:
+                print("Le truc existe déjà")
         else:
             print("selection removed for {0}".format(rv.data[index]['text']))
             if rv.liste_des_textes.count(rv.data[index]['text']):
                 rv.liste_des_textes.remove(rv.data[index]['text'])
+                if rv.liste_des_textes.count(rv.data[index]['text']) >= 1:
+                    print("il faut retirer plus le text")
                 if 'elem' in rv.data[index] and rv.data[index]['elem']:
+                    print("il faut retirer le elem")
                     rv.liste_des_elem.remove(rv.data[index]['elem'])
         if rv.apply_callback:
             rv.apply_callback(rv.liste_des_textes, rv.liste_des_elem)
@@ -84,7 +90,7 @@ class ListeView(RecycleView):
             self.touch_multiselect = True
         else:
             self.multiselect = False
-            self.touch_multiselect = False
+            self.touch_multiselect = True #False
         super(ListeView, self).__init__(**kwargs)
         self.data =  selections
         self.liste_des_textes = list()

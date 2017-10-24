@@ -14,18 +14,52 @@
         Line:
             rectangle: self.x+1,self.y+1,self.width-1,self.height-1
 
+<PanneauNote>:
+    textinput: textinput
+    consultation: consultation.__self__
+    orientation: 'horizontal'
+    BoxLayout:
+        orientation: 'vertical'
+        TextInput:
+            id: textinput
+            multiline: True
+        BoxLayout:
+            size_hint: (1, .1)
+            orientation: 'horizontal'
+            Button:
+                pos_hint: {'right': 0}
+                size_hint: (.4, 1)
+                text: 'Effacer'
+                on_release: textinput.text=''
+            Widget:
+            Button:
+                pos_hint: {'left': 0}
+                size_hint: (.4, 1)
+                text: 'Sauvegarder'
+                on_release:
+                    root.sauvegarde_texte()
+    BoxLayout:
+        id: consultation
+        size_hint: (.3, 1)
+        orientation: 'vertical'
+
 <EcranEleve>:
     notebook: nb
     Notebook:
         id: nb
         TabbedPanelItem:
+            id: eval
             text: 'Evaluation'
         TabbedPanelItem:
+            id: cours
             text: 'Cours'
         TabbedPanelItem:
+            id: video
             text: 'Vidéo'
         TabbedPanelItem:
+            id: notes
             text: 'Notes'
+            PanneauNote:
 
 <Formation>:
     colonne_eleves: colonne_eleves
