@@ -71,9 +71,6 @@ class CoursGroupeExistant(Screen):
         eleves = set(self.liste_complete_eleves)
         absents = set(liste_eleves)
         self.liste_presents = list(eleves ^ absents)
-        #print("La liste définitive est:")
-        #for e in self.liste_presents:
-            #print(" - " + e.__str__())
 
     def on_choix_groupe(self, liste_noms, liste_groupes):
         # Des qu'on sélectionne ou déselectionne un groupe, il faut mettre à
@@ -83,13 +80,12 @@ class CoursGroupeExistant(Screen):
         self.liste_groupes = liste_groupes[:]
         for groupe in liste_groupes:
             self.eleves = self.eleves[:] + groupe.participants[:]
-            #for eleve in groupe.participants:
-                #if self.eleves.count(eleve) == 0:
-                    #self.eleves.append(eleve)
         # On gère l'unicité des noms d'élèves grâce au 'set' du python...
         # Fort pratique!!
         ll = list(set(self.eleves))
-        self.liste_choix_absents.data = [{'text': participant.prenom + ' ' + participant.nom, 'elem': participant} for participant in ll]
+        # On se fait un petit rangement par ordre alphabétique...
+        dic = sorted([{'text': participant.__str__(), 'elem': participant} for participant in ll], key=lambda x: x['text'])
+        self.liste_choix_absents.setDataDict(dic)
         # Attention: même référence, du coup, une seule vraie liste en mémoire
         self.liste_complete_eleves = ll
 

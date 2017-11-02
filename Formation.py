@@ -51,21 +51,23 @@ class PanneauNote(BoxLayout):
             pass
             #print("déjà ajouté")
         #self.liste_notes_view.data = []
-        self.liste_notes_view.data = [{'text': tup[0], 'elem': tup}
-                                     for tup in self.liste_notes]
-        print('je fais de la purée avec:', self.liste_notes_view.data)
+        self.liste_notes_view.setDataDict([{'text': tup[0], 'elem': tup}
+                                     for tup in self.liste_notes])
+        self.liste_notes_view.clear_selection()
 
     def on_affiche_note(self, liste_nom_note, liste_notes):
-        if not liste_nom_note: return
-        print("voila la liste")
-        for i in liste_notes:
-            print("j'ai", i[1])
+        if not liste_nom_note:
+            self.textinput.text = ""
+            return
         self.textinput.text = liste_notes[0][1]
 
 class EcranEleve(Screen):
     notebook = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(EcranEleve, self).__init__(**kwargs)
+
+class DefaultTab(Screen):
+    pass
 
 class Formation(Screen):
     colonne_eleves = ObjectProperty(None)
@@ -81,7 +83,12 @@ class Formation(Screen):
         for nom_groupe in liste_nom_groupe:
             self.liste_choix_eleves.data = [
                                      {'text': eleve.__str__(), 'elem': eleve}
-                                     for eleve in self.dict_eleves[nom_groupe]]
+                                     for eleve in
+                                         sorted(
+                                             self.dict_eleves[nom_groupe], 
+                                             key=lambda eleve: eleve.__str__()
+                                         )
+                                     ]
 
     def __init__(self, retour_accueil, titre, parent_scm, dict_eleves_par_groupe, liste_presents, **kwargs):
         self.titre = titre
@@ -96,11 +103,13 @@ class Formation(Screen):
                                        False, self.on_choix_groupe)
         self.colonne_groupes.add_widget(self.liste_choix_groupe)
         self.liste_choix_eleves = ListeView(
-                                 [{'text': eleve.nom + eleve.prenom,
-                                   'elem': eleve} for eleve in []],
+                                 [{'text': eleve.__str__(), 'elem': eleve}
+                                 for eleve in []],
                                  False, self.on_choix_eleve)
         self.colonne_eleves.add_widget(self.liste_choix_eleves)
 
+        self.scm.add_widget(DefaultTab(name='default'))
         # Maintenant il faut creer les panneaux pour chaque élève
         for eleve in liste_presents:
             self.scm.add_widget(EcranEleve(name=eleve.__str__()))
+        self.scm.current = 'default'
