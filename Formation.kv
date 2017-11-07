@@ -18,6 +18,28 @@
         Line:
             rectangle: self.x+1,self.y+1,self.width-1,self.height-1
 
+<PanneauVideo>:
+    camera: camera
+    capture_bouton: capture_bouton
+    consultation: consultation
+    orientation: 'horizontal'
+    BoxLayout:
+        orientation: 'vertical'
+        Camera:
+            id: camera
+            resolution: (640, 480)
+            play: False
+        Button:
+            id: capture_bouton
+            text: 'Capture'
+            size_hint_y: None
+            height: '48dp'
+            on_press: root.capture()
+    BoxLayout:
+        id: consultation
+        size_hint: (.3, 1)
+        orientation: 'vertical'
+
 <PanneauNote>:
     textinput: textinput
     consultation: consultation.__self__
@@ -49,20 +71,28 @@
 
 <EcranEleve>:
     notebook: nb
+    video: video
     Notebook:
         id: nb
         TabbedPanelItem:
             id: eval
             text: 'Evaluation'
+            on_release: video.play_video(False)
         TabbedPanelItem:
             id: cours
             text: 'Cours'
+            on_release: video.play_video(False)
         TabbedPanelItem:
-            id: video
+            video: video
             text: 'Vidéo'
+            on_release: video.play_video(True)
+            PanneauVideo:
+                name: root.name
+                id: video
         TabbedPanelItem:
             id: notes
             text: 'Notes'
+            on_release: video.play_video(False)
             PanneauNote:
 
 <Formation>:
