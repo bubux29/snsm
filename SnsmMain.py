@@ -12,6 +12,7 @@ from kivy.properties import ObjectProperty
 
 from Apropos import Apropos
 from MainMenu import ExpertMenuLayout
+from Gestion import GestionSCM
 #from Cours import MainCoursMenu
 from Cours import MainCoursScreenManager
 
@@ -80,7 +81,8 @@ class Main(Widget):
         # Ajout de l'écran de gestion aux onglets
         tab = TabbedPanelItem()
         tab.text = "Gérer"
-        tab.add_widget(ExpertMenuLayout().creer())
+        #tab.add_widget(ExpertMenuLayout().creer())
+        tab.add_widget(GestionSCM())
         self.notebook.add_widget(tab)
         self.gestion_tab = tab
 

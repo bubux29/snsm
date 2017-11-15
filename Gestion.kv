@@ -1,0 +1,41 @@
+<GestionEleves>:
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Gestion des élèves'
+            size_hint: (1, .2)
+        GridLayout:
+            pos_hint: {'center_x': .5}
+            size_hint: (.8,.9)
+            cols:2
+            Button:
+                text: 'Ajouter un élève'
+                on_press:
+                    root.parentscm.current = 'NouvelEleve'
+            Button:
+                text: 'Consulter par groupes'
+                on_press:
+                    root.parentscm.current = 'ElevesParGroupe'
+            Button:
+                text: 'Consulter'
+                on_press:
+                    root.parentscm.current = 'TousEleves'
+
+<GestionMenuPrincipal>:
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Gestion des bases de données'
+            size_hint: (1, .2)
+        GridLayout:
+            pos_hint: {'center_x': .5}
+            size_hint: (.8,.9)
+            cols:2
+            Button:
+                text: 'Élèves'
+                on_press:
+                    root.parentscm.current = 'GestionEleves'
+            Button:
+                text: 'Lieux de Formation'
+                on_press:
+                    root.parentscm.current = 'GestionLieux'

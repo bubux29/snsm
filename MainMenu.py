@@ -169,7 +169,6 @@ class ExpertMenuLayout(Widget):
         #super(ExpertMenu, self).__init__(**kwargs)
 
     def creer(self):
-        info("coucou les cons")
         #self.main = ExpertMenuMain()
         #self.mainLayout.add_widget(Label(text="coucou"))
         self.eleves = ExpertMenuSub(ExpertMenuEleves(), self.go_home)
