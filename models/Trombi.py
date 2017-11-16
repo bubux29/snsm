@@ -15,9 +15,10 @@ class Eleve(peewee.Model):
         date_naissance = peewee.DateTimeField(verbose_name="Date de naissance")
         telephone = peewee.CharField(max_length=16, verbose_name="Numéro de téléphone")
         courriel = peewee.CharField(max_length=64, verbose_name="Adresse courrier électronique")
-        is_formateur = peewee.BooleanField(null=False, default=False)
+        is_formateur = peewee.BooleanField(null=False, default=False, verbose_name="Est un formateur")
         date_entree = peewee.DateTimeField(verbose_name="Date de première adhésion")
         photo_path = peewee.CharField(max_length=256, verbose_name="Photo")
+        affichage = ['nom', 'prenom', 'date_naissance', 'telephone', 'courriel', 'is_formateur', 'photo_path']
         class Meta:
                 database = database
         def __str__(self):

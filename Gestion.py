@@ -5,17 +5,18 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.checkbox import CheckBox
 from kivy.lang import Builder
 
 from kivy.properties import ObjectProperty
-import KivyCalendar
+from KivyCalendar import DatePicker
 
 import log
 import formation_db
-import peewee # OK: ça n'a rien à faire ici...
 
 import inspect
-from models import Cours, Trombi
+from models import Cours, Trombi, dbHelper
 
 def err(text):
     log.err("GESTION", text)
@@ -24,12 +25,32 @@ def info(text):
 
 Gestion = Builder.load_file('Gestion.kv')
 
+class GestionTextInput(TextInput):
+    pass
+
+def gti():
+    return GestionTextInput()
+def dp():
+    return DatePicker(multiline='False', size_hint=(None, .1), pHint=(0.4, 0.4))
+def cb():
+    return CheckBox()
+widgetDict=dict(
+E_CharField=gti,
+E_TextField=gti,
+E_DateField=dp,
+E_BoolField=cb
+)
+
 def generateForm(classe):
     box=GridLayout(cols=2)
-    for name, obj in inspect.getmembers(classe):
-        if type(obj) == peewee.CharField:
-            box.add_widget(Label(text=name))
-            box.add_widget(Label(text='coucou'))
+    fdict=dict([ (name, obj)
+              for name, obj in inspect.getmembers(classe,
+                                        lambda x: dbHelper.isType(type(x)))
+              if classe.affichage.count(name)])
+    for name in classe.affichage:
+        box.add_widget(Label(text=fdict[name].verbose_name))
+        ty=dbHelper.whatType(type(fdict[name]))
+        box.add_widget(widgetDict[ty[0]]())
     return box
 
 class GestionEleves(Screen):
@@ -41,11 +62,12 @@ class GestionEleves(Screen):
         self.parentscm.add_widget(GestionConsultationEleves(name='TousEleves', parentscm=parentscm))
 
 class GestionNouvelEleve(Screen):
+    core = ObjectProperty(None)
     def __init__(self, parentscm, **kwargs):
         super(GestionNouvelEleve, self).__init__(**kwargs)
         self.parentscm = parentscm
 
-        self.add_widget(generateForm(Trombi.Eleve))
+        self.core.add_widget(generateForm(Trombi.Eleve))
 
 class GestionConsultationEleves(Screen):
     def __init__(self, parentscm, groupes=None, **kwargs):

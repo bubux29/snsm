@@ -1,3 +1,29 @@
+<GestionTextInput>:
+    multiline: False
+    size_hint: None, .1
+    width: 200
+
+<GestionNouvelEleve>:
+    core: core
+    BoxLayout:
+        id: core
+        orientation: 'vertical'
+        BoxLayout:
+            size_hint: .3, .1
+            pos_hint: {'top': 1, 'right': .3}
+            orientation: 'horizontal'
+            Button:
+                #size_hint: .3,.1
+                text: 'Retour'
+                on_press:
+                    root.parentscm.transition.direction='right'
+                    root.parentscm.current='GestionEleves'
+            Button:
+                #size_hint: .3,.1
+                text: 'OK'
+                on_press:
+                    print('OK podium')
+
 <GestionEleves>:
     BoxLayout:
         orientation: 'vertical'
@@ -11,14 +37,17 @@
             Button:
                 text: 'Ajouter un élève'
                 on_press:
+                    root.parentscm.transition.direction='left'
                     root.parentscm.current = 'NouvelEleve'
             Button:
                 text: 'Consulter par groupes'
                 on_press:
+                    root.parentscm.transition.direction='left'
                     root.parentscm.current = 'ElevesParGroupe'
             Button:
                 text: 'Consulter'
                 on_press:
+                    root.parentscm.transition.direction='left'
                     root.parentscm.current = 'TousEleves'
 
 <GestionMenuPrincipal>:
