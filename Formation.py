@@ -101,6 +101,9 @@ class PanneauVideo(BoxLayout):
 
     def resume_video(self, *extras):
         self.play_video(True)
+        # On évite de se reprendre la sélection de la vidéo au moment de la
+        # modification de la liste des vidéos (i-e après capture d'une vidéo)
+        self.liste_video_view.clear_selection()
 
     def play_video(self, bo):
         self.camera.play=bo
