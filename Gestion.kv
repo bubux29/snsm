@@ -1,3 +1,15 @@
+
+<Notebook@TabbedPanel>:
+    cols: 1
+    spacing: 10
+    padding: 20
+    do_default_tab: False
+    #tab_width: self.width
+
+<DefaultTab>:
+    Image:
+        source: 'static/img/logo_snsm_240x240.png'
+
 <GestionTextInput>:
     multiline: False
     size_hint: None, .1
@@ -22,7 +34,44 @@
                 #size_hint: .3,.1
                 text: 'OK'
                 on_press:
-                    print('OK podium')
+                    root.enregistreNouvelEleve()
+
+<PanneauDetailsEleve>
+    BoxLayout:
+        orientation: 'vertical'
+        #Image:
+        #    source: root.eleve.photo_path
+        #Label:
+            #text: root.eleve.__str__()
+
+<PanneauConsultationEleve>
+    notebook: nb
+    Notebook:
+        id: nb
+        details: details
+        cours: cours
+        evaluations: eval
+        TabbedPanelItem:
+            id: details
+            text: 'Détails'
+            panneau: panneau
+            on_release:
+                panneau.draw()
+            PanneauDetailsEleve:
+                id: panneau
+                eleve: root.eleve
+        TabbedPanelItem:
+            id: cours
+            text: 'Cours suivis'
+        TabbedPanelItem:
+            id: eval
+            text: 'Evaluations'
+
+<GestionConsultationEleves>
+    principal: principal
+    BoxLayout:
+        id: principal
+        orientation: 'horizontal'
 
 <GestionEleves>:
     BoxLayout:

@@ -18,7 +18,7 @@ class Eleve(peewee.Model):
         is_formateur = peewee.BooleanField(null=False, default=False, verbose_name="Est un formateur")
         date_entree = peewee.DateTimeField(verbose_name="Date de première adhésion")
         photo_path = peewee.CharField(max_length=256, verbose_name="Photo")
-        affichage = ['nom', 'prenom', 'date_naissance', 'telephone', 'courriel', 'is_formateur', 'photo_path']
+        requis = ['nom', 'prenom', 'date_naissance', 'telephone', 'courriel', 'is_formateur', 'photo_path']
         class Meta:
                 database = database
         def __str__(self):
