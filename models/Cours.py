@@ -4,6 +4,8 @@ from playhouse.fields import ManyToManyField
 from models.Trombi import Eleve
 import datetime
 
+GROUPE_ANCIENS='Anciens'
+
 database = peewee.SqliteDatabase("snsm.db")
 
 # Relations:
