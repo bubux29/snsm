@@ -18,6 +18,7 @@ from kivy.properties import ObjectProperty
 
 import log
 import formation_db
+from models.Cours import GROUPE_ANCIENS
 from Formation import Formation
 from ComboEdit import ComboEdit
 from listeview import ListeView
@@ -57,49 +58,90 @@ class CoursGroupeExistant(Screen):
         # Pour la formation, nous avons besoin de trier l'ensemble des présents
         # par groupe...
         self.dict_eleve = dict()
-        presents_set = set(self.liste_presents)
+        liste_eleves = self.liste_presents + self.liste_anciens
+        presents_set = set(liste_eleves)
+        self.liste_groupes.append(self.groupe_anciens)
         for groupe in self.liste_groupes:
             eleves_set = set(groupe.participants)
             self.dict_eleve[groupe.nom] = list(eleves_set & presents_set)
-        self.parent_scm.add_widget(Formation(name='fo', retour_accueil=self.retour_accueil, titre=self.titre, parent_scm=self.parent_scm, dict_eleves_par_groupe=self.dict_eleve, liste_presents=self.liste_presents))
+        self.parent_scm.add_widget(
+                            Formation(name='fo',
+                                      retour_accueil=self.retour_accueil,
+                                      titre=self.titre,
+                                      parent_scm=self.parent_scm,
+                                      dict_eleves_par_groupe=self.dict_eleve,
+                                      liste_presents=liste_eleves
+                            ))
         self.parent.current = 'fo'
 
-    def on_choix_absents(self, liste_noms, liste_eleves):
+    def on_choix_presents(self, liste_noms, liste_eleves):
         # A chaque fois, la liste des groupes (donc la liste complète des élèves
         # peut avoir été augmentée, du coup, pour être sûr, on reprend cette
         # liste
-        eleves = set(self.liste_complete_eleves)
-        absents = set(liste_eleves)
-        self.liste_presents = list(eleves ^ absents)
+        self.liste_presents = liste_eleves[:]
 
     def on_choix_groupe(self, liste_noms, liste_groupes):
         # Des qu'on sélectionne ou déselectionne un groupe, il faut mettre à
         # jour la liste des élèves... cette liste permettra de choisir les
         # absents.
-        self.eleves = list()
-        self.liste_groupes = liste_groupes[:]
-        for groupe in liste_groupes:
-            self.eleves = self.eleves[:] + groupe.participants[:]
+        self.eleves = list(formation_db.liste_eleves_by_groupe(liste_noms))
         # On gère l'unicité des noms d'élèves grâce au 'set' du python...
         # Fort pratique!!
-        ll = list(set(self.eleves))
-        # On se fait un petit rangement par ordre alphabétique...
-        dic = sorted([{'text': participant.__str__(), 'elem': participant} for participant in ll], key=lambda x: x['text'])
-        self.liste_choix_absents.setDataDict(dic)
-        # Attention: même référence, du coup, une seule vraie liste en mémoire
-        self.liste_complete_eleves = ll
+        ll = set(self.eleves)
+        dic = sorted([{'text': participant.__str__(), 'elem': participant}
+               for participant in ll], key=lambda x: x['text'])
+        self.liste_choix_presents.setDataDict(dic)
+        self.liste_groupes = liste_groupes
+
+    def on_ancien_tri_nom(self, ti, value):
+        dic = sorted([{'text': participant.__str__(), 'elem': participant}
+            for participant in self.anciens
+            if value in participant.__str__().lower()], key=lambda x: x['text'])
+        self.liste_choix_anciens.setDataDict(dic)
+
+    def on_choix_anciens(self, liste_noms, liste_anciens):
+        self.liste_anciens = liste_anciens[:]
 
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         self.titre = titre
         self.retour_accueil = retour_accueil
         self.parent_scm = parent_scm
+        self.liste_presents = list()
+        self.liste_anciens = list()
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
-        liste_groupe = [{'text': groupe.nom, 'elem': groupe} for groupe in formation_db.liste_groupes_all()]
-        self.liste_choix_groupe = ListeView(liste_groupe, True, self.on_choix_groupe)
+        self.related_groupes = formation_db.liste_groupes_by_cours([titre])
+        # Liste des groupes des stagiaires
+        liste_groupe = [{'text': groupe.nom, 'elem': groupe}
+                      for groupe in self.related_groupes
+                         if groupe.nom != GROUPE_ANCIENS]
+        self.liste_choix_groupe = ListeView(liste_groupe,
+                                            True, self.on_choix_groupe)
         self.bl.add_widget(self.liste_choix_groupe)
-        self.liste_choix_absents = ListeView([{'text': eleve.nom + eleve.prenom, 'elem': eleve} for eleve in []], True, self.on_choix_absents)
-        self.bl.add_widget(self.liste_choix_absents)
+        # Liste d'appel des stagiaires
+        self.liste_choix_presents = ListeView(
+                              [{'text': eleve.nom + eleve.prenom, 'elem': eleve}
+                              for eleve in []],
+                              True, self.on_choix_presents
+                              )
+        self.bl.add_widget(self.liste_choix_presents)
+        # Pour les anciens, il faut rajouter une texte entry pour pouvoir
+        # chercher par nom
+        ba = BoxLayout(orientation='vertical')
+        self.bl.add_widget(ba)
+        ti = TextInput(size_hint=(1,.1), multiline=False)
+        ti.bind(text=self.on_ancien_tri_nom)
+        ba.add_widget(ti)
+        self.groupe_anciens = [groupe for groupe in self.related_groupes
+                              if groupe.nom == GROUPE_ANCIENS][0]
+        self.anciens = self.groupe_anciens.participants[:]
+        self.liste_choix_anciens = ListeView(
+                       sorted([{'text': eleve.nom + eleve.prenom, 'elem': eleve}
+                          for eleve in self.anciens], key=lambda x: x['text']),
+                              True, self.on_choix_anciens
+                              )
+        ba.add_widget(self.liste_choix_anciens)
+                              
 
 def init_liste_cours_popup(popuplist, on_choix):
     nom_de_cours = list()

@@ -166,14 +166,14 @@ class Formation(Screen):
 
     def on_choix_groupe(self, liste_nom_groupe, empty):
         for nom_groupe in liste_nom_groupe:
-            self.liste_choix_eleves.data = [
+            self.liste_choix_eleves.setDataDict([
                                      {'text': eleve.__str__(), 'elem': eleve}
                                      for eleve in
                                          sorted(
                                              self.dict_eleves[nom_groupe], 
                                              key=lambda eleve: eleve.__str__()
                                          )
-                                     ]
+                                     ])
 
     def __init__(self, retour_accueil, titre, parent_scm, dict_eleves_par_groupe, liste_presents, **kwargs):
         self.titre = titre

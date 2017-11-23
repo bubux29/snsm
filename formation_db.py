@@ -49,6 +49,10 @@ def liste_eleves_all():
 def liste_eleves_by_statut(noms):
     return Eleve.select().where(Eleve.statut << noms)
 
+def liste_eleves_by_groupe(noms_groupes):
+    Through = Eleve.fait_partie.get_through_model()
+    return list(Eleve.select(Through,Eleve,Groupe).join(Through).join(Groupe).where(Groupe.nom << noms_groupes).order_by(Eleve.nom))
+
 def ajouter_lieu_db(nom, desc):
     lieu = Lieu.create(lieu=nom, description=desc)
     lieu.save()
