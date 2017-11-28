@@ -2,15 +2,15 @@
 
 from kivy.app import App
 from kivy.uix.label import Label
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.tabbedpanel import TabbedPanelItem
+from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
@@ -119,23 +119,22 @@ class PanneauVideo(BoxLayout):
 class PanneauNote(BoxLayout):
     textinput = ObjectProperty(None)
     consultation = ObjectProperty(None)
-    main = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         super(PanneauNote, self).__init__(**kwargs)
         self.liste_notes = list()
         self.liste_notes_view = ListeView([], False, self.on_affiche_note)
-        #self.main.add_widget(self.liste_notes_view)
         #self.consultation.add_widget(self.liste_notes_view)
         
     def sauvegarde_texte(self):
+        if not self.textinput.text:
+            return
         note_tuple = (datetime.datetime.now().strftime('%Hh%Mm%Ss'), self.textinput.text)
         self.liste_notes.append(note_tuple)
         try:
             self.consultation.add_widget(self.liste_notes_view)
         except:
             pass
-            #print("déjà ajouté")
-        #self.liste_notes_view.data = []
         self.liste_notes_view.setDataDict([{'text': tup[0], 'elem': tup}
                                      for tup in self.liste_notes])
         self.liste_notes_view.clear_selection()
@@ -154,9 +153,8 @@ class EcranEleve(Screen):
 class DefaultTab(Screen):
     pass
 
-class Formation(Screen):
+class PanneauGroupe(BoxLayout):
     colonne_eleves = ObjectProperty(None)
-    colonne_groupes = ObjectProperty(None)
     scm = ObjectProperty(None)
 
     def on_choix_eleve(self, liste_nom_eleve, liste_eleve):
@@ -164,16 +162,33 @@ class Formation(Screen):
             return
         self.scm.current = liste_eleve[0].__str__()
 
-    def on_choix_groupe(self, liste_nom_groupe, empty):
-        for nom_groupe in liste_nom_groupe:
-            self.liste_choix_eleves.setDataDict([
-                                     {'text': eleve.__str__(), 'elem': eleve}
-                                     for eleve in
-                                         sorted(
-                                             self.dict_eleves[nom_groupe], 
-                                             key=lambda eleve: eleve.__str__()
-                                         )
-                                     ])
+    def __init__(self, liste_eleves, **kwargs):
+        super(PanneauGroupe, self).__init__(**kwargs)
+        self.liste_choix_eleves = ListeView(
+                                 [{'text': eleve.__str__(), 'elem': eleve}
+                                 for eleve in liste_eleves],
+                                 False, self.on_choix_eleve)
+        self.colonne_eleves.add_widget(self.liste_choix_eleves)
+
+        self.scm.add_widget(DefaultTab(name='default'))
+        # Maintenant il faut creer les panneaux pour chaque élève
+        for eleve in liste_eleves:
+            self.scm.add_widget(EcranEleve(name=eleve.__str__()))
+        self.scm.current = 'default'
+
+class PanneauFinFormation(BoxLayout):
+    pass
+
+class Formation(Screen):
+    nb = ObjectProperty(None)
+
+    def change_data_set(self, new_dic):
+        liste_groupe = [{'text': nom_groupe}
+                        for nom_groupe in new_dic.keys()]
+        self.liste_choix_groupe.setDataDict(liste_groupe)
+        # Il faut créer les nouvelles pages pour les nouveaux arrivants
+        # on utilise pour cela les set et moyen d'exclusion qu'ils offrent!!!
+        # TODO: trouver comment mettre à plat un dictionnaire sous forme de liste
 
     def __init__(self, retour_accueil, titre, parent_scm, dict_eleves_par_groupe, liste_presents, **kwargs):
         self.titre = titre
@@ -181,20 +196,13 @@ class Formation(Screen):
         self.parent_scm = parent_scm
         self.dict_eleves = dict_eleves_par_groupe
         super(Formation, self).__init__(**kwargs)
-        liste_groupe = [{'text': nom_groupe}
-                        for nom_groupe in self.dict_eleves.keys()]
-        self.liste_choix_groupe = ListeView(
-                                       liste_groupe,
-                                       False, self.on_choix_groupe)
-        self.colonne_groupes.add_widget(self.liste_choix_groupe)
-        self.liste_choix_eleves = ListeView(
-                                 [{'text': eleve.__str__(), 'elem': eleve}
-                                 for eleve in []],
-                                 False, self.on_choix_eleve)
-        self.colonne_eleves.add_widget(self.liste_choix_eleves)
 
-        self.scm.add_widget(DefaultTab(name='default'))
-        # Maintenant il faut creer les panneaux pour chaque élève
-        for eleve in liste_presents:
-            self.scm.add_widget(EcranEleve(name=eleve.__str__()))
-        self.scm.current = 'default'
+        for nom_groupe in self.dict_eleves.keys():
+            tb = TabbedPanelItem(text=nom_groupe)
+            panneaugr = PanneauGroupe(self.dict_eleves[nom_groupe])
+            tb.add_widget(panneaugr)
+            self.nb.add_widget(tb)
+
+        fin = TabbedPanelItem(text='Terminer')
+        fin.add_widget(PanneauFinFormation())
+        self.nb.add_widget(fin)

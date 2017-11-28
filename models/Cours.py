@@ -61,20 +61,6 @@ class Categorie (BaseModel):
     def __str__(self):
         return self.nom
 
-# Un test c'est:
-# - un nom
-# - OneToOneField vers catégorie
-# - une description
-class Test (BaseModel):
-    nom = peewee.CharField(max_length=32, null=False)
-    categorie = peewee.CharField(max_length=32, null=False)
-    description = peewee.TextField(null=False, verbose_name="Détail du test à passer par l'évalué")
-    cours = peewee.ForeignKeyField(Cours, related_name="tests")
-    class Meta:
-        order_by = ('categorie',)
-    def __str__(self):
-        return self.nom
-
 # Un module de formation c'est:
 # - un nom
 # - une description
@@ -83,8 +69,25 @@ class ModuleFormation (BaseModel):
     categorie = peewee.CharField(max_length=32, null=True)
     description = peewee.TextField(null=False, verbose_name="Détail du module de formation à réaliser")
     cours = peewee.ForeignKeyField(Cours, related_name="modules")
+    requis = ['nom', 'categorie', 'description', 'cours']
+    affichage = ['nom', 'cours', 'categorie']
     class Meta:
-        order_by = ('categorie',)
+        order_by = ('cours', 'categorie',)
+    def __str__(self):
+        return self.nom
+
+# Un test c'est:
+# - un nom
+# - OneToOneField vers catégorie
+# - une description
+class Test (BaseModel):
+    nom = peewee.CharField(max_length=32, null=False)
+    description = peewee.TextField(null=False, verbose_name="Détail du test à passer par l'évalué")
+    #cours = peewee.ForeignKeyField(Cours, related_name="tests")
+    module = peewee.ForeignKeyField(ModuleFormation, related_name="tests")
+    requis = ['nom', 'description', 'module']
+    class Meta:
+        order_by = ('module',)
     def __str__(self):
         return self.nom
 
@@ -109,8 +112,10 @@ class Groupe (BaseModel):
 # - une date
 # - un lieu
 # - un nom de formateur
-# - un ManyToManyField vers Eleve
+# - un groupe qui a fait la formation (on créera en base autant de journée de
+#                                      formation qu'il y a eu de groupe)
 # - un ManyToManyField vers Module de Formation
+# - des notes prises pendant le cours
 class JourneeFormation (BaseModel):
      # La date de la journée doit être renseignée automatiquement à la création
      # Par contre, on se fiche de mettre à jour la date quand on modifie
@@ -122,8 +127,9 @@ class JourneeFormation (BaseModel):
                                    null=True,
                                    related_name="formateur_sur",
                                    verbose_name="Nom du formateur présent pour la journée (un seul nom autorisé)",)
-     groupe_participants = ManyToManyField(Groupe, related_name="a_participe_le")
+     groupe_participants = peewee.ForeignKeyField(Groupe, related_name="a_participe_le")
      modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
+     notes = peewee.TextField(verbose_name="Notes prises lors du cours")
      class Meta:
         order_by = ('date',)
      def __str__(self):
@@ -144,10 +150,10 @@ class Resultat (BaseModel):
     statut = peewee.CharField (max_length=2, choices=TEST_RESULTAT_CHOIX, default=NONFAIT)
     eleve = peewee.ForeignKeyField(Eleve)
     test  = peewee.ForeignKeyField(Test)
-    cours = peewee.ForeignKeyField(Cours, null=True)
+    #cours = peewee.ForeignKeyField(Cours, null=True)
     commentaires = peewee.TextField(null=True, verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce test")
     class Meta:
-        indexes = ( (('eleve', 'test'), True), (('eleve', 'cours'), True),)
+        indexes = ( (('eleve', 'test'), True), )
     def __str__(self):
         return self.test.nom
 
@@ -173,8 +179,6 @@ def _create_tables():
         Cours.groupes_attaches.get_through_model(), 
         Groupe.cours.get_through_model(), 
         JourneeFormation, 
-        JourneeFormation.groupe_participants.get_through_model(),
-        Groupe.a_participe_le.get_through_model(),
         JourneeFormation.modules_vus.get_through_model(),
         ModuleFormation, 
         ModuleFormation.etudie_le.get_through_model(),

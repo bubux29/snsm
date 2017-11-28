@@ -2,8 +2,8 @@
 
 <Notebook@TabbedPanel>:
     cols: 1
-    spacing: 10
-    padding: 20
+    spacing: 5
+    padding: 5
     do_default_tab: False
     #tab_width: self.width
 
@@ -56,7 +56,9 @@
                 pos_hint: {'right': 0}
                 size_hint: (.4, 1)
                 text: 'Effacer'
-                on_release: textinput.text=''
+                on_release:
+                    textinput.text=''
+                    root.liste_notes_view.clear_selection()
             Widget:
             Button:
                 pos_hint: {'left': 0}
@@ -95,20 +97,28 @@
             on_release: video.play_video(False)
             PanneauNote:
 
+<PanneauFinFormation>:
+    BoxLayout:
+        orientation: 'horizontal'
+        BoxLayout:
+            id: colonne_formateur
+            size_hint: (.2,1)
+            pos_hint: {'right': 0}
+            orientation: 'vertical'
+            Label:
+                text: 'Nom du formateur du jour'
+
 <Formation>:
-    colonne_eleves: colonne_eleves
-    colonne_groupes: colonne_groupes
+    nb: nb
+    Notebook:
+        id: nb
+
+<PanneauGroupe>:
     scm: scm
+    colonne_eleves: colonne_eleves
     BoxLayout:
         id: bl
         orientation: 'horizontal'
-        BoxLayout:
-            id: colonne_groupes
-            orientation: 'vertical'
-            size_hint: (.2,1)
-            Label:
-                size_hint: (1,.1)
-                text: 'Groupes'
         BoxLayout:
             id: colonne_eleves
             orientation: 'vertical'

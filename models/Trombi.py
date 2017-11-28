@@ -28,6 +28,8 @@ class Eleve(peewee.Model):
     photo_path = peewee.CharField(max_length=256, verbose_name="Photo")
     nom_cfi = peewee.CharField(max_length=64, null=True, verbose_name="CFI d'origine (seulement si formateur ou ancien)")
     requis = ['nom', 'prenom', 'date_naissance', 'telephone', 'courriel', 'statut', 'photo_path', 'nom_cfi']
+    affichage = ['nom', 'prenom', 'courriel', 'statut']
+    image = ['photo_path']
     class Meta:
         database = database
     def __str__(self):

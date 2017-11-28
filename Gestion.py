@@ -3,6 +3,7 @@
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
@@ -23,6 +24,7 @@ import formation_db
 
 import inspect
 from models import Cours, Trombi, dbHelper
+from models.dbDefs import FieldType
 
 def err(text):
     log.err("GESTION", text)
@@ -34,17 +36,27 @@ Gestion = Builder.load_file('Gestion.kv')
 class GestionTextInput(TextInput):
     pass
 
-def gti():
+def gti(nom_champ, class_obj):
     return GestionTextInput()
-def dp():
+def dp(nom_champ, class_obj):
     return DatePicker(multiline='False', size_hint=(None, .1), pHint=(0.4, 0.4))
-def cb():
+def cb(nom_champ, class_obj):
     return CheckBox()
+def dc(nom_champ, class_obj):
+    chbtn = Button(text=nom_champ)
+    dropdown = DropDown()
+    for u in formation_db.liste_all_from(class_obj.rel_model):
+        btn = Button(text=u.__str__(), size_hint_y=None, height=40)
+        dropdown.add_widget(btn)
+    chbtn.bind(on_release=dropdown.open)
+    return chbtn
+
 widgetDict=dict(
 E_CharField=gti,
 E_TextField=gti,
 E_DateField=dp,
-E_BoolField=cb
+E_BoolField=cb,
+E_LinkField=dc,
 )
 
 def generateForm(classe):
@@ -56,8 +68,15 @@ def generateForm(classe):
     for name in classe.requis:
         box.add_widget(Label(text=fdict[name].verbose_name))
         ty=dbHelper.whatType(type(fdict[name]))
-        box.add_widget(widgetDict[ty[0]]())
+        box.add_widget(widgetDict[ty[0]](name, fdict[name]))
     box.add_widget(Widget())
+    return box
+
+def generateGridConsultation(classe):
+    box=GridLayout(cols=len(classe.affichage))
+    # Sur la première ligne on met les champs
+    for name in classe.affichage:
+        box.add_widget(Label(text=name))
     return box
 
 class GestionEleves(Screen):
@@ -168,12 +187,34 @@ class GestionLieux(Screen):
         super(GestionLieux, self).__init__(**kwargs)
         self.parentscm = parentscm
 
+class NouveauModule(Screen):
+    core = ObjectProperty(None)
+    def __init__(self, parentscm, **kwargs):
+        super(NouveauModule, self).__init__(**kwargs)
+        self.parentscm = parentscm
+        self.core.add_widget(generateForm(Cours.ModuleFormation))
+
+class GestionModules(Screen):
+    core = ObjectProperty(None)
+    def __init__(self, parentscm, **kwargs):
+        super(GestionModules, self).__init__(**kwargs)
+        self.parentscm = parentscm
+        self.core.add_widget(generateGridConsultation(Cours.ModuleFormation))
+        self.parentscm.add_widget(NouveauModule(name='NouveauModule', parentscm=parentscm))
+
+class GestionTests(Screen):
+    def __init__(self, parentscm, **kwargs):
+        super(GestionTests, self).__init__(**kwargs)
+        self.parentscm = parentscm
+
 class GestionMenuPrincipal(Screen):
     def __init__(self, parentscm, **kwargs):
         super(GestionMenuPrincipal, self).__init__(**kwargs)
         self.parentscm=parentscm
         self.parentscm.add_widget(GestionEleves(name='GestionEleves', parentscm=parentscm))
         self.parentscm.add_widget(GestionLieux(name='GestionLieux', parentscm=parentscm))
+        self.parentscm.add_widget(GestionModules(name='GestionModules', parentscm=parentscm))
+        self.parentscm.add_widget(GestionTests(name='GestionTests', parentscm=parentscm))
 
 class GestionSCM(ScreenManager):
     def __init__(self, **kwargs):

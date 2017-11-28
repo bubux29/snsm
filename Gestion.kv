@@ -99,6 +99,35 @@
                     root.parentscm.transition.direction='left'
                     root.parentscm.current = 'TousEleves'
 
+<GestionModules>:
+    core: core
+    BoxLayout:
+        id: core
+        orientation: 'vertical'
+        Button:
+            text: 'Nouveau'
+            size_hint: (.1,.1)
+            on_press:
+                root.parentscm.current = 'NouveauModule'
+
+<NouveauModule>:
+    core: core
+    BoxLayout:
+        id: core
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: (.1,.5)
+            Button:
+                text: 'Retour'
+                on_press:
+                    root.parentscm.transition.direction = 'left'
+                    root.parentscm.current = root.precedent
+            Button:
+                text: 'Sauvegarder'
+                on_press:
+                    root.sauvegarder()
+
 <GestionMenuPrincipal>:
     BoxLayout:
         orientation: 'vertical'
@@ -117,3 +146,11 @@
                 text: 'Lieux de Formation'
                 on_press:
                     root.parentscm.current = 'GestionLieux'
+            Button:
+                text: 'Modules de Formation'
+                on_press:
+                    root.parentscm.current = 'GestionModules'
+            Button:
+                text: 'Tests'
+                on_press:
+                    root.parentscm.current = 'GestionTests'
