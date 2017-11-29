@@ -61,10 +61,16 @@ class CoursGroupeExistant(Screen):
         liste_eleves = self.liste_presents + self.liste_anciens
         presents_set = set(liste_eleves)
         self.liste_groupes.append(self.groupe_anciens)
-        for groupe in self.liste_groupes:
+        for groupe in sorted(self.liste_groupes, key=lambda x: x.nom):
             eleves_set = set(groupe.participants)
-            self.dict_eleve[groupe.nom] = list(eleves_set & presents_set)
-        self.parent_scm.add_widget(
+            eleves_pour_ce_groupe = list(eleves_set & presents_set)
+            # On ajoute le groupe uniquement s'il contient des élèves présents
+            if eleves_pour_ce_groupe:
+                self.dict_eleve[groupe.nom] = eleves_pour_ce_groupe
+
+        # Si la formation n'a pas déjà débuté
+        if not self.formation_wid:
+            self.parent_scm.add_widget(
                             Formation(name='fo',
                                       retour_accueil=self.retour_accueil,
                                       titre=self.titre,
@@ -72,6 +78,8 @@ class CoursGroupeExistant(Screen):
                                       dict_eleves_par_groupe=self.dict_eleve,
                                       liste_presents=liste_eleves
                             ))
+        else:
+            self.formation_wid.change_data_set(self.dict_eleve)
         self.parent.current = 'fo'
 
     def on_choix_presents(self, liste_noms, liste_eleves):
@@ -108,6 +116,7 @@ class CoursGroupeExistant(Screen):
         self.parent_scm = parent_scm
         self.liste_presents = list()
         self.liste_anciens = list()
+        self.formation_wid = None
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
         self.related_groupes = formation_db.liste_groupes_by_cours([titre])
