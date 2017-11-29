@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+
+from models.Cours import *
+
+#database.drop_table(ModuleFormation)
+#database.create_table(ModuleFormation,
+                    #ModuleFormation.etudie_le.get_through_model())
+
+def ajout_mf(nom, nom_cours, categorie, description):
+    print('Ajout', nom, 'dans', nom_cours, ' : ', end='')
+    try:
+        cc=Cours.get(Cours.nom==nom_cours)
+        mf=ModuleFormation(nom=nom, cours=cc, categorie=categorie, description=description)
+        mf.save()
+        print('done')
+    except Exception as e:
+        print('impossible (', e, ')')
+
+ajout_mf('100m', 'Piscine', 'à voir', 'Faire 100m et sortir de l\'eau')
+ajout_mf('200m', 'Piscine', 'à voir', 'Faire 200m et sortir de l\'eau')

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+from models.Cours import *
+
+database.drop_table(Test)
+database.create_table(Test)
+
+def ajout_test(nom, nom_mf, description):
+    print('Ajout', nom, 'dans le module', nom_mf, ' : ', end='')
+    try:
+        mf=ModuleFormation.get(ModuleFormation.nom==nom_mf)
+        test=Test(nom=nom, module=mf, description=description)
+        test.save()
+        print('done')
+    except Exception as e:
+        print('impossible (', e, ')')
+
+ajout_test('25m 1', '100m', 'Faire 25m en apnée')
+ajout_test('25m 2', '100m', 'Faire 25m sur le dos')
+ajout_test('50m', '100m', 'Sortir de l\'eau')
+
+ajout_test('200m', '200m', 'Nager dans la longueur du bassin')
