@@ -16,7 +16,6 @@ database.create_tables([
     JourneeFormation.groupe_participants.get_through_model(),
     Groupe.a_participe_le.get_through_model(),
     JourneeFormation.modules_vus.get_through_model(),
-    ModuleFormation,
     ModuleFormation.etudie_le.get_through_model(),
     Resultat],
     safe=True)

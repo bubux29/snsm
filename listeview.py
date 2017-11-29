@@ -7,6 +7,7 @@ from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import RecycleLayoutManagerBehavior, LayoutSelectionBehavior, RecycleDataViewBehavior
@@ -174,6 +175,22 @@ class ListeView(RecycleView,RecycleLayoutManagerBehavior):
 
     def clear_selection(self):
         self.sl.clear_selected_views()
+
+class ListeViewWithSearch(BoxLayout):
+    def tri_par_text(self, textinput, text):
+        dic = sorted([{'text': elem['text'], 'elem': elem['elem']}
+                      for elem in self.dic
+                      if text in elem['text'].lower()], key=lambda x: x['text'])
+        self.liste_view.setDataDict(dic)
+
+    def __init__(self, orientation, selections, has_multi, change_callback=None, **kwargs):
+        self.dic = selections
+        self.liste_view = ListeView(selections, has_multi, change_callback, **kwargs)
+        ti = TextInput(size_hint=(1,.1), multiline=False)
+        ti.bind(text=self.tri_par_text)
+        super(ListeViewWithSearch, self).__init__(**kwargs)
+        self.add_widget(ti)
+        self.add_widget(self.liste_view)
 
 class TestApp(App):
     def build(self):

@@ -8,6 +8,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.tabbedpanel import TabbedPanelItem
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
@@ -116,6 +117,16 @@ class PanneauVideo(BoxLayout):
         else:
             self.start_enreg()
 
+class PanneauEvaluation(ScrollView):
+    core = ObjectProperty(None)
+    def __init__(self, liste_modules, nom_eleve, **kwargs):
+        super(PanneauEvaluation, self).__init__(**kwargs)
+        self.core.add_widget(Label(text='l\'artiste ' + nom_eleve))
+        for module in liste_modules:
+            self.core.add_widget(Label(text='Test du ' + module.nom))
+            for test in module.tests:
+                self.core.add_widget(Label(text='Point ' + test.nom))
+
 class PanneauNote(BoxLayout):
     textinput = ObjectProperty(None)
     consultation = ObjectProperty(None)
@@ -147,8 +158,12 @@ class PanneauNote(BoxLayout):
 
 class EcranEleve(Screen):
     notebook = ObjectProperty(None)
-    def __init__(self, **kwargs):
+    panneaueval = ObjectProperty(None)
+    def __init__(self, nom_cours, **kwargs):
         super(EcranEleve, self).__init__(**kwargs)
+        cours = formation_db.trouver_cours(nom_cours)
+        liste_modules = cours.modules
+        self.panneaueval.add_widget(PanneauEvaluation(liste_modules=liste_modules, nom_eleve=self.name, size=self.size))
 
 class DefaultTab(Screen):
     pass
@@ -162,8 +177,9 @@ class PanneauGroupe(BoxLayout):
             return
         self.scm.current = liste_eleve[0].__str__()
 
-    def __init__(self, liste_eleves, **kwargs):
+    def __init__(self, liste_eleves, nom_cours, **kwargs):
         super(PanneauGroupe, self).__init__(**kwargs)
+        self.nom_cours = nom_cours
         self.liste_choix_eleves = ListeView(
                                  [{'text': eleve.__str__(), 'elem': eleve}
                                  for eleve in liste_eleves],
@@ -173,7 +189,7 @@ class PanneauGroupe(BoxLayout):
         self.scm.add_widget(DefaultTab(name='default'))
         # Maintenant il faut creer les panneaux pour chaque élève
         for eleve in liste_eleves:
-            self.scm.add_widget(EcranEleve(name=eleve.__str__()))
+            self.scm.add_widget(EcranEleve(name=eleve.__str__(), nom_cours=nom_cours))
         self.scm.current = 'default'
 
 class PanneauFinFormation(BoxLayout):
@@ -199,7 +215,7 @@ class Formation(Screen):
 
         for nom_groupe in self.dict_eleves.keys():
             tb = TabbedPanelItem(text=nom_groupe)
-            panneaugr = PanneauGroupe(self.dict_eleves[nom_groupe])
+            panneaugr = PanneauGroupe(self.dict_eleves[nom_groupe], nom_cours=titre)
             tb.add_widget(panneaugr)
             self.nb.add_widget(tb)
 

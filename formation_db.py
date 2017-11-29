@@ -35,6 +35,9 @@ def liste_lieux_all():
 def liste_groupes_all():
     return Groupe.select()
 
+def liste_all_from(classe):
+    return classe.select()
+
 
 #Through.select(Through,Groupe,Cours).join(Cours).switch(Through).join(Groupe).where(Cours.nom << nom_cours):
 def liste_groupes_by_cours(noms_cours):
