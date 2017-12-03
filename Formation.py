@@ -10,8 +10,10 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.tabbedpanel import TabbedPanelItem
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
+from kivy.uix.checkbox import CheckBox
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
+from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
@@ -26,6 +28,7 @@ import formation_db
 from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
+from models.dbDefs import FieldType
 
 from videorecorder import VideoRecorder
 
@@ -117,15 +120,89 @@ class PanneauVideo(BoxLayout):
         else:
             self.start_enreg()
 
-class PanneauEvaluation(ScrollView):
+class LigneModule(BoxLayout):
+    desc_module = ObjectProperty(None)
+    succes = ObjectProperty(None)
+    echec  = ObjectProperty(None)
+    def __init__(self, nom, **kwargs):
+        self.nom = nom
+        super(LigneModule, self).__init__(**kwargs)
+
+class ResultatTest(BoxLayout):
+    orientation = 'horizontal'
+    def __init__(self, test_class, **kwargs):
+        super(ResultatTest, self).__init__(**kwargs)
+        bx=None
+        if(test_class.mode == FieldType.E_CharField.value):
+            bx=TextInput(multiline=False, height=10, width=30)
+            self.value = self._textToText
+            self.ti = bx.text
+            self.add_widget(bx)
+        elif(test_class.mode == FieldType.E_BoolField.value):
+            bx=CheckBox()
+            self.value = self._checkBoxToText
+            self.cb = bx.active
+            self.add_widget(bx)
+
+    def _textToText(self):
+       if(self.ti == None): return ''
+       return self.ti
+
+    def _checkBoxToText(self):
+       # Cas bizarre
+       if(self.cb == None): return ''
+       if(self.cb == True):
+           return 'True'
+       else:
+           return 'False'
+
+
+class LigneTest(BoxLayout):
+    label_module = ObjectProperty(None)
+    def __init__(self, test_class, **kwargs):
+        self.nom_module = test_class.nom
+        super(LigneTest, self).__init__(**kwargs)
+        self.result = ResultatTest(test_class)#, pos_hint={'left': 1})
+        self.add_widget(self.result)
+        
+class LinedBox(BoxLayout):
+    pass
+
+class NoteEvaluation(BoxLayout):
+    pass
+
+class PanneauEvaluation(BoxLayout):
     core = ObjectProperty(None)
-    def __init__(self, liste_modules, nom_eleve, **kwargs):
+    photo = ObjectProperty(None)
+    bandeau = ObjectProperty(None)
+    nom_eluve = ObjectProperty(None)
+    nom_eleve = ObjectProperty(None)
+    liste_modules = ObjectProperty(None)
+    #def __init__(self, liste_modules, nom_eleve, **kwargs):
+    def __init__(self, **kwargs):
         super(PanneauEvaluation, self).__init__(**kwargs)
-        self.core.add_widget(Label(text='l\'artiste ' + nom_eleve))
+        self.listes_test=list()
+
+    def creer_env(self, liste_modules, nom_eleve):
+        self.core.bind(minimum_height=self.core.setter('height'))
+        print('Mon eluve est:', self.nom_eluve)
+        core = self.core
+        self.nom_eleve.text = nom_eleve
+        # Il nous faut simplement le chemin vers la photo...
+        # Ca nous fait une petite requête en plus!!!
+        self.eleve = formation_db.trouver_eleve(nom_eleve)
+        self.photo.source = self.eleve.photo_path
+        self.liste_modules = liste_modules[:]
         for module in liste_modules:
-            self.core.add_widget(Label(text='Test du ' + module.nom))
+            mod = LigneModule(nom=module.nom, height=20)
+            core.add_widget(mod)
+            bx=LinedBox(orientation='vertical', size_hint_y=None, spacing=10, height=40*len(module.tests))
+            core.add_widget(bx)
             for test in module.tests:
-                self.core.add_widget(Label(text='Point ' + test.nom))
+                test=LigneTest(test, height=20)
+                self.listes_test.append(test)
+                bx.add_widget(test)
+            bx=LinedBox(orientation='vertical', size_hint_y=None, height=5)
 
 class PanneauNote(BoxLayout):
     textinput = ObjectProperty(None)
@@ -160,10 +237,17 @@ class EcranEleve(Screen):
     notebook = ObjectProperty(None)
     panneaueval = ObjectProperty(None)
     def __init__(self, nom_cours, **kwargs):
-        super(EcranEleve, self).__init__(**kwargs)
         cours = formation_db.trouver_cours(nom_cours)
-        liste_modules = cours.modules
-        self.panneaueval.add_widget(PanneauEvaluation(liste_modules=liste_modules, nom_eleve=self.name, size=self.size))
+        self.liste_modules = cours.modules
+        super(EcranEleve, self).__init__(**kwargs)
+        self.panneaueval.creer_env(self.liste_modules, self.name)
+        #panpan=PanneauEvaluation(liste_modules=self.liste_modules, nom_eleve=self.name, size_hint=(1,None))
+        #panpan.bind(minimum_height=panpan.setter('height'))
+        #rol = ScrollView(size_hint=(1, None), size=(self.width, self.height))
+        #rol.add_widget(panpan)
+        #self.panneaueval.add_widget(rol)
+        #self.panneaueval.add_widget(panpan)
+        #self.panneaueval.add_widget(PanneauEvaluation(liste_modules=liste_modules, nom_eleve=self.name, size_hint=(1,None), size=(self.width, self.height)))
 
 class DefaultTab(Screen):
     pass

@@ -11,12 +11,30 @@
     Image:
         source: 'static/img/logo_snsm_240x240.png'
 
+<LinedBox@BoxLayout>:
+    canvas:
+        Line:
+            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+
 <MenuBouton@Button>:
     size_hint: (.5,1)
     pos_hint: { 'center_x': .5 }
     canvas:
         Line:
             rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+
+<NoteEvaluation>:
+    notes: notes
+    BoxLayout:
+        height: 50
+        size_hint_y: None
+        orientation: 'vertical'
+        Label:
+            text: 'Notes'
+            pos_hint:{'right': 1}
+        TextInput:
+            id: notes
+            height: 40
 
 <PanneauVideo>:
     camera: camera
@@ -40,12 +58,68 @@
         size_hint: (.3, 1)
         orientation: 'vertical'
 
+<LigneTest>:
+    label_module: nom
+    BoxLayout:
+        orientation: 'horizontal'
+        Label:
+            id: nom
+            size_hint_x: .7
+            pos_hint: {'right': 1}
+            text: 'Test: ' + root.nom_module
+        
+<LigneModule>:
+    desc_module: desc_module
+    orientation: 'horizontal'
+    succes: succes
+    echec: echec
+    size_hint_y: None
+    BoxLayout:
+        canvas:
+            Line:
+                rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+        orientation: 'horizontal'
+        height: 30
+        size_hint_y: None
+        Label:
+            id: desc_module
+            #size_hint_y: None
+            #pos_hint: {'top': .5}
+            text: 'Test de ' + root.nom + ':'
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_x: .2
+            ToggleButton:
+                id: succes
+                size_hint_x: .1
+                text: 'I'
+                group: root.nom
+            ToggleButton:
+                id: echec
+                size_hint_x: .1
+                text: 'O'
+                group: root.nom
+
 <PanneauEvaluation>
     core: core
-    size_hint: (1, None)
+    photo: photo
+    nom_eleve: nom_eleve
+    bandeau: bandeau
     BoxLayout:
         orientation: 'vertical'
         id: core
+        #size_hint_y: None
+        spacing: 20
+        BoxLayout:
+            id: bandeau
+            size_hint_y: None
+            height: 90
+            orientation: 'horizontal'
+            pos_hint: {'top': 1}
+            Image:
+                id: photo
+            Label:
+                id: nom_eleve
 
 <PanneauNote>:
     textinput: textinput
@@ -81,13 +155,24 @@
 <EcranEleve>:
     notebook: nb
     panneaueval: eval
+    #panneaueval: panel
     video: video
     Notebook:
         id: nb
         TabbedPanelItem:
-            id: eval
             text: 'Evaluation'
             on_release: video.play_video(False)
+            id: panel
+            ScrollView:
+                size: root.size
+                pos: root.pos
+                PanneauEvaluation:
+                    id: eval
+                    height: 450
+                    pos_hint: {'top': 1}
+                    size_hint_y: None
+                    nom_eluve: root.name
+                    liste_modules: root.liste_modules
         TabbedPanelItem:
             id: cours
             text: 'Cours'
