@@ -20,6 +20,10 @@ def trouver_cours(name):
     cours = Cours.get(Cours.nom == name)
     return cours
 
+def trouver_eleve(nom):
+    eleve = Eleve.get(Eleve.prenom + ' ' + Eleve.nom == nom)
+    return eleve
+
 def _liste_by(cls, rule):
     return cls.select().where(rule)
 
