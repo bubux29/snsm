@@ -2,9 +2,9 @@
 
 from models.Cours import *
 
-#database.drop_table(ModuleFormation)
-#database.create_table(ModuleFormation,
-                    #ModuleFormation.etudie_le.get_through_model())
+database.drop_table(ModuleFormation)
+database.create_table(ModuleFormation,
+                    ModuleFormation.etudie_le.get_through_model())
 
 def ajout_mf(nom, nom_cours, categorie, description):
     print('Ajout', nom, 'dans', nom_cours, ' : ', end='')
@@ -17,4 +17,4 @@ def ajout_mf(nom, nom_cours, categorie, description):
         print('impossible (', e, ')')
 
 ajout_mf('100m', 'Piscine', 'à voir', 'Faire 100m et sortir de l\'eau')
-ajout_mf('200m', 'Piscine', 'à voir', 'Faire 200m et sortir de l\'eau')
+ajout_mf('250m', 'Piscine', 'à voir', 'Faire 200m et sortir de l\'eau')

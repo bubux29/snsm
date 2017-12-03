@@ -2,6 +2,7 @@
 import peewee
 from playhouse.fields import ManyToManyField
 from models.Trombi import Eleve
+from models.dbDefs import FieldType, FieldsDescription
 import datetime
 
 GROUPE_ANCIENS='Anciens'
@@ -81,6 +82,7 @@ class ModuleFormation (BaseModel):
 # - OneToOneField vers catégorie
 # - une description
 class Test (BaseModel):
+    mode = peewee.IntegerField (choices=FieldsDescription, default=FieldType.E_CharField)
     nom = peewee.CharField(max_length=32, null=False)
     description = peewee.TextField(null=False, verbose_name="Détail du test à passer par l'évalué")
     #cours = peewee.ForeignKeyField(Cours, related_name="tests")

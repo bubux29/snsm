@@ -7,4 +7,11 @@ class FieldType(Enum):
     E_BoolField = 4
     E_LinkField  = 5
 
+FieldsDescription = (
+  (FieldType.E_CharField, 'TextEntry'),
+  (FieldType.E_TextField, 'TextArea'),
+  (FieldType.E_DateField, 'Date'),
+  (FieldType.E_BoolField, 'Check'),
+  (FieldType.E_LinkField, 'Foreign'),
+)
 
