@@ -6,6 +6,7 @@ from kivy.lang import Builder
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.label import Label
+from kivy.uix.button import Button
 from kivy.properties import BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
@@ -154,13 +155,10 @@ class ListeView(RecycleView,RecycleLayoutManagerBehavior):
         self.apply_callback = change_callback
 
     def refresh_from_data(self, *largs, **kwargs):
-        #print("on me refraichit?!")
         super(RecycleView, self).refresh_from_data(*largs, **kwargs)
         self.data_has_changed=True
-        #print("Done")
 
     def refresh_views(self, *largs):
-        #print("on me refraichit la vue?!")
         super(RecycleView, self).refresh_views(*largs)
         self.sl.reselect_views()
         if self.data_has_changed == True:
