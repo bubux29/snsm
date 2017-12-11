@@ -2,13 +2,21 @@
 import sys
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
-from models.Cours import *
+from models.Cours import _create_tables
+from models.Cours import Groupe
 from models.Trombi import *
 from formation_db import *
-cours=liste_cours_all()
-eleves=liste_eleves_all()
 from datetime import *
 import formation_db
+
+print("Effaçage")
+#database.drop_table(Groupe)
+print("Clean")
+_create_tables()
+
+
+cours=liste_cours_all()
+eleves=liste_eleves_all()
 
 def create_groupe(nom_groupe, noms_cours):
     try:
@@ -33,7 +41,7 @@ if not ancien.participants:
 
 try:
     Groupe.get(Groupe.nom=='Groupe3').participants.add(Eleve.get(Eleve.nom=='Bové'))
-    Groupe.get(Groupe.nom=='Groupe1').participants.add(Eleve.select().where(Eleve.nom != 'Bové', Eleve.statut=='Stagiaire'))
+    Groupe.get(Groupe.nom=='Groupe1').participants.add(Eleve.select().where(Eleve.nom != 'Du Rest', Eleve.statut=='Stagiaire'))
 except:
     print('Les groupes ont déjà été rempli')
 

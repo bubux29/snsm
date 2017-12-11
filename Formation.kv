@@ -1,4 +1,6 @@
 #: import TabbedPanel kivy.uix.tabbedpanel
+#: import DropDownMenu dropdownmenu
+#: import liste_formateurs formation_db
 
 <Notebook@TabbedPanel>:
     cols: 1
@@ -168,7 +170,7 @@
                 pos: root.pos
                 PanneauEvaluation:
                     id: eval
-                    height: 450
+                    height: 500
                     pos_hint: {'top': 1}
                     size_hint_y: None
                     nom_eluve: root.name
@@ -191,15 +193,24 @@
             PanneauNote:
 
 <PanneauFinFormation>:
+    ligne_formateur: ligne_formateur
+    terminerbutton: terminer
     BoxLayout:
-        orientation: 'horizontal'
+        orientation: 'vertical'
         BoxLayout:
-            id: colonne_formateur
-            size_hint: (.2,1)
-            pos_hint: {'right': 0}
-            orientation: 'vertical'
+            id: ligne_formateur
+            height: 20
+            size_hint: (1,None)
+            orientation: 'horizontal'
             Label:
-                text: 'Nom du formateur du jour'
+                size_hint: (.2,None)
+                pos_hint: {'right': 0}
+                text: 'Nom du formateur du jour:'
+        Button:
+            id: terminer
+            size_hint: (.2,None)
+            height: 30
+            text: 'Enregistrer'
 
 <Formation>:
     nb: nb

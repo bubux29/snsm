@@ -179,6 +179,23 @@ class GestionConsultationEleves(Screen):
             self.scm.add_widget(PanneauConsultationEleve(name=eleve.__str__(), eleve=eleve))
         self.principal.add_widget(self.scm)
 
+class GestionEvaluationGroupes(Screen):
+    def __init__(self, parentscm, nom_cours, **kwargs):
+        liste_groupes = formation_db.trouver_groupes_par_cours(nom_cours)
+        liste_modules = formation_db.trouver_modules_par_cours(nom_cours)
+        # Construction du dictionnaire à afficher:
+        liste_bilans = list()
+        for groupe in liste_groupes:
+            for eleve in groupe.participants:
+                dic = dict()
+                dic['nom'] = eleve.__str__()
+                liste_bilans = formation_db.trouver_bilans_par_eleve(eleve, liste_modules)
+                for bilan in liste_bilans:
+                    module = bilan.module
+                    dic[module.nom] = bilan.__str__()
+                liste_bilans.append(dic)
+        self.add_widget(TableView(liste_bilans, '400dp'))
+
 class GestionCours(Screen):
     pass
 

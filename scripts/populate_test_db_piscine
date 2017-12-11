@@ -16,8 +16,8 @@ def ajout_test(nom, nom_mf, description, mode):
     except Exception as e:
         print('impossible (', e, ')')
 
-ajout_test('Apnée 1', '100m', 'Faire une apnée', FieldType.E_BoolField.value)
-ajout_test('Apnée 2', '100m', 'Faire une apnée', FieldType.E_BoolField.value)
+ajout_test('Apnée 1', '100m', 'Faire une apnée', FieldType.E_TestResField.value)
+ajout_test('Apnée 2', '100m', 'Faire une apnée', FieldType.E_TestResField.value)
 ajout_test('Temps 100m', '100m', 'Faire 100m', FieldType.E_CharField.value)
 
 ajout_test('Temps 200m', '250m', 'Nager', FieldType.E_CharField.value)

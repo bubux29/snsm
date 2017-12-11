@@ -242,6 +242,9 @@
             Button:
                 text: "Consulter les évaluations"
                 id: consulter_evaluation
+                on_press:
+                    root.manager.transition.direction = 'left'
+                    root.manager.current = 'ce'
             Button:
                 text: "Consulter les fiches de cours"
                 id: consulter_fiches

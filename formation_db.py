@@ -24,6 +24,10 @@ def trouver_eleve(nom):
     eleve = Eleve.get(Eleve.prenom + ' ' + Eleve.nom == nom)
     return eleve
 
+def trouver_formateurs():
+    return list(Eleve.select().where(Eleve.statut == 'Formateur'))
+liste_formateurs = trouver_formateurs()
+
 def _liste_by(cls, rule):
     return cls.select().where(rule)
 
@@ -39,16 +43,33 @@ def liste_lieux_all():
 def liste_groupes_all():
     return Groupe.select()
 
+def liste_tests_all():
+    return liste_all_from(Test)
+
+def liste_modules_all():
+    return liste_all_from(ModuleFormation)
+
 def liste_all_from(classe):
     return classe.select()
 
+def trouver_resultat_test_par_eleve(test, eleve):
+    ##return list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))[0]
+    return Resultat.get(Resultat.eleve == eleve and Resultat.test == test)
+
+def trouver_bilan_module_par_eleve(module, eleve):
+    return BilanModule.get(BilanModule.eleve == eleve and BilanModule.module == module)
+
+def trouver_modules_par_cours(cours):
+    return list(ModuleFormation.select().where(ModuleFormation.cours == cours))
+
+def trouver_bilans_par_eleve(eleve, modules):
+    return list(BilanModule.select().where(BilanModule.module << modules and BilanModule.eleve == eleve))
 
 #Through.select(Through,Groupe,Cours).join(Cours).switch(Through).join(Groupe).where(Cours.nom << nom_cours):
-def liste_groupes_by_cours(noms_cours):
+def trouver_groupes_par_cours(noms_cours):
     Through=Groupe.cours.get_through_model()
     return list(Groupe.select(Through,Groupe,Cours).join(Through).join(Cours).where(Cours.nom << noms_cours))
-
-    return Groupe.select().where(Groupe.cours << liste_cours)
+    #return Groupe.select().where(Groupe.cours << liste_cours)
 
 def liste_eleves_all():
     return Eleve.select()

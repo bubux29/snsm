@@ -7,9 +7,10 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.tabbedpanel import TabbedPanelItem
+from kivy.uix.tabbedpanel import TabbedPanelItem, TabbedPanelHeader
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
+from kivy.uix.dropdown import DropDown
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
@@ -17,11 +18,11 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
+from kivy.properties import ObjectProperty, BooleanProperty
+
 from kivy.uix.videoplayer import VideoPlayer
 
 import datetime, os, sys
-
-from kivy.properties import ObjectProperty, BooleanProperty
 
 import log
 import formation_db
@@ -29,6 +30,8 @@ from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
 from models.dbDefs import FieldType
+from models.Cours import Resultat, BilanModule
+from dropdownmenu import DropDownMenu
 
 from videorecorder import VideoRecorder
 
@@ -124,17 +127,38 @@ class LigneModule(BoxLayout):
     desc_module = ObjectProperty(None)
     succes = ObjectProperty(None)
     echec  = ObjectProperty(None)
-    def __init__(self, nom, **kwargs):
+    def __init__(self, nom, resultat, eleve, **kwargs):
         self.nom = nom
+        self.eleve = eleve
         super(LigneModule, self).__init__(**kwargs)
+        if resultat.statut == BilanModule.SUCCES:
+            succes.state = 'down'
 
 class ResultatTest(BoxLayout):
     orientation = 'horizontal'
-    def __init__(self, test_class, **kwargs):
+    def __init__(self, test_eleve, test_class, **kwargs):
+        self.test_eleve = test_eleve
         super(ResultatTest, self).__init__(**kwargs)
         bx=None
         if(test_class.mode == FieldType.E_CharField.value):
             bx=TextInput(multiline=False, height=10, width=30)
+            self.value = self._textToText
+            self.ti = bx.text
+            # On récupère le résultat du test (s'il y en a)
+            if test_eleve.resultat:
+                bx.text = test_eleve.resultat
+            self.add_widget(bx)
+        elif(test_class.mode == FieldType.E_TestResField.value):
+            bx = Button(text='Res', height=10)
+            bx.text = test_eleve.statut
+            self.dropdown = DropDown()
+            for u in Resultat.TEST_RESULTAT_CHOIX:
+                btn = Button(text=u[0], size_hint_y=None, height=20)
+                #btn = Button(text=u[0], height=30)
+                btn.bind(on_release=lambda btn: self.dropdown.select(btn.text))
+                self.dropdown.add_widget(btn)
+            self.dropdown.bind(on_select=lambda instance, x: setattr(bx, 'text', x))
+            bx.bind(on_release=self.dropdown.open)
             self.value = self._textToText
             self.ti = bx.text
             self.add_widget(bx)
@@ -156,13 +180,14 @@ class ResultatTest(BoxLayout):
        else:
            return 'False'
 
-
 class LigneTest(BoxLayout):
     label_module = ObjectProperty(None)
-    def __init__(self, test_class, **kwargs):
+    def __init__(self, eleve, test_class, **kwargs):
         self.nom_module = test_class.nom
+        self.eleve = eleve
         super(LigneTest, self).__init__(**kwargs)
-        self.result = ResultatTest(test_class)#, pos_hint={'left': 1})
+        resultat = formation_db.trouver_resultat_test_par_eleve(test_class, eleve)
+        self.result = ResultatTest(resultat, test_class, pos_hint={'left': 1}, size_hint_x=.3)
         self.add_widget(self.result)
         
 class LinedBox(BoxLayout):
@@ -185,7 +210,6 @@ class PanneauEvaluation(BoxLayout):
 
     def creer_env(self, liste_modules, nom_eleve):
         self.core.bind(minimum_height=self.core.setter('height'))
-        print('Mon eluve est:', self.nom_eluve)
         core = self.core
         self.nom_eleve.text = nom_eleve
         # Il nous faut simplement le chemin vers la photo...
@@ -194,15 +218,19 @@ class PanneauEvaluation(BoxLayout):
         self.photo.source = self.eleve.photo_path
         self.liste_modules = liste_modules[:]
         for module in liste_modules:
-            mod = LigneModule(nom=module.nom, height=20)
+            res = formation_db.trouver_bilan_module_par_eleve(module, self.eleve)
+            mod = LigneModule(nom=module.nom, resultat=res, eleve=self.eleve, height=20)
             core.add_widget(mod)
-            bx=LinedBox(orientation='vertical', size_hint_y=None, spacing=10, height=40*len(module.tests))
+            bx=LinedBox(orientation='vertical', size_hint_y=None, spacing=10, height=40*(len(module.tests) + 1))
             core.add_widget(bx)
             for test in module.tests:
-                test=LigneTest(test, height=20)
+                test=LigneTest(self.eleve, test, height=20)
                 self.listes_test.append(test)
                 bx.add_widget(test)
-            bx=LinedBox(orientation='vertical', size_hint_y=None, height=5)
+            bs=BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
+            bs.add_widget(Label(text='Note:', size_hint_x=.1, pos_hint={'right':1}))
+            bs.add_widget(TextInput(height=50))
+            bx.add_widget(bs)
 
 class PanneauNote(BoxLayout):
     textinput = ObjectProperty(None)
@@ -261,9 +289,18 @@ class PanneauGroupe(BoxLayout):
             return
         self.scm.current = liste_eleve[0].__str__()
 
+    def ajoute_nouvel_eleve(self, eleve):
+        self.liste_eleves.append(eleve)
+        
+        self.liste_choix_eleves.setDataDict(
+                                       [{'text': eleve.__str__(), 'elem': eleve}
+                                        for eleve in self.liste_eleves])
+        self.scm.add_widget(EcranEleve(name=eleve.__str__(), nom_cours=self.nom_cours))
+
     def __init__(self, liste_eleves, nom_cours, **kwargs):
         super(PanneauGroupe, self).__init__(**kwargs)
         self.nom_cours = nom_cours
+        self.liste_eleves = liste_eleves
         self.liste_choix_eleves = ListeView(
                                  [{'text': eleve.__str__(), 'elem': eleve}
                                  for eleve in liste_eleves],
@@ -277,7 +314,13 @@ class PanneauGroupe(BoxLayout):
         self.scm.current = 'default'
 
 class PanneauFinFormation(BoxLayout):
-    pass
+    ligne_formateur = ObjectProperty(None)
+    terminerbutton = ObjectProperty(None)
+    def __init__(self, terminaison, **kwargs):
+        super(PanneauFinFormation, self).__init__(**kwargs)
+        drop_list=[f.nom for f in formation_db.trouver_formateurs()]
+        self.ligne_formateur.add_widget(DropDownMenu(text='Formateur', drop_list=drop_list, size_hint_x=.3, size_hint_y=None, height=20))
+        self.terminerbutton.bind(on_release=terminaison)
 
 class Formation(Screen):
     nb = ObjectProperty(None)
@@ -285,24 +328,63 @@ class Formation(Screen):
     def change_data_set(self, new_dic):
         liste_groupe = [{'text': nom_groupe}
                         for nom_groupe in new_dic.keys()]
-        self.liste_choix_groupe.setDataDict(liste_groupe)
-        # Il faut créer les nouvelles pages pour les nouveaux arrivants
-        # on utilise pour cela les set et moyen d'exclusion qu'ils offrent!!!
-        # TODO: trouver comment mettre à plat un dictionnaire sous forme de liste
+        current_groupes = self.dict_panneau_groupe.keys()
+        for groupe in liste_groupe:
+            nom_groupe = groupe['text']
+            print('On gère', nom_groupe)
+            if not new_dic[nom_groupe]:
+                # Si c'est vide
+                continue
+            # Si le groupe n'existe pas, on crée le panneau et le rajoute
+            if not nom_groupe in current_groupes:
+                tb = TabbedPanelItem(text=nom_groupe)
+                panneaugr = PanneauGroupe(new_dic[nom_groupe],
+                                          nom_cours=self.titre)
+                self.dict_panneau_groupe[nom_groupe] = panneaugr
+                tb.add_widget(panneaugr)
+                # Parce qu'à la SNSM, on aime quand c'est bien fait!
+                self.nb.remove_widget(self.panneau_fin)
+                self.nb.remove_widget(self.panneau_retour)
+                self.nb.add_widget(tb)
+                self.nb.add_widget(self.panneau_fin)
+                self.nb.add_widget(self.panneau_retour)
+            else:
+                # Maintenant on gère les nouveaux élèves
+                nouveaux_eleves = [eleve for eleve in new_dic[nom_groupe]
+                                 if not eleve in self.dict_eleves[nom_groupe]]
+                panneaugr = self.dict_panneau_groupe[nom_groupe]
+                for ne in nouveaux_eleves:
+                    panneaugr.ajoute_nouvel_eleve(ne)
+           
+    def terminaison(self, instance):
+        for pangr in self.dict_panneau_groupe.values():
+            for eleve in pangr.liste_eleves:
+                print('Il faut sauver:', eleve.__str__())
 
-    def __init__(self, retour_accueil, titre, parent_scm, dict_eleves_par_groupe, liste_presents, **kwargs):
+    def retour(self, instance):
+        self.parent_scm.transition.direction = 'right'
+        self.parent_scm.current = self.retour_selection
+
+    def __init__(self, retour_selection, titre, parent_scm, dict_eleves_par_groupe, liste_presents, **kwargs):
         self.titre = titre
-        self.retour_accueil = retour_accueil
+        self.retour_selection = retour_selection
         self.parent_scm = parent_scm
         self.dict_eleves = dict_eleves_par_groupe
+        self.dict_panneau_groupe = dict()
         super(Formation, self).__init__(**kwargs)
 
         for nom_groupe in self.dict_eleves.keys():
             tb = TabbedPanelItem(text=nom_groupe)
             panneaugr = PanneauGroupe(self.dict_eleves[nom_groupe], nom_cours=titre)
+            self.dict_panneau_groupe[nom_groupe] = panneaugr
             tb.add_widget(panneaugr)
             self.nb.add_widget(tb)
 
         fin = TabbedPanelItem(text='Terminer')
-        fin.add_widget(PanneauFinFormation())
+        fin.add_widget(PanneauFinFormation(self.terminaison))
         self.nb.add_widget(fin)
+        self.panneau_fin = fin
+        retour = TabbedPanelHeader(text='Retour')
+        retour.bind(on_release=self.retour)
+        self.nb.add_widget(retour)
+        self.panneau_retour = retour

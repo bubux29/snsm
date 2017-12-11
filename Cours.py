@@ -14,6 +14,8 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
+from collections import OrderedDict
+
 from kivy.properties import ObjectProperty
 
 import log
@@ -23,6 +25,8 @@ from Formation import Formation
 from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
+
+from tablelayout import TableView
 
 MainCoursMenu = Builder.load_file("Cours.kv")
 
@@ -57,7 +61,7 @@ class CoursGroupeExistant(Screen):
     def on_selection(self):
         # Pour la formation, nous avons besoin de trier l'ensemble des présents
         # par groupe...
-        self.dict_eleve = dict()
+        self.dict_eleve = OrderedDict()
         liste_eleves = self.liste_presents + self.liste_anciens
         presents_set = set(liste_eleves)
         self.liste_groupes.append(self.groupe_anciens)
@@ -70,16 +74,16 @@ class CoursGroupeExistant(Screen):
 
         # Si la formation n'a pas déjà débuté
         if not self.formation_wid:
-            self.parent_scm.add_widget(
-                            Formation(name='fo',
-                                      retour_accueil=self.retour_accueil,
+            self.formation_wid = Formation(name='fo',
+                                      retour_selection=self.name,
                                       titre=self.titre,
                                       parent_scm=self.parent_scm,
                                       dict_eleves_par_groupe=self.dict_eleve,
-                                      liste_presents=liste_eleves
-                            ))
+                                      liste_presents=liste_eleves)
+            self.parent_scm.add_widget(self.formation_wid)
         else:
             self.formation_wid.change_data_set(self.dict_eleve)
+        self.parent.transition.direction = 'left'
         self.parent.current = 'fo'
 
     def on_choix_presents(self, liste_noms, liste_eleves):
@@ -119,7 +123,7 @@ class CoursGroupeExistant(Screen):
         self.formation_wid = None
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
-        self.related_groupes = formation_db.liste_groupes_by_cours([titre])
+        self.related_groupes = formation_db.trouver_groupes_par_cours([titre])
         # Liste des groupes des stagiaires
         liste_groupe = [{'text': groupe.nom, 'elem': groupe}
                       for groupe in self.related_groupes
@@ -158,6 +162,26 @@ def init_liste_cours_popup(popuplist, on_choix):
         nom_de_cours.append(cours.nom)
     popuplist.init(nom_de_cours, "Cours existants", on_choix)
     popuplist.hint_xy = (.3,.3)
+
+class CoursConsultationEvaluations(Screen):
+    def __init__(self, parentscm, nom_cours, **kwargs):
+        super(CoursConsultationEvaluations, self).__init__(**kwargs)
+        liste_groupes = formation_db.trouver_groupes_par_cours([nom_cours])
+        cours = formation_db.trouver_cours(nom_cours)
+        liste_modules = formation_db.trouver_modules_par_cours(cours)
+        # Construction du dictionnaire à afficher:
+        liste_bilans_par_eleve = list()
+        for groupe in liste_groupes:
+            for eleve in groupe.participants:
+                # Petite pysubtilité
+                dic = OrderedDict()
+                dic['nom'] = eleve.__str__()
+                liste_bilans = formation_db.trouver_bilans_par_eleve(eleve, liste_modules)
+                for bilan in liste_bilans:
+                    module = bilan.module
+                    dic[module.nom] = bilan.__str__()
+                liste_bilans_par_eleve.append(dic)
+        self.add_widget(TableView(liste_bilans_par_eleve, '400dp', '800dp'))
 
 class CoursGroupeNouveau(Screen):
     bouton_choix_cours = ObjectProperty(None)
@@ -216,6 +240,9 @@ class MainCoursMenu(Screen):
         super(MainCoursMenu, self).__init__(**kwargs)
         self.retour.bind(on_press=retour_accueil)
         parent_scm.add_widget(CoursChoixGroupe(name='df', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
+        parent_scm.add_widget(CoursConsultationEvaluations(name='ce',
+                                                          parentscm=parent_scm,
+                                                          nom_cours=titre))
 
 class MainCoursScreenManager(BoxLayout):
     def __init__(self, titre, retour_accueil, **kwargs):
