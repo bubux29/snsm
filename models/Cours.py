@@ -152,12 +152,32 @@ class Resultat (BaseModel):
     statut = peewee.CharField (max_length=2, choices=TEST_RESULTAT_CHOIX, default=NONFAIT)
     eleve = peewee.ForeignKeyField(Eleve)
     test  = peewee.ForeignKeyField(Test)
+    resultat = peewee.TextField(null=True, verbose_name="Résultat du test")
     #cours = peewee.ForeignKeyField(Cours, null=True)
     commentaires = peewee.TextField(null=True, verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce test")
     class Meta:
         indexes = ( (('eleve', 'test'), True), )
     def __str__(self):
         return self.test.nom
+
+class BilanModule(BaseModel):
+    SUCCES = '1'
+    ECHEC = '0'
+    NONFAIT = 'NT'
+    MODULE_RESULTAT_CHOIX = (
+       (SUCCES, 'succès'),
+       (ECHEC, 'échec'),
+       (NONFAIT, 'non passé'),
+    )
+    statut = peewee.CharField (max_length=2, choices=MODULE_RESULTAT_CHOIX, default=NONFAIT)
+    eleve = peewee.ForeignKeyField(Eleve)
+    module  = peewee.ForeignKeyField(ModuleFormation)
+    date = peewee.DateTimeField(verbose_name="Date du passage de l'évaluation du module par l'élève", default=datetime.datetime.now)
+    commentaires = peewee.TextField(null=True, verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce module")
+    class Meta:
+        indexes = ( (('eleve', 'module'), True), )
+    def __str__(self):
+        return self.statut
 
 def _connect_to_db():
     database.connect()

@@ -3,20 +3,33 @@ from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
 from models.Cours import _create_tables
 from models.Trombi import *
+
+try:
+    database.drop_table(Eleve)
+except:
+    print("Pas possible supprimer la base")
 _create_tables()
-#pp=Eleve.create(nom="Dette", prenom="Thomas", date_naissance="12/02/2012", is_formateur=False, date_entree="12/03/1990")
-pp=Eleve.create(nom="Dette", prenom="Thomas", date_naissance="12/02/2012", telephone="06.22.33.14.55", courriel="thomas@patate.com", statut='Ancien', date_entree="12/03/1990", photo_path="./pics/portrait1.jpg", nom_cfi='Brest')
-pp.save()
-pp=Eleve.create(nom="Ohjo", prenom="Oji", date_naissance="12/09/2000", telephone="06.12.23.34.45", courriel="dfff@sqdfze.com", statut='Stagiaire', date_entree="12/12/2012", photo_path="./pics/portrait2.jpg")
-pp.save()
-pp=Eleve.create(nom="Simpsons", prenom="Orde", date_naissance="12/09/2001", telephone="06.12.23.34.43", courriel="fzoef@sqdfze.com", statut='Stagiaire', date_entree="12/12/2012", photo_path="./pics/portrait3.jpg")
-pp.save()
-pp=Eleve.create(nom="Maison", prenom="Carré", date_naissance="12/10/2001", telephone="06.12.23.34.40", courriel="fronon@sqdfze.com", statut='Stagiaire', date_entree="12/12/2012", photo_path="./pics/portrait4.jpg")
-pp.save()
-pp=Eleve.create(nom="Azet", prenom="Iset", date_naissance="12/9/2000", telephone="06.12.23.34.37", courriel="iseese@sqdfze.com", statut='Ancien', date_entree="12/12/2012", photo_path="./pics/portrait5.jpg", nom_cfi='Brest')
-pp.save()
-pp=Eleve.create(nom="Oze", prenom="Uzu", date_naissance="12/9/1998", telephone="06.12.23.34.32", courriel="fritz@sqdfze.com", statut='Ancien', date_entree="12/12/2012", photo_path="./pics/portrait6.jpg", nom_cfi='Quimper')
-pp.save()
-pp=Eleve.create(nom="Dfgui", prenom="Ou", date_naissance="12/9/1999", telephone="06.12.23.34.29", courriel="ffdoeizu@sqdfze.com", statut='Ancien', date_entree="12/12/2012", photo_path="./pics/portrait7.jpg", nom_cfi='Brest')
-pp=Eleve.create(nom="Bové", prenom="José", date_naissance="12/8/1999", telephone="06.12.23.34.22", courriel="jose@bouse.com", statut='Stagiaire', date_entree="12/12/2012", photo_path="./pics/portrait71.jpg")
-pp.save()
+
+def new_eleve(nom, prenom, naissance, tel, courriel, statut, entree, photo, nom_cfi=''):
+   try:
+     print("Ajout élève", prenom, nom, ":", end='')
+     pp=Eleve.create(nom=nom, prenom=prenom, date_naissance=naissance, telephone=tel, courriel=courriel, statut=statut, date_entree=entree, photo_path=photo, nom_cfi=nom_cfi)
+     pp.save()
+     print("OK")
+   except Exception as e:
+     print("Pas bon:", e)
+
+new_eleve("De La Fleur", "Jean-Sébastien", "12/09/2000", "06.12.23.34.45", "dfff@sqdfze.com", 'Stagiaire', "12/12/2012", "./pics/portrait2.jpg")
+new_eleve("Paddutout", "Antoine", "12/09/2001", "06.12.23.34.43", "fzoef@sqdfze.com", 'Stagiaire', "12/12/2012", "./pics/portrait3.jpg")
+new_eleve("Deloin", "Caroline", "12/10/2001", "06.12.23.34.40", "fronon@sqdfze.com", 'Stagiaire', "12/12/2012", "./pics/portrait4.jpg")
+new_eleve("Bëchameline", "Christophe", "12/9/2000", "06.12.23.34.37", "iseese@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait5.jpg", nom_cfi='Brest')
+new_eleve("De Troicatre", "Jean-Paul", "12/9/1998", "06.12.23.34.32", "fritz@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait6.jpg", nom_cfi='Quimper')
+new_eleve("Deré", "Odile", "12/9/1999", "06.12.23.34.29", "ffdoeizu@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait7.jpg", nom_cfi='Brest')
+new_eleve("Le Bouille", "Patrick", "12/8/1999", "06.12.23.34.22", "jose@bouse.com", 'Stagiaire', "12/12/2012", "./pics/portrait71.jpg")
+new_eleve("Juliojulio", "Jacques", "12/9/1998", "06.12.23.34.32", "fritz@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait6.jpg", nom_cfi='Quimper')
+new_eleve("Abaziour", "Emile", "12/9/1999", "06.12.23.34.29", "ffdoeizu@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait7.jpg", nom_cfi='Brest')
+new_eleve("Verbatim", "Vincent", "12/8/1999", "06.12.23.34.22", "jose@bouse.com", 'Stagiaire', "12/12/2012", "./pics/portrait71.jpg")
+new_eleve("Du Rest", "Marie-Antoinette", "12/9/1998", "06.12.23.34.32", "fritz@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait6.jpg", nom_cfi='Quimper')
+new_eleve("Abdique", "Yves", "12/9/1999", "06.12.23.34.29", "ffdoeizu@sqdfze.com", 'Ancien', "12/12/2012", "./pics/portrait7.jpg", nom_cfi='Brest')
+new_eleve("Dobipierre Hountch", "Anatole", "12/9/1999", "06.12.23.34.29", "ffdoeizu@sqdfze.com", 'Formateur', "12/12/2012", "./pics/portrait7.jpg", nom_cfi='Quimper')
+new_eleve("Verbatim", "Etienne", "12/8/1999", "06.12.23.34.22", "jose@bouse.com", 'Stagiaire', "12/12/2012", "./pics/portrait71.jpg")
