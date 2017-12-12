@@ -155,6 +155,7 @@ class Resultat (BaseModel):
     resultat = peewee.TextField(null=True, verbose_name="Résultat du test")
     #cours = peewee.ForeignKeyField(Cours, null=True)
     commentaires = peewee.TextField(null=True, verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce test")
+    affichage = (('eleve', 200), ('test', 120), ('statut', 60), ('commentaires', 300))
     class Meta:
         indexes = ( (('eleve', 'test'), True), )
     def __str__(self):

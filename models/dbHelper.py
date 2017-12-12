@@ -8,7 +8,7 @@ if DB=='peewee':
     handled_db_dict=_peewee_types_dict
 
 def whatType(classe):
-    return [c for c, v in handled_db_dict.items() if v == classe]
+    return [c for c, v in handled_db_dict.items() if v == classe][0]
 
 def isType(ty):
     return handled_db_types.count(ty)
