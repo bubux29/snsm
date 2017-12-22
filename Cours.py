@@ -120,6 +120,7 @@ class CoursGroupeExistant(Screen):
         self.parent_scm = parent_scm
         self.liste_presents = list()
         self.liste_anciens = list()
+        self.liste_groupes = list()
         self.formation_wid = None
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
@@ -181,7 +182,7 @@ class CoursConsultationEvaluations(Screen):
                     module = bilan.module
                     dic[module.nom] = bilan.__str__()
                 liste_bilans_par_eleve.append(dic)
-        self.add_widget(TableView(liste_bilans_par_eleve, '400dp', '800dp'))
+        self.add_widget(TableView(data=liste_bilans_par_eleve, window_height='400dp', window_width='800dp'))
 
 class CoursGroupeNouveau(Screen):
     bouton_choix_cours = ObjectProperty(None)
@@ -240,9 +241,9 @@ class MainCoursMenu(Screen):
         super(MainCoursMenu, self).__init__(**kwargs)
         self.retour.bind(on_press=retour_accueil)
         parent_scm.add_widget(CoursChoixGroupe(name='df', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
-        parent_scm.add_widget(CoursConsultationEvaluations(name='ce',
-                                                          parentscm=parent_scm,
-                                                          nom_cours=titre))
+        #parent_scm.add_widget(CoursConsultationEvaluations(name='ce',
+                                                          #parentscm=parent_scm,
+                                                          #nom_cours=titre))
 
 class MainCoursScreenManager(BoxLayout):
     def __init__(self, titre, retour_accueil, **kwargs):

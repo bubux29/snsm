@@ -18,22 +18,29 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
-from kivy.properties import ObjectProperty, BooleanProperty
-
+from kivy.properties import ObjectProperty, BooleanProperty, ListProperty
 from kivy.uix.videoplayer import VideoPlayer
 
+from collections import OrderedDict
 import datetime, os, sys
 
 import log
 import formation_db
+import scripts.poplib
 from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
 from models.dbDefs import FieldType
 from models.Cours import Resultat, BilanModule
 from dropdownmenu import DropDownMenu
+from cellview import StdCellView
+from tablelayout import TableView
+
+import pops
 
 from videorecorder import VideoRecorder
+
+poplib = scripts.poplib
 
 def err(text):
     log.err("FORMATION", text)
@@ -127,12 +134,39 @@ class LigneModule(BoxLayout):
     desc_module = ObjectProperty(None)
     succes = ObjectProperty(None)
     echec  = ObjectProperty(None)
-    def __init__(self, nom, resultat, eleve, **kwargs):
-        self.nom = nom
+    def __init__(self, module, resultat, eleve, **kwargs):
+        self.nom = module.nom
+        self.module = module
         self.eleve = eleve
+        self.origine = resultat.statut
+        self.nom_groupe_toggle = eleve.__str__()
         super(LigneModule, self).__init__(**kwargs)
         if resultat.statut == BilanModule.SUCCES:
-            succes.state = 'down'
+            self.succes.state = 'down'
+        elif resultat.statut == BilanModule.ECHEC:
+            self.echec.state = 'down'
+    def bilan(self):
+        if self.succes.state == 'down':
+            return BilanModule.SUCCES
+        elif self.echec.state == 'down':
+            return BilanModule.ECHEC
+        else:
+            return BilanModule.NONFAIT
+
+class ValidationResultat(Button):
+    def __init__(self, statut, **kwargs):
+        self.text = 'Res'
+        self.height = 10
+        super(ValidationResultat, self).__init__(**kwargs)
+        self.text = statut
+        self.dropdown = DropDown()
+        for u in Resultat.TEST_RESULTAT_CHOIX:
+            btn = Button(text=u[0], size_hint_y=None, height=20)
+            btn.bind(on_release=lambda btn: self.dropdown.select(btn.text))
+            self.dropdown.add_widget(btn)
+        self.dropdown.bind(on_select=lambda instance,
+                           x: setattr(self, 'text', x))
+        self.bind(on_release=self.dropdown.open)
 
 class ResultatTest(BoxLayout):
     orientation = 'horizontal'
@@ -143,34 +177,39 @@ class ResultatTest(BoxLayout):
         if(test_class.mode == FieldType.E_CharField.value):
             bx=TextInput(multiline=False, height=10, width=30)
             self.value = self._textToText
-            self.ti = bx.text
+            self.ti = bx
+            bu = ValidationResultat(test_eleve.statut)
+            self.add_widget(bu)
+            self.tv = bu
+            self.statut = self._statut
             # On récupère le résultat du test (s'il y en a)
             if test_eleve.resultat:
                 bx.text = test_eleve.resultat
             self.add_widget(bx)
         elif(test_class.mode == FieldType.E_TestResField.value):
-            bx = Button(text='Res', height=10)
-            bx.text = test_eleve.statut
-            self.dropdown = DropDown()
-            for u in Resultat.TEST_RESULTAT_CHOIX:
-                btn = Button(text=u[0], size_hint_y=None, height=20)
-                #btn = Button(text=u[0], height=30)
-                btn.bind(on_release=lambda btn: self.dropdown.select(btn.text))
-                self.dropdown.add_widget(btn)
-            self.dropdown.bind(on_select=lambda instance, x: setattr(bx, 'text', x))
-            bx.bind(on_release=self.dropdown.open)
+            bx = ValidationResultat(test_eleve.statut)
+            self.add_widget(bx)
             self.value = self._textToText
-            self.ti = bx.text
-            self.add_widget(bx)
-        elif(test_class.mode == FieldType.E_BoolField.value):
-            bx=CheckBox()
-            self.value = self._checkBoxToText
-            self.cb = bx.active
-            self.add_widget(bx)
+            self.ti = bx
+            self.tv = bx
+            self.statut = self._statut
+        # On ne sait pas trop si ce type a un sens...
+        # à confirmer à l'utilisation
+        #elif(test_class.mode == FieldType.E_BoolField.value):
+            #bx=CheckBox()
+            #self.value = self._checkBoxToText
+            #self.cb = bx.active
+            #self.add_widget(bx)
+        else:
+            print('Type de résultat non encore géré:', test_class.mode)
 
     def _textToText(self):
        if(self.ti == None): return ''
-       return self.ti
+       return self.ti.text
+
+    def _statut(self):
+       if(self.tv == None): return
+       return self.tv.text
 
     def _checkBoxToText(self):
        # Cas bizarre
@@ -182,14 +221,19 @@ class ResultatTest(BoxLayout):
 
 class LigneTest(BoxLayout):
     label_module = ObjectProperty(None)
-    def __init__(self, eleve, test_class, **kwargs):
-        self.nom_module = test_class.nom
+    def __init__(self, eleve, resultat, test_class, **kwargs):
+        self.nom = test_class.nom
+        self.test_class = test_class
         self.eleve = eleve
+        self.statut_origine = resultat.statut
         super(LigneTest, self).__init__(**kwargs)
-        resultat = formation_db.trouver_resultat_test_par_eleve(test_class, eleve)
         self.result = ResultatTest(resultat, test_class, pos_hint={'left': 1}, size_hint_x=.3)
         self.add_widget(self.result)
-        
+    def statut(self):
+        return self.result.statut()
+    def value(self):
+        return self.result.value()
+
 class LinedBox(BoxLayout):
     pass
 
@@ -203,10 +247,14 @@ class PanneauEvaluation(BoxLayout):
     nom_eluve = ObjectProperty(None)
     nom_eleve = ObjectProperty(None)
     liste_modules = ObjectProperty(None)
+    photo_height = 80
     #def __init__(self, liste_modules, nom_eleve, **kwargs):
     def __init__(self, **kwargs):
         super(PanneauEvaluation, self).__init__(**kwargs)
-        self.listes_test=list()
+        self.liste_tests=list()
+
+    def compute_height(nbmodules, nbtests):
+        return nbmodules * 60 + nbtests * 60 + PanneauEvaluation.photo_height
 
     def creer_env(self, liste_modules, nom_eleve):
         self.core.bind(minimum_height=self.core.setter('height'))
@@ -217,20 +265,47 @@ class PanneauEvaluation(BoxLayout):
         self.eleve = formation_db.trouver_eleve(nom_eleve)
         self.photo.source = self.eleve.photo_path
         self.liste_modules = liste_modules[:]
+        self.liste_bilans = list()
         for module in liste_modules:
-            res = formation_db.trouver_bilan_module_par_eleve(module, self.eleve)
-            mod = LigneModule(nom=module.nom, resultat=res, eleve=self.eleve, height=20)
+            try:
+                res = formation_db.trouver_bilan_module_par_eleve(module,
+                                                                  self.eleve)
+            except:
+                res = BilanModule(eleve=self.eleve, module=module)
+            mod = LigneModule(module=module, resultat=res, eleve=self.eleve,
+                              height=20)
+            self.liste_bilans.append(mod)
             core.add_widget(mod)
             bx=LinedBox(orientation='vertical', size_hint_y=None, spacing=10, height=40*(len(module.tests) + 1))
             core.add_widget(bx)
             for test in module.tests:
-                test=LigneTest(self.eleve, test, height=20)
-                self.listes_test.append(test)
+                try:
+                   resultat = formation_db.trouver_resultat_test_par_eleve(
+                                                         test, self.eleve)
+                except Exception as e:
+                   print('Pas de résultat pour', self.eleve.__str__(),
+                         'sur', test.nom, e)
+                   # On se crée un résultat bidon
+                   resultat = Resultat(test=test, eleve=self.eleve)
+                test=LigneTest(self.eleve, resultat, test, height=20)
+                self.liste_tests.append(test)
                 bx.add_widget(test)
             bs=BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
             bs.add_widget(Label(text='Note:', size_hint_x=.1, pos_hint={'right':1}))
-            bs.add_widget(TextInput(height=50))
+            mod.commentaires = TextInput(height=50)
+            bs.add_widget(mod.commentaires)
             bx.add_widget(bs)
+
+    def calcule_bilans(self):
+        # On retourne, par module: le tuple:
+        #         (module, SUCCES/ECHEC/NT)
+        return [ (bil.module, bil.bilan(), bil.commentaires, bil.origine) 
+                 for bil in self.liste_bilans ]
+    def calcule_resultats(self):
+        # On retourne, par tests, le tuple:
+        #         (nom_test, SUCCES/ECHEC/NT, valeur)
+        return [ (res.test_class, res.statut(), res.value(), res.statut_origine)
+                 for res in self.liste_tests ]
 
 class PanneauNote(BoxLayout):
     textinput = ObjectProperty(None)
@@ -264,9 +339,17 @@ class PanneauNote(BoxLayout):
 class EcranEleve(Screen):
     notebook = ObjectProperty(None)
     panneaueval = ObjectProperty(None)
+    liste_modules = ListProperty(None)
     def __init__(self, nom_cours, **kwargs):
-        cours = formation_db.trouver_cours(nom_cours)
+        cours = formation_db.trouver_cours([nom_cours])[0]
         self.liste_modules = cours.modules
+        for m in self.liste_modules: 
+            print(m.__str__())
+        nbtests = sum([len(m.tests) for m in cours.modules])
+        nbmodules = len(cours.modules)
+        self.evalheight = PanneauEvaluation.compute_height(nbmodules, nbtests)
+        print('Il y a', self.evalheight, 'hauteurs')
+        
         super(EcranEleve, self).__init__(**kwargs)
         self.panneaueval.creer_env(self.liste_modules, self.name)
         #panpan=PanneauEvaluation(liste_modules=self.liste_modules, nom_eleve=self.name, size_hint=(1,None))
@@ -276,6 +359,11 @@ class EcranEleve(Screen):
         #self.panneaueval.add_widget(rol)
         #self.panneaueval.add_widget(panpan)
         #self.panneaueval.add_widget(PanneauEvaluation(liste_modules=liste_modules, nom_eleve=self.name, size_hint=(1,None), size=(self.width, self.height)))
+
+    def bilan_eleve(self):
+        return self.panneaueval.calcule_bilans()
+    def resultats_eleve(self):
+        return self.panneaueval.calcule_resultats()
 
 class DefaultTab(Screen):
     pass
@@ -315,15 +403,44 @@ class PanneauGroupe(BoxLayout):
 
 class PanneauFinFormation(BoxLayout):
     ligne_formateur = ObjectProperty(None)
+    ligne_lieu = ObjectProperty(None)
     terminerbutton = ObjectProperty(None)
-    def __init__(self, terminaison, **kwargs):
+    recapitulatif = ObjectProperty(None)
+    def __init__(self, terminaison, recap, **kwargs):
+        self.orientation = 'vertical'
         super(PanneauFinFormation, self).__init__(**kwargs)
         drop_list=[f.nom for f in formation_db.trouver_formateurs()]
-        self.ligne_formateur.add_widget(DropDownMenu(text='Formateur', drop_list=drop_list, size_hint_x=.3, size_hint_y=None, height=20))
+        self.dpf = DropDownMenu(text='', drop_list=drop_list,
+                                               size_hint_x=.3, size_hint_y=None,
+                                               height=30)
+        self.ligne_formateur.add_widget(self.dpf)
+
+        drop_list = [ l.lieu for l in formation_db.liste_lieux_all() ]
+        self.dpl = DropDownMenu(text='', drop_list=drop_list,
+                                               size_hint_x=.3, size_hint_y=None,
+                                               height=30)
+        self.ligne_lieu.add_widget(self.dpl)
+        
         self.terminerbutton.bind(on_release=terminaison)
+        self.former_bilans = None
+        self.recap = recap
+
+    def nom_formateur(self):
+        return self.dpf.text
+
+    def nom_lieu(self):
+        return self.dpl.text
+
+    def update(self, instance):
+        if self.former_bilans:
+            self.recapitulatif.remove_widget(self.former_bilans)
+        # Petit recap
+        self.former_bilans = TableView(data=self.recap(), window_width='800dp', window_height='300dp')
+        self.recapitulatif.add_widget(self.former_bilans)
 
 class Formation(Screen):
     nb = ObjectProperty(None)
+    deja_enregistre = BooleanProperty(False)
 
     def change_data_set(self, new_dic):
         liste_groupe = [{'text': nom_groupe}
@@ -331,7 +448,6 @@ class Formation(Screen):
         current_groupes = self.dict_panneau_groupe.keys()
         for groupe in liste_groupe:
             nom_groupe = groupe['text']
-            print('On gère', nom_groupe)
             if not new_dic[nom_groupe]:
                 # Si c'est vide
                 continue
@@ -357,10 +473,79 @@ class Formation(Screen):
                     panneaugr.ajoute_nouvel_eleve(ne)
            
     def terminaison(self, instance):
-        for pangr in self.dict_panneau_groupe.values():
-            for eleve in pangr.liste_eleves:
-                print('Il faut sauver:', eleve.__str__())
+        if self.deja_enregistre:
+            print('putain, le mec a déjà validé une fois...')
+        nom_formateur = self.panfin.nom_formateur()
+        formateurs = formation_db.trouver_formateurs(noms=[nom_formateur])
+        ## TODO: faire un popup d'erreur
+        if not formateurs:
+            pops.pop_warn(None, 'Renseigner le nom du formateur')
+            return
+        formateur = formateurs[0]
+        nom_lieu = self.panfin.nom_lieu()
+        lieux = formation_db.trouver_lieux(noms=[nom_lieu])
+        if not lieux:
+            pops.pop_warn(None,
+                          'Renseigner le lieu de la formation d\'aujourd\'hui')
+            return
+        lieu = lieux[0]
 
+        cours = formation_db.trouver_cours([self.titre])
+        if not cours:
+            pops.pop_warn('Erreur interne: le cours', self.titre, 'a disparu de la base de données... Mieux vaut quitter')
+            return
+        cour = cours[0]
+
+        jf = poplib.ajout_jf(lieu=lieu, cours=cour, formateur=formateur,
+                                   notes='')
+
+        for pangr in self.dict_panneau_groupe.values():
+            current_scm = pangr.scm
+            for eleve in pangr.liste_eleves:
+                s = current_scm.get_screen(eleve.__str__())
+                for module, resultat, commentaires, origine in s.bilan_eleve():
+                    #bilan = BilanModule(module=module, statut=resultat,
+                    # Si le bilan est NT, on ne crée pas de Bilan
+                    if resultat == BilanModule.NONFAIT:
+                        continue
+                    if resultat == origine: 
+                        continue
+                    bilan = poplib.ajout_bilan(module=module, statut=resultat,
+                                             commentaires=commentaires,
+                                             eleve=eleve, date=jf)
+                for test, statut, resultat, origine in s.resultats_eleve():
+                    # Si le statut est NT, on ne crée pas de Resultat
+                    if statut == Resultat.NONFAIT:
+                        continue
+                    if statut == origine:
+                        continue
+                    res = poplib.ajout_res(test=test, eleve=eleve, date=jf,
+                                           resultat=resultat, statut=statut)
+        self.deja_enregistre = True
+
+    def recapitulatif(self):
+        # Pour l'affichage du récapitulatif, on utilise le tablelayout
+        # Il faut donc construire les cellules selon le contenu du BilanModule
+        recap = list()
+        for pangr in self.dict_panneau_groupe.values():
+            current_scm = pangr.scm
+            for eleve in pangr.liste_eleves:
+                eleve_dict = OrderedDict()
+                eleve_dict['nom'] = StdCellView.factory('E_CharField',
+                                                        eleve.__str__(),
+                                                        width=180,
+                                                        name='nom')
+                for module, resultat, commentaires, origine in \
+                          current_scm.get_screen(eleve.__str__()).bilan_eleve():
+                    nom_module = module.nom
+                    eleve_dict[nom_module] = StdCellView.factory(
+                                                          'E_CharField',
+                                                          resultat,
+                                                          width=100, 
+                                                          name=nom_module)
+                recap.append(eleve_dict)
+        return recap
+                
     def retour(self, instance):
         self.parent_scm.transition.direction = 'right'
         self.parent_scm.current = self.retour_selection
@@ -381,7 +566,9 @@ class Formation(Screen):
             self.nb.add_widget(tb)
 
         fin = TabbedPanelItem(text='Terminer')
-        fin.add_widget(PanneauFinFormation(self.terminaison))
+        self.panfin = PanneauFinFormation(self.terminaison, self.recapitulatif)
+        fin.add_widget(self.panfin)
+        fin.bind(on_release=self.panfin.update)
         self.nb.add_widget(fin)
         self.panneau_fin = fin
         retour = TabbedPanelHeader(text='Retour')

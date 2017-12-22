@@ -1,6 +1,5 @@
 #: import TabbedPanel kivy.uix.tabbedpanel
 #: import DropDownMenu dropdownmenu
-#: import liste_formateurs formation_db
 
 <Notebook@TabbedPanel>:
     cols: 1
@@ -68,7 +67,7 @@
             id: nom
             size_hint_x: .7
             pos_hint: {'right': 1}
-            text: 'Test: ' + root.nom_module
+            text: 'Test: ' + root.nom
         
 <LigneModule>:
     desc_module: desc_module
@@ -95,12 +94,12 @@
                 id: succes
                 size_hint_x: .1
                 text: 'I'
-                group: root.nom
+                group: root.nom_groupe_toggle + root.nom
             ToggleButton:
                 id: echec
                 size_hint_x: .1
                 text: 'O'
-                group: root.nom
+                group: root.nom_groupe_toggle + root.nom
 
 <PanneauEvaluation>
     core: core
@@ -170,7 +169,7 @@
                 pos: root.pos
                 PanneauEvaluation:
                     id: eval
-                    height: 500
+                    height: root.evalheight
                     pos_hint: {'top': 1}
                     size_hint_y: None
                     nom_eluve: root.name
@@ -194,23 +193,39 @@
 
 <PanneauFinFormation>:
     ligne_formateur: ligne_formateur
+    ligne_lieu: ligne_lieu
     terminerbutton: terminer
+    recapitulatif: recapitulatif
+    orientation: 'vertical'
     BoxLayout:
-        orientation: 'vertical'
-        BoxLayout:
-            id: ligne_formateur
-            height: 20
-            size_hint: (1,None)
-            orientation: 'horizontal'
-            Label:
-                size_hint: (.2,None)
-                pos_hint: {'right': 0}
-                text: 'Nom du formateur du jour:'
-        Button:
-            id: terminer
-            size_hint: (.2,None)
+        id: ligne_formateur
+        height: 30
+        size_hint_y: None
+        orientation: 'horizontal'
+        Label:
+            size_hint_y: None
+            size_hint_x: .7
             height: 30
-            text: 'Enregistrer'
+            pos_hint: {'right': 0}
+            text: 'Nom du formateur du jour:'
+    BoxLayout:
+        id: ligne_lieu
+        height: 30
+        size_hint_y: None
+        Label:
+            size_hint_y: None
+            size_hint_x: .7
+            height: 30
+            pos_hint: {'right': 0}
+            text: 'Nom du lieu de la formation du jour:'
+    BoxLayout:
+        id: recapitulatif
+    Button:
+        id: terminer
+        size_hint: (.2,None)
+        right: .9
+        height: 30
+        text: 'Enregistrer'
 
 <Formation>:
     nb: nb

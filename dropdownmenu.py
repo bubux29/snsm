@@ -6,6 +6,8 @@ from kivy.uix.button import Button
 class DropDownMenu(Button):
     drop_list = ListProperty([])
     def __init__(self, height=20, **kwargs):
+        self.size_hint_y=None
+        self.height=height
         super(DropDownMenu, self).__init__(**kwargs)
         self.dropdown = DropDown()
         for u in self.drop_list:

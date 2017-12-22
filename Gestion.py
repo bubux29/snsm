@@ -68,7 +68,7 @@ def generateForm(classe):
     for name in classe.requis:
         box.add_widget(Label(text=fdict[name].verbose_name))
         ty=dbHelper.whatType(type(fdict[name]))
-        box.add_widget(widgetDict[ty[0]](name, fdict[name]))
+        box.add_widget(widgetDict[ty](name, fdict[name]))
     box.add_widget(Widget())
     return box
 

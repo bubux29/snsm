@@ -16,17 +16,27 @@ def ajouter_cours(name):
     cours = Cours.create(nom=name)
     cours.save()
 
-def trouver_cours(name):
-    cours = Cours.get(Cours.nom == name)
-    return cours
+def trouver_cours(nom=None):
+    if nom == None:
+        return list(Cours.select())
+    else:
+        return list(Cours.select().where(Cours.nom << nom))
 
 def trouver_eleve(nom):
     eleve = Eleve.get(Eleve.prenom + ' ' + Eleve.nom == nom)
     return eleve
 
-def trouver_formateurs():
-    return list(Eleve.select().where(Eleve.statut == 'Formateur'))
-liste_formateurs = trouver_formateurs()
+def trouver_formateurs(noms=None):
+    if noms == None:
+        return list(Eleve.select().where(Eleve.statut == 'Formateur'))
+    else:
+        return list(Eleve.select().where(Eleve.statut == 'Formateur' and Eleve.nom << noms))
+
+def trouver_lieux(noms=None):
+    if noms == None:
+        return list(Lieu.select())
+    else:
+        return list(Lieu.select().where(Lieu.lieu << noms))
 
 def _liste_by(cls, rule):
     return cls.select().where(rule)
@@ -54,10 +64,12 @@ def liste_all_from(classe):
 
 def trouver_resultat_test_par_eleve(test, eleve):
     ##return list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))[0]
-    return Resultat.get(Resultat.eleve == eleve and Resultat.test == test)
+    luste = list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))
+    return luste[len(luste) - 1]
 
 def trouver_bilan_module_par_eleve(module, eleve):
-    return BilanModule.get(BilanModule.eleve == eleve and BilanModule.module == module)
+    luste = list(BilanModule.select().where(BilanModule.eleve == eleve and BilanModule.module == module))
+    return luste[len(luste) - 1]
 
 def trouver_modules_par_cours(cours):
     return list(ModuleFormation.select().where(ModuleFormation.cours == cours))

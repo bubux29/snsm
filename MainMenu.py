@@ -24,19 +24,6 @@ def err(text):
 def info(text):
     log.info("EXPERT", text)
 
-class MenuComment(BoxLayout):
-    comments_txt = ObjectProperty(None)
-    valider_btn = ObjectProperty(None)
-    def __init__(self, popup=None, **kwargs):
-        super(BoxLayout, self).__init__(**kwargs)
-        self.orientation = "vertical"
-        #self.size_hint = (.5,.5)
-        self.popup=popup
-
-    def on_valider(self, inst):
-        if self.popup != None:
-            self.popup.dismiss()
-
 class ExpertMenuSub(RelativeLayout):
     def __init__(self, submenu, go_back_home, **kwargs):
         super(RelativeLayout, self).__init__(**kwargs)
@@ -63,22 +50,6 @@ class ExpertMenuSub(RelativeLayout):
         if self.submenu.check_on_valid():
             # Be careful to never use any instance in go_home call!!
             self.go_back_home(None)
-
-def _pop_(popup, title, text):
-    if popup == None:
-        popup = Popup(title=title)
-        content = MenuComment()
-        content.valider_btn.bind(on_release=popup.dismiss)
-        popup.content = content
-        popup.size_hint = (0.5, 0.5)
-    content.comments_txt.text=text
-    popup.open()
-
-def pop_warn(popup, text):
-    _pop_(popup, "Attention", text)
-
-def pop_ok(popup, text):
-    _pop_(popup, "Validé", text)
 
 def clear_text(textinput):
     textinput.select_all()
