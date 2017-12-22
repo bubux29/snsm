@@ -29,6 +29,10 @@ Builder.load_string('''
         Rectangle:
             pos: self.pos
             size: self.size
+    text_size: (self.width, None)
+    shorten: True
+    halign: 'center'
+    valign: 'middle'
 <ListeView>:
     sl: sl
     viewclass: 'SelectableLabel'
