@@ -57,8 +57,6 @@ class Cours (BaseModel):
 
 class Categorie (BaseModel):
     nom = peewee.CharField(max_length=64)
-    class Meta:
-        database = database
     def __str__(self):
         return self.nom
 
@@ -72,8 +70,12 @@ class ModuleFormation (BaseModel):
     cours = peewee.ForeignKeyField(Cours, related_name="modules")
     requis = ['nom', 'categorie', 'description', 'cours']
     affichage = ['nom', 'cours', 'categorie']
+    largeur_cellule_min = peewee.IntegerField(verbose_name='Largeur minimum de la colonne qui doit afficher le contenu du module')
     class Meta:
         order_by = ('cours', 'categorie',)
+        indexes = (
+            (('nom', 'cours'), True),
+        )
     def __str__(self):
         return self.nom
 
@@ -90,6 +92,9 @@ class Test (BaseModel):
     requis = ['nom', 'description', 'module']
     class Meta:
         order_by = ('module',)
+        indexes = (
+            (('nom', 'module'), True),
+        )
     def __str__(self):
         return self.nom
 
@@ -122,20 +127,24 @@ class JourneeFormation (BaseModel):
      # La date de la journée doit être renseignée automatiquement à la création
      # Par contre, on se fiche de mettre à jour la date quand on modifie
      # l'instance (auto_now_add & auto_now)
-     date = peewee.DateTimeField(verbose_name="Date du jour de la formation")
+     date = peewee.DateTimeField(verbose_name="Date du jour de la formation",
+                                 default=datetime.datetime.now)
      lieu = peewee.ForeignKeyField(Lieu, related_name="activites")
      cours = peewee.ForeignKeyField(Cours, related_name="journees")
      formateur = peewee.ForeignKeyField(Eleve,
                                    null=True,
                                    related_name="formateur_sur",
                                    verbose_name="Nom du formateur présent pour la journée (un seul nom autorisé)",)
-     groupe_participants = peewee.ForeignKeyField(Groupe, related_name="a_participe_le")
-     modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
+     #groupe_participants = peewee.ForeignKeyField(Groupe, related_name="a_participe_le")
+     #modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
      notes = peewee.TextField(verbose_name="Notes prises lors du cours")
      class Meta:
         order_by = ('date',)
+        indexes = (
+           (('date', 'cours'), True),
+        )
      def __str__(self):
-        return self.modules_vus
+        return self.cours.__str__() + ' ' + self.date
 
 # Il faut créer une page qui crée automatiquement l'ensemble des résultats
 # d'un élève aux tests d'un cours
@@ -153,15 +162,19 @@ class Resultat (BaseModel):
     eleve = peewee.ForeignKeyField(Eleve)
     test  = peewee.ForeignKeyField(Test)
     resultat = peewee.TextField(null=True, verbose_name="Résultat du test")
-    #cours = peewee.ForeignKeyField(Cours, null=True)
-    commentaires = peewee.TextField(null=True, verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce test")
+    date = peewee.ForeignKeyField(JourneeFormation)
+    commentaires = peewee.TextField(null=True,
+                   verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce test")
     affichage = (('eleve', 200), ('test', 120), ('statut', 60), ('commentaires', 300))
     class Meta:
-        indexes = ( (('eleve', 'test'), True), )
+        order_by = ('eleve',)
+        indexes = (
+            (('eleve', 'test', 'date'), True)
+        )
     def __str__(self):
         return self.test.nom
 
-class BilanModule(BaseModel):
+class BilanModule (BaseModel):
     SUCCES = '1'
     ECHEC = '0'
     NONFAIT = 'NT'
@@ -173,10 +186,13 @@ class BilanModule(BaseModel):
     statut = peewee.CharField (max_length=2, choices=MODULE_RESULTAT_CHOIX, default=NONFAIT)
     eleve = peewee.ForeignKeyField(Eleve)
     module  = peewee.ForeignKeyField(ModuleFormation)
-    date = peewee.DateTimeField(verbose_name="Date du passage de l'évaluation du module par l'élève", default=datetime.datetime.now)
+    date = peewee.ForeignKeyField(JourneeFormation)
     commentaires = peewee.TextField(null=True, verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce module")
     class Meta:
-        indexes = ( (('eleve', 'module'), True), )
+        order_by = ('date',)
+        indexes = (
+            (('eleve', 'module', 'date'), True)
+        )
     def __str__(self):
         return self.statut
 
@@ -187,7 +203,7 @@ def _disconnect_db():
     database.close()
 
 def _create_tables():
-    database.connect()
+    #database.connect()
     # Dans le cas de champs ManyToMany, il faut générer explicitement les
     # bases de données transverses...
     database.create_tables([
@@ -202,9 +218,6 @@ def _create_tables():
         Cours.groupes_attaches.get_through_model(), 
         Groupe.cours.get_through_model(), 
         JourneeFormation, 
-        JourneeFormation.modules_vus.get_through_model(),
-        ModuleFormation, 
-        ModuleFormation.etudie_le.get_through_model(),
         Resultat
     ],
     safe=True)
