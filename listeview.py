@@ -123,7 +123,7 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
         ''' Respond to the selection of items in the view. '''
         self.selected = is_selected
         if is_selected:
-            print("selection changed ({0}) to {0}".format(index,rv.data[index]['text']))
+            #print("selection changed ({0}) to {0}".format(index,rv.data[index]['text']))
             if not rv.liste_des_textes.count(rv.data[index]['text']):
                 rv.liste_des_textes.append(rv.data[index]['text'])
                 if 'elem' in rv.data[index] and rv.data[index]['elem']:
@@ -131,13 +131,13 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
         else:
             #for line in traceback.format_stack():
                 #print(line.strip())
-            print("selection removed for {0}".format(rv.data[index]['text']))
+            #print("selection removed for {0}".format(rv.data[index]['text']))
             if rv.liste_des_textes.count(rv.data[index]['text']):
                 rv.liste_des_textes.remove(rv.data[index]['text'])
-                if rv.liste_des_textes.count(rv.data[index]['text']) >= 1:
-                    print("il faut retirer plus le text")
+                #if rv.liste_des_textes.count(rv.data[index]['text']) >= 1:
+                    #print("il faut retirer plus le text")
                 if 'elem' in rv.data[index] and rv.data[index]['elem']:
-                    print("il faut retirer le elem")
+                    #print("il faut retirer le elem")
                     rv.liste_des_elem.remove(rv.data[index]['elem'])
         if rv.apply_callback:
             rv.apply_callback(rv.liste_des_textes, rv.liste_des_elem)

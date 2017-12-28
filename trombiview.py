@@ -89,10 +89,8 @@ class SelectableBox(RecycleDataViewBehavior, BoxLayout):
         ''' Respond to the selection of items in the view. '''
         self.selected = is_selected
         if is_selected:
-            print("selection changed to {0}".format(rv.data[index]))
             rv.liste_des_index.append(index)
         else:
-            print("selection removed for {0}".format(rv.data[index]))
             if index in rv.liste_des_index:
                 rv.liste_des_index.remove(index)
 
