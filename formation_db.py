@@ -30,7 +30,7 @@ def trouver_formateurs(noms=None):
     if noms == None:
         return list(Eleve.select().where(Eleve.statut == 'Formateur'))
     else:
-        return list(Eleve.select().where(Eleve.statut == 'Formateur' and Eleve.nom << noms))
+        return list(Eleve.select().where(Eleve.statut == 'Formateur').where(Eleve.nom << noms))
 
 def trouver_lieux(noms=None):
     if noms == None:
@@ -64,18 +64,18 @@ def liste_all_from(classe):
 
 def trouver_resultat_test_par_eleve(test, eleve):
     ##return list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))[0]
-    luste = list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))
+    luste = list(Resultat.select().where(Resultat.eleve == eleve).where(Resultat.test == test))
     return luste[len(luste) - 1]
 
-def trouver_bilan_module_par_eleve(module, eleve):
-    luste = list(BilanModule.select().where(BilanModule.eleve == eleve and BilanModule.module == module))
-    return luste[len(luste) - 1]
+#def trouver_bilans_module_par_eleve(module, eleve):
+    #luste = list(BilanModule.select().where(BilanModule.eleve == eleve and BilanModule.module == module))
+    #return luste
 
 def trouver_modules_par_cours(cours):
-    return list(ModuleFormation.select().where(ModuleFormation.cours == cours))
+    return list(ModuleFormation.select().where(ModuleFormation.cours << cours))
 
-def trouver_bilans_par_eleve(eleve, modules):
-    return list(BilanModule.select().where(BilanModule.module << modules and BilanModule.eleve == eleve))
+def trouver_bilans_par_eleve(eleves, modules):
+    return list(BilanModule.select().where(BilanModule.module << modules).where(BilanModule.eleve << eleves))
 
 #Through.select(Through,Groupe,Cours).join(Cours).switch(Through).join(Groupe).where(Cours.nom << nom_cours):
 def trouver_groupes_par_cours(noms_cours):
