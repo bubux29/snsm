@@ -195,6 +195,13 @@ class BilanModule (BaseModel):
         )
     def __str__(self):
         return self.statut
+    def synthese(liste_bilans):
+        s = [ b.statut for b in liste_bilans ]
+        if BilanModule.SUCCES in s:
+            return BilanModule.SUCCES
+        if BilanModule.ECHEC in s:
+            return BilanModule.ECHEC
+        return BilanModule.NONFAIT
 
 def _connect_to_db():
     database.connect()

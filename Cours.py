@@ -7,10 +7,11 @@ from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelHeader, TabbedPanelItem
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
@@ -20,13 +21,14 @@ from kivy.properties import ObjectProperty
 
 import log
 import formation_db
-from models.Cours import GROUPE_ANCIENS
+from models.Cours import GROUPE_ANCIENS, BilanModule
 from Formation import Formation
 from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
 
 from tablelayout import TableView
+from cellview import StdCellView
 
 MainCoursMenu = Builder.load_file("Cours.kv")
 
@@ -164,25 +166,51 @@ def init_liste_cours_popup(popuplist, on_choix):
     popuplist.init(nom_de_cours, "Cours existants", on_choix)
     popuplist.hint_xy = (.3,.3)
 
+class ConsultationEvaluationsGroupe(TabbedPanelItem):
+    def __init__(self, parentscm, liste_modules, liste_eleves, **kwargs):
+        super(ConsultationEvaluationsGroupe, self).__init__(**kwargs)
+        self.recap = list()
+        for eleve in liste_eleves:
+            eleve_dict = OrderedDict()
+            eleve_dict['nom'] = StdCellView.factory('E_CharField',
+                                                    eleve.__str__(),
+                                                    width=180, name='nom')
+            for module in liste_modules:
+                try:
+                    l = formation_db.trouver_bilans_par_eleve([eleve], [module])
+                    s = BilanModule.synthese(l)
+                except Exception as e:
+                    print('prout: ', e)
+                    s = BilanModule(eleve=eleve, module=module).statut
+                nom_module = module.nom
+                eleve_dict[nom_module] = StdCellView.factory(
+                                                     'E_CharField',
+                                                     s,
+                                                     #width=module.largeur_cellule_min,
+                                                     width=140,
+                                                     name=nom_module)
+            self.recap.append(eleve_dict)
+        self.add_widget(TableView(data=self.recap, width=700, height=400))
+
 class CoursConsultationEvaluations(Screen):
     def __init__(self, parentscm, nom_cours, **kwargs):
+        self.nom_cours = nom_cours
+        self.parentscm = parentscm
         super(CoursConsultationEvaluations, self).__init__(**kwargs)
+        nb = TabbedPanel(cols=1, spacing=5, padding=5, do_default_tab=False)
+        self.add_widget(nb)
         liste_groupes = formation_db.trouver_groupes_par_cours([nom_cours])
-        cours = formation_db.trouver_cours(nom_cours)
-        liste_modules = formation_db.trouver_modules_par_cours(cours)
-        # Construction du dictionnaire à afficher:
-        liste_bilans_par_eleve = list()
-        for groupe in liste_groupes:
-            for eleve in groupe.participants:
-                # Petite pysubtilité
-                dic = OrderedDict()
-                dic['nom'] = eleve.__str__()
-                liste_bilans = formation_db.trouver_bilans_par_eleve(eleve, liste_modules)
-                for bilan in liste_bilans:
-                    module = bilan.module
-                    dic[module.nom] = bilan.__str__()
-                liste_bilans_par_eleve.append(dic)
-        self.add_widget(TableView(data=liste_bilans_par_eleve, window_height='400dp', window_width='800dp'))
+        liste_modules = formation_db.trouver_modules_par_cours(formation_db.trouver_cours([nom_cours]))
+        for gr in liste_groupes:
+            ce = ConsultationEvaluationsGroupe(parentscm, liste_modules, gr.participants, text=gr.__str__())
+            nb.add_widget(ce)
+        retour = TabbedPanelHeader(text='Retour')
+        retour.bind(on_release=self.retour)
+        nb.add_widget(retour)
+
+    def retour(self, instance):
+        self.parentscm.transition.direction = 'right'
+        self.parentscm.current = self.nom_cours
 
 class CoursGroupeNouveau(Screen):
     bouton_choix_cours = ObjectProperty(None)
@@ -241,9 +269,9 @@ class MainCoursMenu(Screen):
         super(MainCoursMenu, self).__init__(**kwargs)
         self.retour.bind(on_press=retour_accueil)
         parent_scm.add_widget(CoursChoixGroupe(name='df', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
-        #parent_scm.add_widget(CoursConsultationEvaluations(name='ce',
-                                                          #parentscm=parent_scm,
-                                                          #nom_cours=titre))
+        parent_scm.add_widget(CoursConsultationEvaluations(name='ce',
+                                                          parentscm=parent_scm,
+                                                          nom_cours=titre))
 
 class MainCoursScreenManager(BoxLayout):
     def __init__(self, titre, retour_accueil, **kwargs):
