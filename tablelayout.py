@@ -10,19 +10,27 @@ from kivy.uix.widget import Widget
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 
-from kivy.properties import NumericProperty, StringProperty, ObjectProperty, ListProperty, DictProperty
+from kivy.properties import NumericProperty, StringProperty, ObjectProperty, ListProperty
 
 from collections import OrderedDict
 import formation_db
 
 Builder.load_string('''
-<TopButton@Button>
-    size: root.size
-    canvas:
-        Rotate:
-            angle: 2
-            
+<TableView@ScrollView>:
+    table: table
+    size_hint: None, None
+    pos_hint: {'center_x': .5, 'center_y': .5}
+
+    GridLayout:
+        cols: 1
+        padding: 5
+        spacing: 5
+        height: self.minimum_height
+        width: self.minimum_width
+        size_hint: None, None
+        id: table
 ''')
+
 class TopButton(Button):
     pass
 
@@ -30,10 +38,13 @@ class TableTop(BoxLayout):
     cells = ObjectProperty(None)
     def __init__(self, on_release, **kwargs):
         self.orientation = 'horizontal'
+        self.size_hint = (None, None)
         super(TableTop, self).__init__(**kwargs)
         for c in self.cells.values():
             b = Button(text=c.name, width=c.width, height=self.height,
-                      size_hint_x=None, size_hint_y=None, on_release=on_release)
+                      size_hint_x=None, size_hint_y=None, on_release=on_release,
+                      text_size = (self.width, None), halign = 'center',
+                      shorten=True)
             # c'est un bouton spécial!!
             b.revert = True
             self.add_widget(b)
@@ -63,6 +74,7 @@ class TableGrid(BoxLayout):
         self.orientation = 'vertical'
         self.rows = list()
         self.bind(minimum_height=self.setter('height'))
+        self.bind(minimum_width=self.setter('width'))
         self.size_hint_x = None
         self.size_hint_y = None
         super(TableGrid, self).__init__(**kwargs)
@@ -71,18 +83,17 @@ class TableGrid(BoxLayout):
             # On parcourt les cellules pour trouver la plus haute et on récupère
             # sa hauteur
             maxheight = max(elem.values(), key=lambda x: x.height).height
-            row = TableRow(dic=elem, height=maxheight)
+            row = TableRow(dic=elem, height=maxheight, width=self.width)
             self.rows.append(row)
             self.add_widget(row)
 
-class TableView(BoxLayout):
-    window_height = StringProperty('')
-    window_width = StringProperty('')
+class TableView(ScrollView):
     data = ListProperty([])
-    def on_release(self, instance):
+    table = ObjectProperty(None)
+    topheight = NumericProperty(20)
+
+    def sorting(self, instance):
         key = instance.text
-        #to_sort = [dic[key] for dic in self.data]
-        #print(sorted(to_sort))
         ordered_rows = sorted(self.tg.rows, key=lambda row: row.dic[key].text)
 
         if not instance.revert:
@@ -93,16 +104,15 @@ class TableView(BoxLayout):
             self.tg.add_widget(row)
 
     def __init__(self, **kwargs):
-        self.orientation = 'vertical'
         super(TableView, self).__init__(**kwargs)
-        #self.add_widget(TableTop(dic[0].keys(), width=col_width, height=20, on_release=self.on_release))
-        self.add_widget(TableTop(cells=self.data[0],
-                                 height=20, on_release=self.on_release))
-        sc = ScrollView(size_hint_y=None, size_hint_x=None,
-                        height=self.window_height, width=self.window_width)
-        self.add_widget(sc)
-        self.tg = TableGrid(data=self.data, width=self.width, height=30)
-        sc.add_widget(self.tg)
+        if len(self.data) == 0:
+            return
+        tb = TableTop(cells=self.data[0], height=self.topheight,
+                                          on_release=self.sorting)
+        self.table.add_widget(tb)
+        total_width = sum([ c.width for c in self.data[0].values() ])
+        self.tg = TableGrid(data=self.data, width=total_width, height=30)
+        self.table.add_widget(self.tg)
 
 class TestApp(App):
     class Cell(TableCell, Label):
@@ -111,17 +121,19 @@ class TestApp(App):
             self.size_hint_x = None
             self.size = self.texture_size
             self.height=40
+            self.halign = 'center'
             self.shorten = True
             super(TestApp.Cell, self).__init__(**kwargs)
             self.text_size = (self.width, None)
     def build(self):
         l = [OrderedDict({
            'nom': TestApp.Cell(name='nom', text=eleve.__str__(), width=180),
-           'tel': TestApp.Cell(name='tel', text=eleve.telephone, width=150),
-           'photo': TestApp.Cell(name='photo', text=eleve.photo_path, width=150)
+           'tel': TestApp.Cell(name='tel', text=eleve.telephone, width=250),
+           'photo': TestApp.Cell(name='photo', text=eleve.photo_path, width=150),
+           'pudu' : TestApp.Cell(name='pudu', text='oh oui', width=300)
            })
              for eleve in formation_db.liste_eleves_all()]
-        return TableView(data=l, window_height='200dp', window_width='800dp')
+        return TableView(data=l, width=600, height=300)
 
 if __name__ == '__main__':
     TestApp().run()
