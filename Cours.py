@@ -21,6 +21,7 @@ from kivy.properties import ObjectProperty
 
 import log
 import formation_db
+from modelfactory import print_resultat
 from models.Cours import GROUPE_ANCIENS, BilanModule
 from Formation import Formation
 from ComboEdit import ComboEdit
@@ -66,7 +67,8 @@ class CoursGroupeExistant(Screen):
         self.dict_eleve = OrderedDict()
         liste_eleves = self.liste_presents + self.liste_anciens
         presents_set = set(liste_eleves)
-        self.liste_groupes.append(self.groupe_anciens)
+        if self.groupe_anciens:
+            self.liste_groupes.append(self.groupe_anciens)
         for groupe in sorted(self.liste_groupes, key=lambda x: x.nom):
             eleves_set = set(groupe.participants)
             eleves_pour_ce_groupe = list(eleves_set & presents_set)
@@ -122,6 +124,7 @@ class CoursGroupeExistant(Screen):
         self.parent_scm = parent_scm
         self.liste_presents = list()
         self.liste_anciens = list()
+        self.anciens = list()
         self.liste_groupes = list()
         self.formation_wid = None
         super(CoursGroupeExistant, self).__init__(**kwargs)
@@ -141,22 +144,25 @@ class CoursGroupeExistant(Screen):
                               True, self.on_choix_presents
                               )
         self.bl.add_widget(self.liste_choix_presents)
-        # Pour les anciens, il faut rajouter une texte entry pour pouvoir
-        # chercher par nom
-        ba = BoxLayout(orientation='vertical')
-        self.bl.add_widget(ba)
-        ti = TextInput(size_hint=(1,.1), multiline=False)
-        ti.bind(text=self.on_ancien_tri_nom)
-        ba.add_widget(ti)
-        self.groupe_anciens = [groupe for groupe in self.related_groupes
-                              if groupe.nom == GROUPE_ANCIENS][0]
-        self.anciens = self.groupe_anciens.participants[:]
-        self.liste_choix_anciens = ListeView(
+
+        groupes_anciens = [groupe for groupe in self.related_groupes
+                              if groupe.nom == GROUPE_ANCIENS]
+        if groupes_anciens:
+            self.groupe_anciens = groupes_anciens[0]
+            # Pour les anciens, il faut rajouter une texte entry pour pouvoir
+            # chercher par nom
+            ba = BoxLayout(orientation='vertical')
+            self.bl.add_widget(ba)
+            ti = TextInput(size_hint=(1,.1), multiline=False)
+            ti.bind(text=self.on_ancien_tri_nom)
+            ba.add_widget(ti)
+            self.anciens = self.groupe_anciens.participants[:]
+            self.liste_choix_anciens = ListeView(
                        sorted([{'text': eleve.nom + eleve.prenom, 'elem': eleve}
                           for eleve in self.anciens], key=lambda x: x['text']),
                               True, self.on_choix_anciens
                               )
-        ba.add_widget(self.liste_choix_anciens)
+            ba.add_widget(self.liste_choix_anciens)
                               
 
 def init_liste_cours_popup(popuplist, on_choix):
@@ -169,6 +175,10 @@ def init_liste_cours_popup(popuplist, on_choix):
 class ConsultationEvaluationsGroupe(TabbedPanelItem):
     def __init__(self, parentscm, liste_modules, liste_eleves, **kwargs):
         super(ConsultationEvaluationsGroupe, self).__init__(**kwargs)
+        self.liste_modules = liste_modules
+        self.liste_eleves = liste_eleves
+        self.main_box = BoxLayout(orientation='vertical')
+        self.add_widget(self.main_box)
         self.recap = list()
         for eleve in liste_eleves:
             eleve_dict = OrderedDict()
@@ -190,7 +200,25 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
                                                      width=140,
                                                      name=nom_module)
             self.recap.append(eleve_dict)
-        self.add_widget(TableView(data=self.recap, width=700, height=400))
+        self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+        prin = Button(text='Imprimer', size_hint=[.1, .2],
+                      on_press=self.print_result)
+        self.main_box.add_widget(prin)
+
+    def print_result(self, dummy):
+        if not self.liste_modules: return
+        for eleve in self.liste_eleves:
+            bilans_modules = list()
+            resultats_tests = list()
+            for module in self.liste_modules:
+               bilans_modules.append(
+                          formation_db.trouver_bilans_par_eleve([eleve], [module])),
+               for test in module.tests:
+                   resultats_tests.append(
+                     formation_db.trouver_resultats_test_par_eleve(test, eleve))
+            print_resultat(self.liste_modules[0].cours.nom, eleve,
+                        bilans_modules, resultats_tests
+                        )
 
 class CoursConsultationEvaluations(Screen):
     def __init__(self, parentscm, nom_cours, **kwargs):
