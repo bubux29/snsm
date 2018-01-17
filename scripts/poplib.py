@@ -29,7 +29,8 @@ def retrait_cours(nom):
 
 def ajout_jf(**kwargs):
     try:
-        j,_ = JourneeFormation.get_or_create(**kwargs)
+        #j,_ = JourneeFormation.get_or_create(**kwargs)
+        j = JourneeFormation.create(**kwargs)
         j.save()
         return j
     except Exception as e:
@@ -59,8 +60,12 @@ def ajout_groupe(nom_groupe, cours):
         groupe, _ = Groupe.get_or_create(nom=nom_groupe)
         groupe.save()
         for c in cours:
-            groupe.cours.add(c)
-            print('Ajout', nom_groupe, 'dans: ', c.__str__())
+            try:
+                cc=Cours.get(nom=c)
+                groupe.cours.add(cc)
+                print('Ajout', nom_groupe, 'dans: ', cc.__str__())
+            except Exception as e:
+                print('Groupe', nom_groupe, 'non rajouté dans :', c, 'car :', e)
         return groupe
     except Exception as e:
         #e = sys.exc_info()[0]
@@ -84,10 +89,11 @@ def ajout_bilan(**kwargs):
     try:
         bil=BilanModule.create(**kwargs)
         bil.save()
-        print('Ajout', module.nom, 'pour', eleve.__str__(), 'fait')
+        print('Ajout', bil.module.nom, 'pour', bil.eleve.__str__(),
+              'fait (' + bil.statut + ')')
         return bil
     except Exception as e:
-        print('Ajout', module.nom, 'impossible (' + e + ')')
+        print('Ajout', module.nom, 'impossible (', e, ')')
         return
 
 def ajout_res(**kwargs):

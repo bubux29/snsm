@@ -6,13 +6,13 @@ def initier_cours():
     ajout_cours('SSA TPC')
 
 def initier_modules():
-    ajout_mf('Rôle et mission', 'SSA TPC', 'TPC', 'situer son rôle et sa mission au sein d\'un dispositif évolutif et adaptable aux conditions du moment', 100)
+    ajout_mf('Rôle et mission', 'SSA TPC', 'TPC', 'situer son rôle et sa mission au sein d\'un dispositif évolutif et adaptable aux conditions du moment', 140)
 
-    ajout_mf('Analyse risques', 'SSA TPC', 'TPC', 'effectuer une analyse des risques particuliers présents sur sa zone', 100)
-    ajout_mf('Actions prévention', 'SSA TPC', 'TPC', 'développer des actions de prévention adaptées aux risques et pratiques sur zone', 100)
-    ajout_mf('Dispositif surveillance', 'SSA TPC', 'TPC', 'Participer à un dispositif de surveillance en mettant en oeuvre des techniques opérationnelles adaptées et mettant éventuellement en oeuvre des moyens spécifiques', 100)
+    ajout_mf('Analyse risques', 'SSA TPC', 'TPC', 'effectuer une analyse des risques particuliers présents sur sa zone', 140)
+    ajout_mf('Actions prévention', 'SSA TPC', 'TPC', 'développer des actions de prévention adaptées aux risques et pratiques sur zone', 140)
+    ajout_mf('Dispositif surveillance', 'SSA TPC', 'TPC', 'Participer à un dispositif de surveillance en mettant en oeuvre des techniques opérationnelles adaptées et mettant éventuellement en oeuvre des moyens spécifiques', 160)
     ajout_mf('Gestes PSA', 'SSA TPC', 'TPC', 'Réaliser des gestes de premier secours adaptés', 100)
-    ajout_mf('Action coordonnée', 'SSA TPC', 'TPC', 'Participer à une action coordonnée de sauvetage, dans sa zone, ou à proximité immédiate de celle-ci, à l\'aide de techniques opérationnelles adaptées ou en mettant en oeuvre des matériels spécifiques', 100)
+    ajout_mf('Action coordonnée', 'SSA TPC', 'TPC', 'Participer à une action coordonnée de sauvetage, dans sa zone, ou à proximité immédiate de celle-ci, à l\'aide de techniques opérationnelles adaptées ou en mettant en oeuvre des matériels spécifiques', 140)
     ajout_mf('Pilotage', 'SSA TPC', 'TPC', 'Réaliser une action de sauvetage en tant que pilote d\'une embarcation motorisée', 100)
 
 def initier_tests():

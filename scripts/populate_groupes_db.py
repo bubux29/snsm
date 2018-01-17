@@ -11,15 +11,26 @@ import formation_db
 
 from scripts.poplib import ajout_groupe
 
-def initier_groupes():
-    cours=formation_db.trouver_cours()
-    eleves=liste_eleves_all()
-    
-    for gt in [('Groupe1', ['Piscine', 'SSA TPC']), ('Groupe2', ['Piscine']), ('Groupe3', ['Piscine']), (GROUPE_ANCIENS, cours), ('Groupe4', ['Secourisme', 'SSA TPC']), ('Groupe5', ['Secourisme']), ('Groupe6', ['Secourisme'])]:
+TOUS_COURS=formation_db.trouver_cours()
+GROUPES_MATCH=[
+  ('Groupe1', ['Piscine', 'SSA TPC']),
+  ('Groupe2', ['Piscine', 'PSE1 Technicités']),
+  ('Groupe3', ['Piscine']),
+  (GROUPE_ANCIENS, TOUS_COURS),
+  ('Groupe4', ['SSA TPC']),
+  ('Groupe5', ['PSE1 Technicités']),
+  ('Groupe6', ['SSA TPC', 'PSE1 Technicités'])
+]
+
+def groupes_dans_cours():
+    for gt in GROUPES_MATCH:
         try:
             ajout_groupe(gt[0], gt[1])
         except:
             print(sys.exc_info())
+    
+def initier_groupes():
+    eleves=liste_eleves_all()
     
     ancien=Groupe.get(Groupe.nom=='Anciens')
     if not ancien.participants:
@@ -37,4 +48,5 @@ def initier_groupes():
             print(' -', eleve)
 
 if __name__ == '__main__':
+    groupes_dans_cours()
     initier_groupes()
