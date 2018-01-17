@@ -174,6 +174,14 @@ class Resultat (BaseModel):
     def __str__(self):
         return self.test.nom
 
+    def synthese(liste_resultats):
+        s = [ b.statut for b in liste_resultats ]
+        if Resultat.SUCCES in s:
+            return Resultat.SUCCES
+        if Resultat.ECHEC in s:
+            return Resultat.ECHEC
+        return Resultat.NONFAIT
+
 class BilanModule (BaseModel):
     SUCCES = '1'
     ECHEC = '0'

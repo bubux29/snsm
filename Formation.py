@@ -138,6 +138,9 @@ class LigneModule(BoxLayout):
         self.nom = module.nom
         self.module = module
         self.eleve = eleve
+        ### TODO: voir comment copier un resultat, histoire de pouvoir
+        ###       faire une comparaison complète avant d'enregistrer un nouveau
+        ###       bilan
         self.origine = resultat.statut
         self.nom_groupe_toggle = eleve.__str__()
         super(LigneModule, self).__init__(**kwargs)
@@ -268,20 +271,25 @@ class PanneauEvaluation(BoxLayout):
         self.liste_bilans = list()
         for module in liste_modules:
             try:
-                res = formation_db.trouver_bilan_module_par_eleve(module,
-                                                                  self.eleve)
+                lisres = formation_db.trouver_bilans_par_eleve([self.eleve],
+                                                               [module])
+                #res = BilanModule.synthese(lisres)
+                res = lisres[len(lisres) - 1]
             except:
                 res = BilanModule(eleve=self.eleve, module=module)
             mod = LigneModule(module=module, resultat=res, eleve=self.eleve,
                               height=20)
             self.liste_bilans.append(mod)
             core.add_widget(mod)
-            bx=LinedBox(orientation='vertical', size_hint_y=None, spacing=10, height=40*(len(module.tests) + 1))
+            bx=LinedBox(orientation='vertical', size_hint_y=None,
+                        spacing=10, height=40*(len(module.tests) + 1))
             core.add_widget(bx)
             for test in module.tests:
                 try:
-                   resultat = formation_db.trouver_resultat_test_par_eleve(
+                   lisres = formation_db.trouver_resultats_test_par_eleve(
                                                          test, self.eleve)
+                   #resultat = Resultat.synthese(lisres)
+                   resultat = lisres[len(lisres) - 1]
                 except Exception as e:
                    print('Pas de résultat pour', self.eleve.__str__(),
                          'sur', test.nom, e)
@@ -435,7 +443,7 @@ class PanneauFinFormation(BoxLayout):
         if self.former_bilans:
             self.recapitulatif.remove_widget(self.former_bilans)
         # Petit recap
-        self.former_bilans = TableView(data=self.recap(), window_width='800dp', window_height='300dp')
+        self.former_bilans = TableView(data=self.recap(), width=600, height=200)
         self.recapitulatif.add_widget(self.former_bilans)
 
 class Formation(Screen):
@@ -497,7 +505,7 @@ class Formation(Screen):
         cour = cours[0]
 
         jf = poplib.ajout_jf(lieu=lieu, cours=cour, formateur=formateur,
-                                   notes='')
+                             notes='')
 
         for pangr in self.dict_panneau_groupe.values():
             current_scm = pangr.scm

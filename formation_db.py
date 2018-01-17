@@ -62,10 +62,10 @@ def liste_modules_all():
 def liste_all_from(classe):
     return classe.select()
 
-def trouver_resultat_test_par_eleve(test, eleve):
+def trouver_resultats_test_par_eleve(test, eleve):
     ##return list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))[0]
     luste = list(Resultat.select().where(Resultat.eleve == eleve).where(Resultat.test == test))
-    return luste[len(luste) - 1]
+    return luste
 
 #def trouver_bilans_module_par_eleve(module, eleve):
     #luste = list(BilanModule.select().where(BilanModule.eleve == eleve and BilanModule.module == module))
