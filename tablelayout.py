@@ -6,11 +6,12 @@ from kivy.lang import Builder
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.widget import Widget
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 
-from kivy.properties import NumericProperty, StringProperty, ObjectProperty, ListProperty
+from kivy.properties import NumericProperty, StringProperty, ObjectProperty, ListProperty, BooleanProperty
 
 from collections import OrderedDict
 import formation_db
@@ -29,6 +30,15 @@ Builder.load_string('''
         width: self.minimum_width
         size_hint: None, None
         id: table
+<TableCell>:
+    canvas.before:
+        Color:
+            rgba: (.0, .3, .9, .6) if self.selected else (0, 0, 0, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    on_press:
+        self.selected = not self.selected
 ''')
 
 class TopButton(Button):
@@ -49,10 +59,12 @@ class TableTop(BoxLayout):
             b.revert = True
             self.add_widget(b)
 
-class TableCell(Widget):
+class TableCell(ButtonBehavior, Widget):
     name = StringProperty('unk')
     text = StringProperty('unk')
-    pass
+    selected = BooleanProperty(True)
+    def __init__(self, **kwargs):
+        super(TableCell, self).__init__(**kwargs)
 
 class TableRow(GridLayout):
     def __init__(self, dic, **kwargs):
