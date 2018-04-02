@@ -69,7 +69,7 @@ class ModuleFormation (BaseModel):
     description = peewee.TextField(null=False, verbose_name="Détail du module de formation à réaliser")
     cours = peewee.ForeignKeyField(Cours, related_name="modules")
     requis = ['nom', 'categorie', 'description', 'cours']
-    affichage = ['nom', 'cours', 'categorie']
+    affichage = [('nom', 200), ('cours', 100), ('categorie', 100)]
     largeur_cellule_min = peewee.IntegerField(verbose_name='Largeur minimum de la colonne qui doit afficher le contenu du module')
     class Meta:
         order_by = ('cours', 'categorie',)
@@ -90,6 +90,7 @@ class Test (BaseModel):
     #cours = peewee.ForeignKeyField(Cours, related_name="tests")
     module = peewee.ForeignKeyField(ModuleFormation, related_name="tests")
     requis = ['nom', 'description', 'module']
+    affichage = [('nom', 200), ('description', 400)]
     class Meta:
         order_by = ('module',)
         indexes = (
@@ -101,6 +102,7 @@ class Test (BaseModel):
 class Lieu (BaseModel):
     lieu = peewee.CharField(max_length=64, unique=True)
     description = peewee.TextField()
+    affichage = [('lieu', 120), ('description', 300)]
     class Meta:
         order_by = ('lieu',)
     def __str__(self):
@@ -165,7 +167,7 @@ class Resultat (BaseModel):
     date = peewee.ForeignKeyField(JourneeFormation)
     commentaires = peewee.TextField(null=True,
                    verbose_name="Avis de l'examinateur quant au passage de l'élève sur ce test")
-    affichage = (('eleve', 200), ('test', 120), ('statut', 60), ('commentaires', 300))
+    affichage = [('eleve', 200), ('test', 120), ('statut', 60), ('commentaires', 300)]
     class Meta:
         order_by = ('eleve',)
         indexes = (

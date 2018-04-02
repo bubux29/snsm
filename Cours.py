@@ -22,7 +22,7 @@ from kivy.properties import ObjectProperty
 import log
 import formation_db
 from modelfactory import print_resultat
-from models.Cours import GROUPE_ANCIENS, BilanModule
+from models.Cours import GROUPE_ANCIENS, BilanModule, Resultat
 from Formation import Formation
 from ComboEdit import ComboEdit
 from listeview import ListeView
@@ -179,7 +179,45 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
         self.liste_eleves = liste_eleves
         self.main_box = BoxLayout(orientation='vertical')
         self.add_widget(self.main_box)
-        self.recap = list()
+        self.recap = self.build_recap_test(liste_eleves, liste_modules)
+        self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+        prin = Button(text='Imprimer', size_hint=[.1, .2],
+                      on_press=self.print_result)
+        self.main_box.add_widget(prin)
+
+    def print_result(self, dummy):
+        if not self.liste_modules: return
+        nom_cours = self.liste_modules[0].cours.nom
+        for eleve in self.liste_eleves:
+            print_resultat(self.liste_modules[0].cours.nom, self.liste_modules, eleve.__str__())
+
+    def build_recap_test(self, liste_eleves, liste_modules):
+        recap = list()
+        for eleve in liste_eleves:
+            eleve_dict = OrderedDict()
+            eleve_dict['nom'] = StdCellView.factory('E_CharField',
+                                                    eleve.__str__(),
+                                                    width=180, name='nom')
+            for module in liste_modules:
+                for test in formation_db.trouver_tests_par_modules([module]):
+                    try:
+                        lr = formation_db.trouver_resultats_tests_par_eleves([test], [eleve])
+                        r = Resultat.synthese(lr)
+                    except Exception as e:
+                        print("prout", e)
+                        r = Resultat(eleve=eleve, test=test).statut
+                    nom_test = test.nom
+                    eleve_dict[nom_test] = StdCellView.factory(
+                                                    'E_CharField',
+                                                    r,
+                                                    width=140,
+                                                    name=nom_test)
+
+            recap.append(eleve_dict)
+        return recap
+
+    def build_recap_module(self, liste_eleves, liste_modules):
+        recap = list()
         for eleve in liste_eleves:
             eleve_dict = OrderedDict()
             eleve_dict['nom'] = StdCellView.factory('E_CharField',
@@ -190,7 +228,6 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
                     l = formation_db.trouver_bilans_par_eleve([eleve], [module])
                     s = BilanModule.synthese(l)
                 except Exception as e:
-                    print('prout: ', e)
                     s = BilanModule(eleve=eleve, module=module).statut
                 nom_module = module.nom
                 eleve_dict[nom_module] = StdCellView.factory(
@@ -199,26 +236,8 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
                                                      #width=module.largeur_cellule_min,
                                                      width=140,
                                                      name=nom_module)
-            self.recap.append(eleve_dict)
-        self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
-        prin = Button(text='Imprimer', size_hint=[.1, .2],
-                      on_press=self.print_result)
-        self.main_box.add_widget(prin)
-
-    def print_result(self, dummy):
-        if not self.liste_modules: return
-        for eleve in self.liste_eleves:
-            bilans_modules = list()
-            resultats_tests = list()
-            for module in self.liste_modules:
-               bilans_modules.append(
-                          formation_db.trouver_bilans_par_eleve([eleve], [module])),
-               for test in module.tests:
-                   resultats_tests.append(
-                     formation_db.trouver_resultats_test_par_eleve(test, eleve))
-            print_resultat(self.liste_modules[0].cours.nom, eleve,
-                        bilans_modules, resultats_tests
-                        )
+            recap.append(eleve_dict)
+        return recap
 
 class CoursConsultationEvaluations(Screen):
     def __init__(self, parentscm, nom_cours, **kwargs):

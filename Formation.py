@@ -286,8 +286,8 @@ class PanneauEvaluation(BoxLayout):
             core.add_widget(bx)
             for test in module.tests:
                 try:
-                   lisres = formation_db.trouver_resultats_test_par_eleve(
-                                                         test, self.eleve)
+                   lisres = formation_db.trouver_resultats_tests_par_eleves(
+                                                         [test], [self.eleve])
                    #resultat = Resultat.synthese(lisres)
                    resultat = lisres[len(lisres) - 1]
                 except Exception as e:

@@ -7,6 +7,7 @@ class FieldType(Enum):
     E_BoolField = 4
     E_LinkField  = 5
     E_TestResField = 6
+    E_ImageField = 7
 
 FieldsDescription = (
   (FieldType.E_CharField, 'TextEntry'),
@@ -15,5 +16,6 @@ FieldsDescription = (
   (FieldType.E_BoolField, 'Check'),
   (FieldType.E_LinkField, 'Foreign'),
   (FieldType.E_TestResField, 'TextArea'),
+  (FieldType.E_ImageField, 'Image'),
 )
 

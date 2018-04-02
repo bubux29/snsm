@@ -1,3 +1,7 @@
+<Wix@BoxLayout>:
+    canvas:
+        Line:
+            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
 
 <Notebook@TabbedPanel>:
     cols: 1
@@ -128,6 +132,29 @@
                 on_press:
                     root.sauvegarder()
 
+<GestionModele>:
+    core: core
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            id: actions
+            size_hint: (.4,.1)
+            Button:
+                text: 'Retour'
+                on_press:
+                    root.parentscm.transition.direction = 'right'
+                    root.parentscm.current = 'GestionMenuPrincipal'
+            Button:
+                text: 'Nouveau'
+                on_press:
+                    print (root.size, core.size)
+        Wix:
+            orientation: 'vertical'
+            size_hint: (1,1)
+            id: core
+            pos_hint: {'center_x': .5} ## <--- ????
+
 <GestionMenuPrincipal>:
     BoxLayout:
         orientation: 'vertical'
@@ -141,16 +168,20 @@
             Button:
                 text: 'Élèves'
                 on_press:
+                    root.parentscm.transition.direction = 'left'
                     root.parentscm.current = 'GestionEleves'
             Button:
                 text: 'Lieux de Formation'
                 on_press:
+                    root.parentscm.transition.direction = 'left'
                     root.parentscm.current = 'GestionLieux'
             Button:
                 text: 'Modules de Formation'
                 on_press:
+                    root.parentscm.transition.direction = 'left'
                     root.parentscm.current = 'GestionModules'
             Button:
                 text: 'Tests'
                 on_press:
+                    root.parentscm.transition.direction = 'left'
                     root.parentscm.current = 'GestionTests'

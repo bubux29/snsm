@@ -1,4 +1,3 @@
-
 from models.Cours import *
 from models.Cours import _connect_to_db, _disconnect_db, _create_tables
 from models.Trombi import Eleve
@@ -38,8 +37,11 @@ def trouver_lieux(noms=None):
     else:
         return list(Lieu.select().where(Lieu.lieu << noms))
 
-def _liste_by(cls, rule):
-    return cls.select().where(rule)
+def liste_par_classe(cls, rule=None):
+    if rule:
+        return cls.select().where(rule)
+    else:
+        return cls.select()
 
 def liste_cours_all():
     return Cours.select()
@@ -62,9 +64,9 @@ def liste_modules_all():
 def liste_all_from(classe):
     return classe.select()
 
-def trouver_resultats_test_par_eleve(test, eleve):
+def trouver_resultats_tests_par_eleves(test, eleve):
     ##return list(Resultat.select().where(Resultat.eleve == eleve and Resultat.test == test))[0]
-    luste = list(Resultat.select().where(Resultat.eleve == eleve).where(Resultat.test == test))
+    luste = list(Resultat.select().where(Resultat.eleve << eleve).where(Resultat.test << test))
     return luste
 
 #def trouver_bilans_module_par_eleve(module, eleve):
@@ -76,6 +78,9 @@ def trouver_modules_par_cours(cours):
 
 def trouver_bilans_par_eleve(eleves, modules):
     return list(BilanModule.select().where(BilanModule.module << modules).where(BilanModule.eleve << eleves))
+
+def trouver_tests_par_modules(modules):
+    return list(Test.select().where(Test.module << modules))
 
 #Through.select(Through,Groupe,Cours).join(Cours).switch(Through).join(Groupe).where(Cours.nom << nom_cours):
 def trouver_groupes_par_cours(noms_cours):

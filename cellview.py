@@ -4,6 +4,7 @@ kivy.require('1.10.0')
 
 from kivy.app import App
 from kivy.uix.label import Label
+from kivy.uix.image import Image
 from kivy.properties import BooleanProperty
 
 from models.dbDefs import FieldType
@@ -48,6 +49,17 @@ class BoolViewCell(TableCell, Label):
         else:
             self.text = 'X'
 
+class ImageViewCell(TableCell, Image):
+    def __init__(self, obj, height=40, **kwargs):
+        self.size_hint_y = None
+        self.size_hint_x = None
+        self.halign = 'center'
+        self.valign = 'center'
+        self.height=height
+        if obj:
+            self.source = obj
+        super(ImageViewCell, self).__init__(**kwargs)
+
 class LinkViewCell(CharViewCell):
     def __init__(self, obj, height=40, **kwargs):
         self.size_hint_y = None
@@ -66,6 +78,7 @@ E_TextField=TextViewCell,
 E_DateField=CharViewCell,
 E_BoolField=BoolViewCell,
 E_LinkField=LinkViewCell,
+E_ImageField=ImageViewCell,
 )
 
 class StdCellView:
@@ -86,9 +99,10 @@ def getmember(obj, name):
 def getmembertype(classe, name):
     return type(getmember(classe, name))
 
-def cells(elem):
+def cells(elem, cells=None):
     classe = type(elem)
-    cells = OrderedDict()
+    if not cells:
+        cells = OrderedDict()
     try:
         for e,w in classe.affichage:
             # On ne peut pas facilement récupérer le type à partir de:
@@ -112,7 +126,7 @@ class TestApp(App):
         #l = [cells(e) for e in Eleve.select()]
         l = [cells(r) for r in Resultat.select()]
         #exit(1)
-        return TableView(data=l, window_height='400dp', window_width='800dp')
+        return TableView(data=l, height='400dp', width='800dp')
 
 if __name__ == '__main__':
     from models.Trombi import Eleve

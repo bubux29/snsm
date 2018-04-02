@@ -17,7 +17,10 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from KivyCalendar import DatePicker
 
+from collections import OrderedDict
+
 from listeview import ListeView
+from cellview import cells, ImageViewCell, getmember
 
 import log
 import formation_db
@@ -25,6 +28,7 @@ import formation_db
 import inspect
 from models import Cours, Trombi, dbHelper
 from models.dbDefs import FieldType
+from tablelayout import TableView
 
 def err(text):
     log.err("GESTION", text)
@@ -72,29 +76,24 @@ def generateForm(classe):
     box.add_widget(Widget())
     return box
 
-def generateGridConsultation(classe):
-    box=GridLayout(cols=len(classe.affichage))
-    # Sur la première ligne on met les champs
-    for name in classe.affichage:
-        box.add_widget(Label(text=name))
-    return box
-
-class GestionEleves(Screen):
-    def __init__(self, parentscm, **kwargs):
-        super(GestionEleves, self).__init__(**kwargs)
-        self.parentscm = parentscm
-        self.parentscm.add_widget(GestionNouvelEleve(name='NouvelEleve', parentscm=parentscm))
-        self.parentscm.add_widget(GestionConsultationEleves(name='ElevesParGroupe', parentscm=parentscm, pargroupe=True))
-        self.parentscm.add_widget(GestionConsultationEleves(name='TousEleves', parentscm=parentscm))
-
-class GestionNouvelEleve(Screen):
-    core = ObjectProperty(None)
-    def __init__(self, parentscm, **kwargs):
-        super(GestionNouvelEleve, self).__init__(**kwargs)
-        self.parentscm = parentscm
-        self.core.add_widget(generateForm(Trombi.Eleve))
-    def enregistreNouvelEleve(self):
-        print('OK podium')
+def consultationElements(classe):
+    elems = list()
+    # D'abord, on voit s'il y a une image dans le modèle
+    try:
+        chemin = getmember(classe, 'image')[0]
+    except Exception as e:
+        print('pas dimage definie pour', classe)
+        print(e)
+        chemin = ''
+    for elem in formation_db.liste_par_classe(classe):
+        elem_details = OrderedDict()
+        if chemin:
+            path = getmember(elem, chemin)
+            print('chemin photo:', path)
+            elem_details[chemin] = ImageViewCell(path, width=80, name='Photo')
+        elem_details = cells(elem, elem_details)
+        elems.append(elem_details)
+    return elems
 
 class PanneauDetailsEleve(BoxLayout):
     eleve = ObjectProperty(None)
@@ -111,73 +110,6 @@ class PanneauDetailsEleve(BoxLayout):
             return
         self.add_widget(Image(source=self.eleve.photo_path))
         self.add_widget(Label(text=self.eleve.__str__()))
-
-class PanneauConsultationEleve(Screen):
-    eleve = ObjectProperty(None)
-    def __init__(self, eleve, **kwargs):
-        self.eleve=eleve
-        super(PanneauConsultationEleve, self).__init__(**kwargs)
-
-class DefaultTab(Screen):
-    pass
-
-class GestionConsultationEleves(Screen):
-    principal = ObjectProperty(None)
-    def on_choix_groupe(self, liste_nom_groupe, liste_groupe):
-        for groupe in liste_groupe:
-            self.liste_choix_eleves.data = [
-                                     {'text': eleve.__str__(), 'elem': eleve}
-                                     for eleve in
-                                         sorted(
-                                             groupe.participants,
-                                             key=lambda eleve: eleve.__str__()
-                                         )
-                                     ]
-
-    def on_choix_eleve(self, liste_noms, liste_eleves):
-        for nom in liste_noms:
-            self.scm.current=nom
-
-    def on_retour(self, hein):
-        self.parentscm.transition.direction='right'
-        self.parentscm.current='GestionEleves'
-
-    def __init__(self, parentscm, pargroupe=False, **kwargs):
-        super(GestionConsultationEleves, self).__init__(**kwargs)
-        self.parentscm = parentscm
-        groupes=None
-        liste_eleves=[{'text': eleve.__str__(), 'elem': eleve}
-                       for eleve in formation_db.liste_eleves_all()]
-        bi=BoxLayout(orientation='vertical', size_hint=(.2,1))
-        self.principal.add_widget(bi)
-        button=Button(text='Retour', on_press=self.on_retour, size_hint=(1,.1))
-        bi.add_widget(button)
-        if pargroupe == True:
-            groupes=formation_db.liste_groupes_all()
-            liste_groupes=[{'text': groupe.__str__(), 'elem': groupe}
-                          for groupe in formation_db.liste_groupes_all()]
-            self.liste_choix_groupe = ListeView(liste_groupes,
-                                                False, self.on_choix_groupe)
-            bi.add_widget(Label(text='Groupe', size_hint=(1,.1)))
-            bi.add_widget(self.liste_choix_groupe)
-
-            bi=BoxLayout(orientation='vertical', size_hint=(.2,1))
-            self.principal.add_widget(bi)
-            liste_eleves=[{'text': eleve.__str__(), 'elem': eleve}
-                          for eleve in []]
-        self.liste_choix_eleves = ListeView(liste_eleves,
-                                               False, self.on_choix_eleve)
-        bi=BoxLayout(orientation='vertical', size_hint=(.2,1))
-        bi.add_widget(Label(text='Eleve', size_hint=(1,.1)))
-        bi.add_widget(self.liste_choix_eleves)
-        self.principal.add_widget(bi)
-
-        # Création des panneaux des élèves
-        self.scm = ScreenManager()
-        self.scm.add_widget(DefaultTab(name='default'))
-        for eleve in formation_db.liste_eleves_all():
-            self.scm.add_widget(PanneauConsultationEleve(name=eleve.__str__(), eleve=eleve))
-        self.principal.add_widget(self.scm)
 
 class GestionEvaluationGroupes(Screen):
     def __init__(self, parentscm, nom_cours, **kwargs):
@@ -196,14 +128,6 @@ class GestionEvaluationGroupes(Screen):
                 liste_bilans.append(dic)
         self.add_widget(TableView(liste_bilans, '400dp'))
 
-class GestionCours(Screen):
-    pass
-
-class GestionLieux(Screen):
-    def __init__(self, parentscm, **kwargs):
-        super(GestionLieux, self).__init__(**kwargs)
-        self.parentscm = parentscm
-
 class NouveauModule(Screen):
     core = ObjectProperty(None)
     def __init__(self, parentscm, **kwargs):
@@ -211,27 +135,40 @@ class NouveauModule(Screen):
         self.parentscm = parentscm
         self.core.add_widget(generateForm(Cours.ModuleFormation))
 
-class GestionModules(Screen):
-    core = ObjectProperty(None)
-    def __init__(self, parentscm, **kwargs):
-        super(GestionModules, self).__init__(**kwargs)
+class GestionModele(Screen):
+    def __init__(self, parentscm, classe, **kwargs):
+        super(GestionModele, self).__init__(**kwargs)
         self.parentscm = parentscm
-        self.core.add_widget(generateGridConsultation(Cours.ModuleFormation))
-        self.parentscm.add_widget(NouveauModule(name='NouveauModule', parentscm=parentscm))
+        self.classe = classe
+        self.core.bind(size=self.propagatesize)
+        self.tableView = None
+        self.updatelist()
+        
+    def propagatesize(self, instance, pos):
+        self.tableView.size = self.core.size
 
-class GestionTests(Screen):
-    def __init__(self, parentscm, **kwargs):
-        super(GestionTests, self).__init__(**kwargs)
-        self.parentscm = parentscm
+    def updatelist(self):
+        if self.tableView:
+            self.core.remove_widget(self.tableView)
+        self.tableView = TableView(data=consultationElements(self.classe))
+        self.core.add_widget(self.tableView)
 
 class GestionMenuPrincipal(Screen):
     def __init__(self, parentscm, **kwargs):
         super(GestionMenuPrincipal, self).__init__(**kwargs)
         self.parentscm=parentscm
-        self.parentscm.add_widget(GestionEleves(name='GestionEleves', parentscm=parentscm))
-        self.parentscm.add_widget(GestionLieux(name='GestionLieux', parentscm=parentscm))
-        self.parentscm.add_widget(GestionModules(name='GestionModules', parentscm=parentscm))
-        self.parentscm.add_widget(GestionTests(name='GestionTests', parentscm=parentscm))
+        self.parentscm.add_widget(GestionModele(name='GestionEleves',
+                                                parentscm=parentscm,
+                                                classe=Trombi.Eleve))
+        self.parentscm.add_widget(GestionModele(name='GestionLieux',
+                                                parentscm=parentscm,
+                                                classe=Cours.Lieu))
+        self.parentscm.add_widget(GestionModele(name='GestionModules',
+                                                parentscm=parentscm,
+                                                classe=Cours.ModuleFormation))
+        self.parentscm.add_widget(GestionModele(name='GestionTests',
+                                                parentscm=parentscm,
+                                                classe=Cours.Test))
 
 class GestionSCM(ScreenManager):
     def __init__(self, **kwargs):
