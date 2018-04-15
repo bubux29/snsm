@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # On va se servir de l'utilitaire Logger de kivy, qui a pas l'air si mal!
 from kivy.logger import Logger

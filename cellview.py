@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import kivy
 kivy.require('1.10.0')

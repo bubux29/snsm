@@ -17,7 +17,18 @@ CA_VALIDE_PAS_ENCORE='☐'
 #worksheet.write(0, 0, CA_VALIDE)
 FONT_NAME='Liberation Sans'
 
+MANDATORY_PSE1_TECHN = [
+  'nom_eleve',
+  'prenom_eleve',
+  'bilans_modules',
+]
+
 class pse1_tech(_Implem):
+    def check_dic(self, bilans):
+        for key in MANDATORY_PSE1_TECHN:
+            if key not in bilans:
+                raise KeyError('Il manque : ' + key)
+
     def header(self):
         workbook = self.workbook
         worksheet = self.worksheet
@@ -36,6 +47,14 @@ class pse1_tech(_Implem):
                                              'font_name': FONT_NAME,
                                              'font_size': 12,
                                              'align': 'center', 'valign': 'vcenter',
+                                            })
+        NOM_PARTICIPANT_FORMAT = workbook.add_format({
+                                             'font_name': FONT_NAME,
+                                             'font_size': 12,
+                                             'align': 'center', 'valign': 'vcenter',
+                                             'bold': 1,
+                                             'fg_color': WHITE,
+                                             'font_scheme': 'major',
                                             })
         worksheet.set_column(0, 1, 26)
         worksheet.set_column(2, 4, 10)
@@ -56,6 +75,9 @@ class pse1_tech(_Implem):
         worksheet.write(5, 0, 'Nom du participant :', DETAILS_FORMAT)
         worksheet.write(7, 0, 'Date formation :   du ', DETAILS_FORMAT)
         worksheet.write(7, 2, 'au', DETAILS_FORMAT_CENTER)
+        worksheet.merge_range(5, 1, 5, 3,
+                       self.infos['nom_eleve'] + ' ' + self.infos['prenom_eleve'],
+                       NOM_PARTICIPANT_FORMAT)
 
     def body(self):
         workbook = self.workbook
@@ -65,7 +87,15 @@ class pse1_tech(_Implem):
         desc = ('Dégagement d\'urgence', 'FT 02 D 01')
         desclist = [desc]
         momo = {'titre':'PROTECTION ET SECURITE ⁽¹⁾', 'descs': desclist}
-        self._add_module(12, 0, 3, momo)
+        at = _first_line
+        columns=(0, 3)
+        nmomo = 0
+        for momo in self.infos['bilans_modules']:
+            if nmomo == 4:
+                at = _first_line
+                columns = (5, 7)
+            at = self._add_module(at, columns[0], columns[1], momo)
+            nmomo += 1
 
         worksheet.write(35, 5,
                         '(1) Renseigner la case par une croix',
@@ -105,21 +135,21 @@ class pse1_tech(_Implem):
                                           })
 
         worksheet.merge_range(first_line, first_column, first_line, last_column,
-                              module['titre'], TITRE_FORMAT)
+                              module.nom_module.upper() + ' ⁽¹⁾', TITRE_FORMAT)
 
         line  = first_line + 1
-        for desc in module['descs']:
+        for test in module.liste_tests:
             worksheet.write(line, last_column,
                             CA_VALIDE_PAS_ENCORE, DESC_FORMAT_CENTER)
             worksheet.write(line, last_column - 1,
-                            desc[1], DESC_FORMAT_SMALL)
+                            'FT', DESC_FORMAT_SMALL)
             if last_column - 2 == first_column:
                 worksheet.write(line, first_column,
-                                desc[0], DESC_FORMAT)
+                                test.description_test, DESC_FORMAT)
             else:
                 worksheet.merge_range(line, first_column,
                                 line, last_column - 2,
-                                desc[0], DESC_FORMAT)
+                                test.description_test, DESC_FORMAT)
             line += 1
         return line
 
@@ -140,21 +170,23 @@ class pse1_tech(_Implem):
                         'Nom et signature du candidat :',
                         DESC_FORMAT)
 
-def populate_file(filename):
-    workbook = xlsxwriter.Workbook(filename)
-    worksheet = workbook.add_worksheet()
-    worksheet.set_zoom(70)
-    worksheet.set_landscape()
-    #worksheet.set_page_view()
-    worksheet.hide_gridlines(1)
-    worksheet.fit_to_pages(1, 1)
-    worksheet.print_area(0, 0, 56, 7)
-    worksheet.set_margins(.43, .24, .75, .32)
-    # set paper: A4
-    worksheet.set_paper(9)
+    def set_print_format(self):
+        worksheet = self.worksheet
+        worksheet.set_zoom(70)
+        worksheet.set_landscape()
+        #worksheet.set_page_view()
+        worksheet.hide_gridlines(1)
+        worksheet.fit_to_pages(1, 1)
+        worksheet.print_area(0, 0, 56, 7)
+        worksheet.set_margins(.43, .24, .75, .32)
+        # set paper: A4
+        worksheet.set_paper(9)
 
-    pt = pse1_tech(workbook, worksheet)
-    pt.populate_workbook()
+    def populate_file(filename, **bilan_eleve):
+        workbook = xlsxwriter.Workbook(filename)
+        worksheet = workbook.add_worksheet()
+        pt = pse1_tech(workbook, worksheet, **bilan_eleve)
+        pt.populate_workbook()
 
 if __name__ == '__main__':
     populate_file('Example_pse1.xlsx')

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Extraite de https://github.com/kivy/kivy/wiki/Editable-ComboBox
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.dropdown import DropDown

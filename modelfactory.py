@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from diplomes import ssa_model, pse1_model
 import formation_db
 

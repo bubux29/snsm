@@ -139,7 +139,8 @@ class JourneeFormation (BaseModel):
                                    verbose_name="Nom du formateur présent pour la journée (un seul nom autorisé)",)
      #groupe_participants = peewee.ForeignKeyField(Groupe, related_name="a_participe_le")
      #modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
-     notes = peewee.TextField(verbose_name="Notes prises lors du cours")
+     #notes = peewee.TextField(verbose_name="Notes prises lors du cours")
+     notes = peewee.TextField(verbose_name="Mise en situation")
      class Meta:
         order_by = ('date',)
         indexes = (

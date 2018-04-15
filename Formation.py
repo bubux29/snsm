@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 
 from kivy.app import App
@@ -412,6 +413,7 @@ class PanneauGroupe(BoxLayout):
 class PanneauFinFormation(BoxLayout):
     ligne_formateur = ObjectProperty(None)
     ligne_lieu = ObjectProperty(None)
+    mise_en_situation = ObjectProperty(None)
     terminerbutton = ObjectProperty(None)
     recapitulatif = ObjectProperty(None)
     def __init__(self, terminaison, recap, **kwargs):
@@ -439,6 +441,8 @@ class PanneauFinFormation(BoxLayout):
     def nom_lieu(self):
         return self.dpl.text
 
+    def nom_mise_en_situation(self):
+        return self.mise_en_situation.text
     def update(self, instance):
         if self.former_bilans:
             self.recapitulatif.remove_widget(self.former_bilans)
@@ -485,18 +489,23 @@ class Formation(Screen):
             print('putain, le mec a déjà validé une fois...')
         nom_formateur = self.panfin.nom_formateur()
         formateurs = formation_db.trouver_formateurs(noms=[nom_formateur])
-        ## TODO: faire un popup d'erreur
         if not formateurs:
             pops.pop_warn(None, 'Renseigner le nom du formateur')
             return
         formateur = formateurs[0]
         nom_lieu = self.panfin.nom_lieu()
+        mise_en_siuation = self.panfin.nom_mise_en_situation()
         lieux = formation_db.trouver_lieux(noms=[nom_lieu])
         if not lieux:
             pops.pop_warn(None,
                           'Renseigner le lieu de la formation d\'aujourd\'hui')
             return
         lieu = lieux[0]
+
+        if not mise_en_situation:
+            pops.pop_warn(None,
+                        'Renseigner le détail de la mise en situation')
+            return
 
         cours = formation_db.trouver_cours([self.titre])
         if not cours:
@@ -505,7 +514,7 @@ class Formation(Screen):
         cour = cours[0]
 
         jf = poplib.ajout_jf(lieu=lieu, cours=cour, formateur=formateur,
-                             notes='')
+                             notes=mise_en_situation)
 
         for pangr in self.dict_panneau_groupe.values():
             current_scm = pangr.scm

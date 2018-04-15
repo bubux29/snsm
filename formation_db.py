@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from models.Cours import *
 from models.Cours import _connect_to_db, _disconnect_db, _create_tables
 from models.Trombi import Eleve

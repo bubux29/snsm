@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from kivy.app import App
 from kivy.properties import ListProperty
 from kivy.uix.dropdown import DropDown

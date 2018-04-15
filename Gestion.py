@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 
 from kivy.app import App
@@ -82,58 +83,15 @@ def consultationElements(classe):
     try:
         chemin = getmember(classe, 'image')[0]
     except Exception as e:
-        print('pas dimage definie pour', classe)
-        print(e)
         chemin = ''
     for elem in formation_db.liste_par_classe(classe):
         elem_details = OrderedDict()
         if chemin:
             path = getmember(elem, chemin)
-            print('chemin photo:', path)
             elem_details[chemin] = ImageViewCell(path, width=80, name='Photo')
         elem_details = cells(elem, elem_details)
         elems.append(elem_details)
     return elems
-
-class PanneauDetailsEleve(BoxLayout):
-    eleve = ObjectProperty(None)
-    def __init__(self, **kwargs):
-        super(PanneauDetailsEleve, self).__init__(**kwargs)
-        # Il aurait fallu que le self.eleve soit défini maintenant, ce qui n'est
-        # pas le cacas!!
-        self.drawn=False
-
-    def draw(self):
-        if self.drawn == False:
-            self.drawn=True
-        else:
-            return
-        self.add_widget(Image(source=self.eleve.photo_path))
-        self.add_widget(Label(text=self.eleve.__str__()))
-
-class GestionEvaluationGroupes(Screen):
-    def __init__(self, parentscm, nom_cours, **kwargs):
-        liste_groupes = formation_db.trouver_groupes_par_cours(nom_cours)
-        liste_modules = formation_db.trouver_modules_par_cours(nom_cours)
-        # Construction du dictionnaire à afficher:
-        liste_bilans = list()
-        for groupe in liste_groupes:
-            for eleve in groupe.participants:
-                dic = dict()
-                dic['nom'] = eleve.__str__()
-                liste_bilans = formation_db.trouver_bilans_par_eleve(eleve, liste_modules)
-                for bilan in liste_bilans:
-                    module = bilan.module
-                    dic[module.nom] = bilan.__str__()
-                liste_bilans.append(dic)
-        self.add_widget(TableView(liste_bilans, '400dp'))
-
-class NouveauModule(Screen):
-    core = ObjectProperty(None)
-    def __init__(self, parentscm, **kwargs):
-        super(NouveauModule, self).__init__(**kwargs)
-        self.parentscm = parentscm
-        self.core.add_widget(generateForm(Cours.ModuleFormation))
 
 class GestionModele(Screen):
     def __init__(self, parentscm, classe, **kwargs):

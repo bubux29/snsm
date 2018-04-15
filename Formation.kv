@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #: import TabbedPanel kivy.uix.tabbedpanel
 #: import DropDownMenu dropdownmenu
 
@@ -194,6 +195,7 @@
 <PanneauFinFormation>:
     ligne_formateur: ligne_formateur
     ligne_lieu: ligne_lieu
+    mise_en_situation: mise_en_situation
     terminerbutton: terminer
     recapitulatif: recapitulatif
     orientation: 'vertical'
@@ -212,12 +214,26 @@
         id: ligne_lieu
         height: 30
         size_hint_y: None
+        orientation: 'horizontal'
         Label:
             size_hint_y: None
             size_hint_x: .7
             height: 30
             pos_hint: {'right': 0}
             text: 'Nom du lieu de la formation du jour:'
+    BoxLayout:
+        height: 30
+        size_hint_y: None
+        orientation: 'horizontal'
+        Label:
+            height: 40
+            size_hint_x: .7
+            pos_hint: {'right': 0}
+            text: 'Nom mise en situation'
+        TextInput:
+            id: mise_en_situation
+            size_hint_x: .3
+            height: 40
     BoxLayout:
         id: recapitulatif
     Button:

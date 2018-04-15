@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import kivy
 kivy.require('1.10.0')
 
@@ -62,7 +63,7 @@ class TableTop(BoxLayout):
 class TableCell(ButtonBehavior, Widget):
     name = StringProperty('unk')
     text = StringProperty('unk')
-    selected = BooleanProperty(True)
+    selected = BooleanProperty(False)
     def __init__(self, **kwargs):
         super(TableCell, self).__init__(**kwargs)
 
@@ -74,11 +75,20 @@ class TableRow(GridLayout):
         super(TableRow, self).__init__(**kwargs)
         keys=self.dic.keys()
         self.cols = len(keys)
-        cells = list()
+        self.cells = list()
         for key in keys:
             lab = self.dic[key]
-            cells.append(self.dic[key])
+            self.cells.append(lab)
             self.add_widget(lab)
+            lab.bind(on_press=self.on_sel)
+
+    def on_sel(self, instance):
+        is_selected = not instance.selected
+        for cell in self.cells:
+            if instance == cell:
+                pass
+            else:
+                cell.selected = is_selected
 
 class TableGrid(BoxLayout):
     data = ListProperty([])
