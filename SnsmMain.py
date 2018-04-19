@@ -37,7 +37,6 @@ class Main(Widget):
         self.current_cours = nom_cours
         if not self.cours_sm.has_screen(nom_cours):
             cours = Screen(name=nom_cours)
-            #cours.add_widget(MainCoursMenu(nom_cours, self.retour_accueil))
             cours.add_widget(MainCoursScreenManager(nom_cours, self.retour_accueil))
             self.cours_sm.add_widget(cours)
         self.cours_sm.transition.direction = 'left'
