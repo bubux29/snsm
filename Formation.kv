@@ -105,13 +105,15 @@
 <PanneauEvaluation>
     core: core
     photo: photo
-    nom_eleve: nom_eleve
+    label_eleve: label_eleve
     bandeau: bandeau
+    size_hint_y: None
     BoxLayout:
         orientation: 'vertical'
         id: core
-        #size_hint_y: None
         spacing: 20
+        size_hint_y: None
+        height: self.minimum_height
         BoxLayout:
             id: bandeau
             size_hint_y: None
@@ -121,7 +123,7 @@
             Image:
                 id: photo
             Label:
-                id: nom_eleve
+                id: label_eleve
 
 <PanneauNote>:
     textinput: textinput
@@ -165,20 +167,14 @@
             text: 'Evaluation'
             on_release: video.play_video(False)
             id: panel
-            ScrollView:
-                size: root.size
-                pos: root.pos
-                PanneauEvaluation:
-                    id: eval
-                    height: root.evalheight
-                    pos_hint: {'top': 1}
-                    size_hint_y: None
-                    nom_eluve: root.name
-                    liste_modules: root.liste_modules
-        TabbedPanelItem:
-            id: cours
-            text: 'Cours'
-            on_release: video.play_video(False)
+            PanneauEvaluation:
+                id: eval
+                pos_hint: {'top': 1}
+                size_hint_y: None
+                width: root.width - 40
+                height: root.height
+                nom_eleve: root.name
+                liste_modules: root.liste_modules
         TabbedPanelItem:
             video: video
             text: 'Vidéo'
@@ -186,11 +182,6 @@
             PanneauVideo:
                 name: root.name
                 id: video
-        TabbedPanelItem:
-            id: notes
-            text: 'Notes'
-            on_release: video.play_video(False)
-            PanneauNote:
 
 <PanneauFinFormation>:
     ligne_formateur: ligne_formateur
@@ -258,8 +249,5 @@
             id: colonne_eleves
             orientation: 'vertical'
             size_hint: (.2,1)
-            Label:
-                size_hint: (1,.1)
-                text: 'Elèves'
         ScreenManager:
             id: scm

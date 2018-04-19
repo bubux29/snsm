@@ -19,7 +19,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
-from kivy.properties import ObjectProperty, BooleanProperty, ListProperty
+from kivy.properties import ObjectProperty, BooleanProperty, ListProperty, StringProperty
 from kivy.uix.videoplayer import VideoPlayer
 
 from collections import OrderedDict
@@ -57,11 +57,9 @@ class Video():
         self.nom = date
         self.path = VIDEO_PATH + "/" + eleve + "/" + date + ".avi"
         try:
-            #print("je crée:", os.path.dirname(self.path))
             os.makedirs(os.path.dirname(self.path), exist_ok=True)
         except:
             pass
-        #print("On sauve:", self.path)
 
 class PanneauVideo(BoxLayout):
     capture_bouton = ObjectProperty(None)
@@ -81,7 +79,6 @@ class PanneauVideo(BoxLayout):
 
     def on_affiche_video(self, nom_video, video):
         if not video : return
-        print("On va jouer:", video[0].path)
         self.playing_video = VideoPlayer(source=video[0].path, state='play')
         self.popup.content = self.playing_video
         # On arrête les enregistrements quand on affiche une vidéo
@@ -244,37 +241,24 @@ class LinedBox(BoxLayout):
 class NoteEvaluation(BoxLayout):
     pass
 
-class PanneauEvaluation(BoxLayout):
+class PanneauEvaluation(ScrollView):
     core = ObjectProperty(None)
     photo = ObjectProperty(None)
     bandeau = ObjectProperty(None)
-    nom_eluve = ObjectProperty(None)
-    nom_eleve = ObjectProperty(None)
+    nom_eleve = StringProperty(None)
+    label_eleve = ObjectProperty(None)
     liste_modules = ObjectProperty(None)
     photo_height = 80
-    #def __init__(self, liste_modules, nom_eleve, **kwargs):
-    def __init__(self, **kwargs):
-        super(PanneauEvaluation, self).__init__(**kwargs)
-        self.liste_tests=list()
 
-    def compute_height(nbmodules, nbtests):
-        return nbmodules * 60 + nbtests * 60 + PanneauEvaluation.photo_height
-
-    def creer_env(self, liste_modules, nom_eleve):
-        self.core.bind(minimum_height=self.core.setter('height'))
+    # Des qu'on positionne la liste des modules, on établit l'affichage
+    def on_liste_modules(self, instance, value):
         core = self.core
-        self.nom_eleve.text = nom_eleve
-        # Il nous faut simplement le chemin vers la photo...
-        # Ca nous fait une petite requête en plus!!!
-        self.eleve = formation_db.trouver_eleve(nom_eleve)
-        self.photo.source = self.eleve.photo_path
-        self.liste_modules = liste_modules[:]
         self.liste_bilans = list()
-        for module in liste_modules:
+        self.liste_tests=list()
+        for module in self.liste_modules:
             try:
                 lisres = formation_db.trouver_bilans_par_eleve([self.eleve],
                                                                [module])
-                #res = BilanModule.synthese(lisres)
                 res = lisres[len(lisres) - 1]
             except:
                 res = BilanModule(eleve=self.eleve, module=module)
@@ -285,6 +269,8 @@ class PanneauEvaluation(BoxLayout):
             bx=LinedBox(orientation='vertical', size_hint_y=None,
                         spacing=10, height=40*(len(module.tests) + 1))
             core.add_widget(bx)
+            core.height += mod.height
+            core.height += bx.height
             for test in module.tests:
                 try:
                    lisres = formation_db.trouver_resultats_tests_par_eleves(
@@ -292,8 +278,8 @@ class PanneauEvaluation(BoxLayout):
                    #resultat = Resultat.synthese(lisres)
                    resultat = lisres[len(lisres) - 1]
                 except Exception as e:
-                   print('Pas de résultat pour', self.eleve.__str__(),
-                         'sur', test.nom, e)
+                   #print('Pas de résultat pour', self.eleve.__str__(),
+                         #'sur', test.nom, e)
                    # On se crée un résultat bidon
                    resultat = Resultat(test=test, eleve=self.eleve)
                 test=LigneTest(self.eleve, resultat, test, height=20)
@@ -304,6 +290,13 @@ class PanneauEvaluation(BoxLayout):
             mod.commentaires = TextInput(height=50)
             bs.add_widget(mod.commentaires)
             bx.add_widget(bs)
+
+    def on_nom_eleve(self, instance, value):
+        self.label_eleve.text = self.nom_eleve
+        # Il nous faut simplement le chemin vers la photo...
+        # Ca nous fait une petite requête en plus!!!
+        self.eleve = formation_db.trouver_eleve(self.nom_eleve)
+        self.photo.source = self.eleve.photo_path
 
     def calcule_bilans(self):
         # On retourne, par module: le tuple:
@@ -324,7 +317,6 @@ class PanneauNote(BoxLayout):
         super(PanneauNote, self).__init__(**kwargs)
         self.liste_notes = list()
         self.liste_notes_view = ListeView([], False, self.on_affiche_note)
-        #self.consultation.add_widget(self.liste_notes_view)
         
     def sauvegarde_texte(self):
         if not self.textinput.text:
@@ -352,22 +344,7 @@ class EcranEleve(Screen):
     def __init__(self, nom_cours, **kwargs):
         cours = formation_db.trouver_cours([nom_cours])[0]
         self.liste_modules = cours.modules
-        for m in self.liste_modules: 
-            print(m.__str__())
-        nbtests = sum([len(m.tests) for m in cours.modules])
-        nbmodules = len(cours.modules)
-        self.evalheight = PanneauEvaluation.compute_height(nbmodules, nbtests)
-        print('Il y a', self.evalheight, 'hauteurs')
-        
         super(EcranEleve, self).__init__(**kwargs)
-        self.panneaueval.creer_env(self.liste_modules, self.name)
-        #panpan=PanneauEvaluation(liste_modules=self.liste_modules, nom_eleve=self.name, size_hint=(1,None))
-        #panpan.bind(minimum_height=panpan.setter('height'))
-        #rol = ScrollView(size_hint=(1, None), size=(self.width, self.height))
-        #rol.add_widget(panpan)
-        #self.panneaueval.add_widget(rol)
-        #self.panneaueval.add_widget(panpan)
-        #self.panneaueval.add_widget(PanneauEvaluation(liste_modules=liste_modules, nom_eleve=self.name, size_hint=(1,None), size=(self.width, self.height)))
 
     def bilan_eleve(self):
         return self.panneaueval.calcule_bilans()
@@ -385,6 +362,12 @@ class PanneauGroupe(BoxLayout):
         if not liste_eleve:
             return
         self.scm.current = liste_eleve[0].__str__()
+
+    def supprime_eleve(self, eleve):
+        self.liste_eleves.remove(eleve)
+        self.liste_choix_eleves.setDataDict(
+                                       [{'text': eleve.__str__(), 'elem': eleve}
+                                        for eleve in self.liste_eleves])
 
     def ajoute_nouvel_eleve(self, eleve):
         self.liste_eleves.append(eleve)
@@ -480,9 +463,14 @@ class Formation(Screen):
                 # Maintenant on gère les nouveaux élèves
                 nouveaux_eleves = [eleve for eleve in new_dic[nom_groupe]
                                  if not eleve in self.dict_eleves[nom_groupe]]
+                rejetes = [ eleve for eleve in self.dict_eleves[nom_groupe]
+                            if not eleve in new_dic[nom_groupe] ]
                 panneaugr = self.dict_panneau_groupe[nom_groupe]
                 for ne in nouveaux_eleves:
                     panneaugr.ajoute_nouvel_eleve(ne)
+                # Et on vire les autres
+                for mm in rejetes:
+                    panneaugr.supprime_eleve(mm)
            
     def terminaison(self, instance):
         if self.deja_enregistre:
@@ -494,7 +482,7 @@ class Formation(Screen):
             return
         formateur = formateurs[0]
         nom_lieu = self.panfin.nom_lieu()
-        mise_en_siuation = self.panfin.nom_mise_en_situation()
+        mise_en_situation = self.panfin.nom_mise_en_situation()
         lieux = formation_db.trouver_lieux(noms=[nom_lieu])
         if not lieux:
             pops.pop_warn(None,
