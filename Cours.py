@@ -302,21 +302,14 @@ class CoursChoixGroupe(Screen):
         super(CoursChoixGroupe, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
         parent_scm.add_widget(CoursGroupeNouveau(name='ng', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
-        parent_scm.add_widget(CoursGroupeExistant(name='ex', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
 
 #class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):
-    titre = ObjectProperty(None)
     retour = ObjectProperty(None)
-    demarrer_formation = ObjectProperty(None)
-    gerer_groupes = ObjectProperty(None)
-    demarrer_evaluation = ObjectProperty(None)
-    consulter_evaluation = ObjectProperty(None)
-    consulter_fiches = ObjectProperty(None)
     def __init__(self, titre, retour_accueil, parent_scm, **kwargs):
         super(MainCoursMenu, self).__init__(**kwargs)
-        self.retour.bind(on_press=retour_accueil)
-        parent_scm.add_widget(CoursChoixGroupe(name='df', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
+        self.retour_accueil = retour_accueil
+        parent_scm.add_widget(CoursGroupeExistant(name='ex', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
         parent_scm.add_widget(CoursConsultationEvaluations(name='ce',
                                                           parentscm=parent_scm,
                                                           nom_cours=titre))
