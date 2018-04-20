@@ -103,6 +103,7 @@ class Lieu (BaseModel):
     lieu = peewee.CharField(max_length=64, unique=True)
     description = peewee.TextField()
     affichage = [('lieu', 120), ('description', 300)]
+    requis = ['lieu', 'description']
     class Meta:
         order_by = ('lieu',)
     def __str__(self):

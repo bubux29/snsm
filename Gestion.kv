@@ -15,118 +15,18 @@
     Image:
         source: 'static/img/logo_snsm_240x240.png'
 
-<GestionTextInput>:
-    multiline: False
-    size_hint: None, .1
-    width: 200
-
-<GestionNouvelEleve>:
-    core: core
-    BoxLayout:
-        id: core
-        orientation: 'vertical'
-        BoxLayout:
-            size_hint: .3, .1
-            pos_hint: {'top': 1, 'right': .3}
-            orientation: 'horizontal'
-            Button:
-                #size_hint: .3,.1
-                text: 'Retour'
-                on_press:
-                    root.parentscm.transition.direction='right'
-                    root.parentscm.current='GestionEleves'
-            Button:
-                #size_hint: .3,.1
-                text: 'OK'
-                on_press:
-                    root.enregistreNouvelEleve()
-
-<PanneauDetailsEleve>
-    BoxLayout:
-        orientation: 'vertical'
-        #Image:
-        #    source: root.eleve.photo_path
-        #Label:
-            #text: root.eleve.__str__()
-
-<PanneauConsultationEleve>
-    notebook: nb
-    Notebook:
-        id: nb
-        details: details
-        cours: cours
-        evaluations: eval
-        TabbedPanelItem:
-            id: details
-            text: 'Détails'
-            panneau: panneau
-            on_release:
-                panneau.draw()
-            PanneauDetailsEleve:
-                id: panneau
-                eleve: root.eleve
-        TabbedPanelItem:
-            id: cours
-            text: 'Cours suivis'
-        TabbedPanelItem:
-            id: eval
-            text: 'Evaluations'
-
-<GestionConsultationEleves>
-    principal: principal
-    BoxLayout:
-        id: principal
-        orientation: 'horizontal'
-
-<GestionEleves>:
-    BoxLayout:
-        orientation: 'vertical'
-        Label:
-            text: 'Gestion des élèves'
-            size_hint: (1, .2)
-        GridLayout:
-            pos_hint: {'center_x': .5}
-            size_hint: (.8,.9)
-            cols:2
-            Button:
-                text: 'Ajouter un élève'
-                on_press:
-                    root.parentscm.transition.direction='left'
-                    root.parentscm.current = 'NouvelEleve'
-            Button:
-                text: 'Consulter par groupes'
-                on_press:
-                    root.parentscm.transition.direction='left'
-                    root.parentscm.current = 'ElevesParGroupe'
-            Button:
-                text: 'Consulter'
-                on_press:
-                    root.parentscm.transition.direction='left'
-                    root.parentscm.current = 'TousEleves'
-
-<GestionModules>:
-    core: core
-    BoxLayout:
-        id: core
-        orientation: 'vertical'
-        Button:
-            text: 'Nouveau'
-            size_hint: (.1,.1)
-            on_press:
-                root.parentscm.current = 'NouveauModule'
-
-<NouveauModule>:
+<NouveauModele>:
     core: core
     BoxLayout:
         id: core
         orientation: 'vertical'
         BoxLayout:
             orientation: 'horizontal'
-            size_hint: (.1,.5)
+            size_hint: (.5, .1)
             Button:
                 text: 'Retour'
                 on_press:
-                    root.parentscm.transition.direction = 'left'
+                    root.parentscm.transition.direction = 'right'
                     root.parentscm.current = root.precedent
             Button:
                 text: 'Sauvegarder'
@@ -149,7 +49,8 @@
             Button:
                 text: 'Nouveau'
                 on_press:
-                    print (root.size, core.size)
+                    root.parentscm.transition.direction = 'left'
+                    root.parentscm.current = root.nouveau.name
         Wix:
             orientation: 'vertical'
             size_hint: (1,1)

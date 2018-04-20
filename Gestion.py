@@ -15,7 +15,7 @@ from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.lang import Builder
 
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty
 from KivyCalendar import DatePicker
 
 from collections import OrderedDict
@@ -93,6 +93,21 @@ def consultationElements(classe):
         elems.append(elem_details)
     return elems
 
+class NouveauModele(Screen):
+    classe = ObjectProperty(None)
+    precedent = StringProperty('')
+    def __init__(self, parentscm, **kwargs):
+        super(NouveauModele, self).__init__(**kwargs)
+        self.parentscm = parentscm
+        self.core.add_widget(self.form)
+
+    def on_classe(self, instance, value):
+        print('Classe', value.__str__)
+        self.form = generateForm(self.classe)
+
+    def sauvegarder(self):
+        print('Coucou')
+
 class GestionModele(Screen):
     def __init__(self, parentscm, classe, **kwargs):
         super(GestionModele, self).__init__(**kwargs)
@@ -101,6 +116,12 @@ class GestionModele(Screen):
         self.core.bind(size=self.propagatesize)
         self.tableView = None
         self.updatelist()
+        nouveau = self.name + '_nouveau'
+        self.nouveau = NouveauModele(name=nouveau,
+                                    parentscm=parentscm,
+                                    precedent=self.name,
+                                    classe=classe)
+        self.parentscm.add_widget(self.nouveau)
         
     def propagatesize(self, instance, pos):
         self.tableView.size = self.core.size
