@@ -48,10 +48,10 @@
                 text: 'Groupes stagiaires'
                 size_hint: (1, .1)
             Label:
-                text: 'Sélectionner les présents'
+                text: u'S\u00e9lectionner les pr\u00e9sents'
                 size_hint: (1, .1)
             Label:
-                text: 'Sélectionner les anciens'
+                text: u'S\u00e9lectionner les anciens'
                 size_hint: (1, .1)
         Button:
             text: 'OK'
@@ -69,7 +69,7 @@
         CoursTopLayout:
             id: retour
         Label:
-            titre: "Création d'un nouveau groupe"
+            titre: u"Cr\u00e9ation d'un nouveau groupe"
             #size_hint: (.5, None)
             pos_hint: {'right': .5}
         GridLayout:
@@ -88,9 +88,9 @@
                 text: 'Liste des cours'
                 id: bouton_choix_cours
             Label:
-                text: 'Eleves'
+                text: u'\u00c9l\u00e8ves'
             Button:
-                text: 'Liste des élèves'
+                text: u'Liste des \u00e9l\u00e8ves'
                 id: bouton_choix_eleves
             #PopupList:
                 #text: root.titre
@@ -112,13 +112,13 @@
         CoursTopLayout:
             id: retour
         MenuBouton:
-            text: 'Sélection des groupes du jour'
+            text: u'S\u00e9lection des groupes du jour'
             id: existant
             on_press:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ex'
         MenuBouton:
-            text: 'Création d\'un nouveau groupe'
+            text: u'Cr\u00e9ation d\'un nouveau groupe'
             id: nouveau
             on_press:
                 root.manager.transition.direction = 'left'
@@ -136,7 +136,7 @@
         temporaire: temporaire
         nouveau: nouveau
         retour: bl.retour
-        # Caractéristiques
+        # Caracteristiques
         orientation: 'vertical'
         spacing: 10
         BoxLayout:
@@ -157,13 +157,13 @@
             text: 'Choix d\'un groupe existant'
             id: existant
         MenuBouton:
-            text: 'Création d\'un groupe pour la journée'
+            text: u'Cr\u00e9ation d\'un groupe pour la journ\u00e9e'
             id: temporaire
             on_press:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ng'
         MenuBouton:
-            text: 'Création d\'un nouveau groupe'
+            text: u'Cr\u00e9ation d\'un nouveau groupe'
             id: nouveau
 
 <CoursFormation>:
@@ -173,7 +173,7 @@
         date: date
         cols: 2
         Label:
-            text: 'Date du début de la journée de formation :'
+            text: u'Date du d\u00e9but de la journ\u00e9e de formation :'
         DatePicker:
             id: date
             multiline: 'False'
@@ -194,13 +194,13 @@
             on_press:
                 root.retour_accueil
         Button:
-            text: "Démarrer une mise en situation"
+            text: u"D\u00e9marrer une mise en situation"
             id: demarrer_formation
             on_press:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ex'
         Button:
-            text: "Consulter les évaluations"
+            text: u"Consulter les \u00e9valuations"
             id: consulter_evaluation
             on_press:
                 root.manager.transition.direction = 'left'
