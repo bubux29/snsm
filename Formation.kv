@@ -47,7 +47,7 @@
         orientation: 'vertical'
         Camera:
             id: camera
-            resolution: (640, 480)
+            #resolution: (640, 480)
             play: False
         Button:
             id: capture_bouton
@@ -176,7 +176,7 @@
                 liste_modules: root.liste_modules
         TabbedPanelItem:
             video: video
-            text: 'Vidéo'
+            text: u'Vid\u00e9o'
             on_release: video.play_video(True)
             PanneauVideo:
                 name: root.name
