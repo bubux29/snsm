@@ -98,13 +98,13 @@
             on_release:
                 root.retour_accueil(self)
         Button:
-            text: "Démarrer une mise en situation"
+            text: u"D\u00e9marrer une mise en situation"
             id: demarrer_formation
             on_release:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ex'
         Button:
-            text: "Consulter les évaluations"
+            text: u"Consulter les \u00e9valuations"
             id: consulter_evaluation
             on_release:
                 root.manager.transition.direction = 'left'
