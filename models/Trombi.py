@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import peewee
+import datetime
 
 database = peewee.SqliteDatabase("snsm.db")
 
@@ -24,7 +25,7 @@ class Eleve(peewee.Model):
     telephone = peewee.CharField(max_length=16, verbose_name="Numéro de téléphone")
     courriel = peewee.CharField(max_length=64, verbose_name="Adresse courrier électronique")
     statut = peewee.CharField(max_length=16, choices=STATUT_ELEVE, default=None, verbose_name="Statut de l'élève")
-    date_entree = peewee.DateTimeField(verbose_name="Date de première adhésion")
+    date_entree = peewee.DateTimeField(verbose_name="Date de première adhésion",  default=datetime.datetime.now)
     photo_path = peewee.CharField(max_length=256, verbose_name="Photo")
     nom_cfi = peewee.CharField(max_length=64, null=True, verbose_name="CFI d'origine (seulement si formateur ou ancien)")
     requis = ['nom', 'prenom', 'date_naissance', 'telephone', 'courriel', 'statut', 'photo_path', 'nom_cfi']

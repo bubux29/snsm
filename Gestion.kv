@@ -61,14 +61,14 @@
     BoxLayout:
         orientation: 'vertical'
         Label:
-            text: 'Gestion des bases de données'
+            text: u'Gestion des bases de donn\u00e9es'
             size_hint: (1, .2)
         GridLayout:
             pos_hint: {'center_x': .5}
             size_hint: (.8,.9)
             cols:2
             Button:
-                text: 'Élèves'
+                text: u'\u00c9l\u00e8ves'
                 on_press:
                     root.parentscm.transition.direction = 'left'
                     root.parentscm.current = 'GestionEleves'
@@ -87,3 +87,8 @@
                 on_press:
                     root.parentscm.transition.direction = 'left'
                     root.parentscm.current = 'GestionTests'
+            Button:
+                text: 'Groupes'
+                on_press:
+                    root.parentscm.transition.direction = 'left'
+                    root.parentscm.current = 'GestionGroupes'

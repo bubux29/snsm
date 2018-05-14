@@ -119,9 +119,21 @@ def ajout_test(nom, nom_mf, description, mode):
         print('Ajout', nom, 'dans le module', nom_mf, 'impossib:', e)
         return None
 
+def ajout_element(classe, **kwargs):
+    try:
+        elm = classe.create(**kwargs)
+        elm.save()
+    except Exception as e:
+        if 'nom' in kwargs:
+            nom = kwargs['nom']
+        else:
+            nom = 'machin'
+        print('Ajout de', kwargs['nom'], 'dans', classe, ': impossib')
+        return None
+
 def creer_tables():
-    formation_db.database.create_tables([Cours], safe=True)
     formation_db.database.create_tables([Eleve], safe=True)
+    formation_db.database.create_tables([Cours], safe=True)
     formation_db.database.create_tables([Test], safe=True)
     formation_db.database.create_tables([ModuleFormation], safe=True)
     formation_db.database.create_tables([Lieu], safe=True)

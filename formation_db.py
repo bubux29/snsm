@@ -20,11 +20,18 @@ def trouver_cours(nom=None):
     if nom == None:
         return list(Cours.select())
     else:
+        print('on recherche:', nom)
         return list(Cours.select().where(Cours.nom << nom))
 
 def trouver_eleve(nom):
     eleve = Eleve.get(Eleve.prenom + ' ' + Eleve.nom == nom)
     return eleve
+
+def trouver_groupe(noms=None):
+    if noms == None:
+        return list(Groupe.select())
+    else:
+        return list(Groupe.select().where(Groupe.nom << noms))
 
 def trouver_formateurs(noms=None):
     if noms == None:

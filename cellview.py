@@ -73,6 +73,23 @@ class LinkViewCell(CharViewCell):
         super(CharViewCell, self).__init__(**kwargs)
         self.text_size = (self.width, None)
 
+class MultiLinkViewCell(CharViewCell):
+    def __init__(self, obj, height=40, **kwargs):
+        self.size_hint_y = None
+        self.size_hint_x = None
+        self.halign = 'center'
+        self.valign = 'center'
+        self.height=height
+        self.shorten = True
+        # Here we have an object that is a query to db
+        # including list
+        #self.text = obj.__str__()
+        l = [ o.__str__() for o in obj ]
+        s = ','.join(l)
+        self.text = s
+        super(CharViewCell, self).__init__(**kwargs)
+        self.text_size = (self.width, None)
+
 viewWidgetDict=dict(
 E_CharField=CharViewCell,
 E_TextField=TextViewCell,
@@ -80,6 +97,7 @@ E_DateField=CharViewCell,
 E_BoolField=BoolViewCell,
 E_LinkField=LinkViewCell,
 E_ImageField=ImageViewCell,
+E_MultiLinkField=MultiLinkViewCell,
 )
 
 class StdCellView:

@@ -28,6 +28,7 @@ import formation_db
 
 import inspect
 from models import Cours, Trombi, dbHelper
+from models.dbHelper import whatType
 from models.dbDefs import FieldType
 from tablelayout import TableView
 
@@ -41,20 +42,40 @@ Gestion = Builder.load_file('Gestion.kv')
 class GestionTextInput(TextInput):
     pass
 
+def dropdown_btn(titre, liste_de_val, **kwargs):
+    chbtn = Button(text=titre, **kwargs)
+    dropdown = DropDown()
+    for value in liste_de_val:
+        btn = Button(text=value, size_hint_y=None, height=40)
+        btn.bind(on_release=lambda btn: dropdown.select(btn.text))
+        dropdown.add_widget(btn)
+    chbtn.bind(on_release=dropdown.open)
+    chbtn.dropdown = dropdown
+    dropdown.bind(on_select=lambda instance, x: setattr(chbtn, 'text', x))
+    return chbtn
+
+# Il faudra utiliser rel_model en cas de LinkField
+
 def gti(nom_champ, class_obj):
-    return GestionTextInput()
+    # Si jamais, dans le design, on limite les choix à un ensemble fermé
+    if getmember(class_obj, 'choices'):
+        liste_de_vals = [ value for enum, value in class_obj.choices ]
+        return dropdown_btn(nom_champ, liste_de_vals)
+    else:
+        return GestionTextInput()
 def dp(nom_champ, class_obj):
     return DatePicker(multiline='False', size_hint=(None, .1), pHint=(0.4, 0.4))
 def cb(nom_champ, class_obj):
     return CheckBox()
 def dc(nom_champ, class_obj):
-    chbtn = Button(text=nom_champ)
-    dropdown = DropDown()
-    for u in formation_db.liste_all_from(class_obj.rel_model):
-        btn = Button(text=u.__str__(), size_hint_y=None, height=40)
-        dropdown.add_widget(btn)
-    chbtn.bind(on_release=dropdown.open)
-    return chbtn
+    liste_de_vals = [ u.__str__() for u in formation_db.liste_all_from(class_obj.rel_model)]
+    return dropdown_btn(nom_champ, liste_de_vals)
+def ddc(nom_champ, class_obj):
+    bx = BoxLayout()
+    l = [ {'text': c.__str__()} for c in formation_db.liste_all_from(class_obj.rel_model) ]
+    bx.add_widget(ListeView(l, True))
+    return bx
+        
 
 widgetDict=dict(
 E_CharField=gti,
@@ -62,6 +83,7 @@ E_TextField=gti,
 E_DateField=dp,
 E_BoolField=cb,
 E_LinkField=dc,
+E_MultiLinkField=ddc,
 )
 
 def generateForm(classe):
@@ -70,10 +92,14 @@ def generateForm(classe):
               for name, obj in inspect.getmembers(classe,
                                         lambda x: dbHelper.isType(type(x)))
               if classe.requis.count(name)])
-    for name in classe.requis:
-        box.add_widget(Label(text=fdict[name].verbose_name))
-        ty=dbHelper.whatType(type(fdict[name]))
-        box.add_widget(widgetDict[ty](name, fdict[name]))
+    box.reponses = list()
+    for nom_champ in classe.requis:
+        box.add_widget(Label(text=fdict[nom_champ].verbose_name))
+        ty=dbHelper.whatType(type(fdict[nom_champ]))
+        reponse = widgetDict[ty](nom_champ, fdict[nom_champ])
+        reponse.champ = nom_champ
+        box.add_widget(reponse)
+        box.reponses.append(reponse)
     box.add_widget(Widget())
     return box
 
@@ -102,11 +128,17 @@ class NouveauModele(Screen):
         self.core.add_widget(self.form)
 
     def on_classe(self, instance, value):
-        print('Classe', value.__str__)
         self.form = generateForm(self.classe)
 
     def sauvegarder(self):
-        print('Coucou')
+        nouveau = dict()
+        for reponse in self.form.reponses:
+            nouveau[reponse.champ] = reponse.get_value()
+        try:
+            le_ptit = self.classe.create(**nouveau)
+            le_ptit.save()
+        except Exception as e:
+            print('Ajout', self.classe, 'not possib:', e)
 
 class GestionModele(Screen):
     def __init__(self, parentscm, classe, **kwargs):
@@ -148,6 +180,9 @@ class GestionMenuPrincipal(Screen):
         self.parentscm.add_widget(GestionModele(name='GestionTests',
                                                 parentscm=parentscm,
                                                 classe=Cours.Test))
+        self.parentscm.add_widget(GestionModele(name='GestionGroupes',
+                                                parentscm=parentscm,
+                                                classe=Cours.Groupe))
 
 class GestionSCM(ScreenManager):
     def __init__(self, **kwargs):

@@ -70,3 +70,12 @@ class ListeBoutons(BoxLayout):
         if self.parent_popup:
             self.parent_popup.dismiss()
         
+import formation_db
+from kivy.app import App
+class TestApp(App):
+    def build(self):
+        l = [{'text': cour.nom} for cour in formation_db.liste_cours_all()]
+        return ListeBoutons(l)
+
+if __name__ == '__main__':
+    TestApp().run()
