@@ -40,41 +40,64 @@ def info(text):
 Gestion = Builder.load_file('Gestion.kv')
 
 class GestionTextInput(TextInput):
-    pass
+    def get_value(self):
+        return self.text
 
-def dropdown_btn(titre, liste_de_val, **kwargs):
-    chbtn = Button(text=titre, **kwargs)
-    dropdown = DropDown()
-    for value in liste_de_val:
-        btn = Button(text=value, size_hint_y=None, height=40)
-        btn.bind(on_release=lambda btn: dropdown.select(btn.text))
-        dropdown.add_widget(btn)
-    chbtn.bind(on_release=dropdown.open)
-    chbtn.dropdown = dropdown
-    dropdown.bind(on_select=lambda instance, x: setattr(chbtn, 'text', x))
-    return chbtn
+class GestionListeChoixUnique(Button):
+    def __init__(self, titre, liste_de_val, cls_associee = None, **kwargs):
+        super(GestionListeChoixUnique, self).__init__(text=titre, **kwargs)
+        self.cls_associee = cls_associee
+        dropdown = DropDown()
+        for value in liste_de_val:
+            btn = Button(text=value, size_hint_y=None, height=40)
+            btn.bind(on_release=lambda btn: dropdown.select(btn.text))
+            dropdown.add_widget(btn)
+        self.bind(on_release=dropdown.open)
+        self.dropdown = dropdown
+        dropdown.bind(on_select=lambda instance, x: setattr(self, 'text', x))
+    def get_value(self):
+        if self.cls_associee:
+            # Choix unique: premier element d'une eventuelle liste
+            return trouver_elems(self.cls_associee, [self.text])[0]
+        else:
+            return self.text
 
-# Il faudra utiliser rel_model en cas de LinkField
+class GestionListeChoixMultiples(BoxLayout):
+    def __init__(self, liste_choix, cls_associee=None, **kwargs):
+        super(GestionListeChoixMultiples, self).__init__(**kwargs)
+        self.choix = ListeView(liste_choix, True)
+        self.cls_associee = cls_associee
+        self.add_widget(self.choix)
+    def get_value(self):
+        # S'il y a une classe associée, il faut alors trouver les
+        # objets en fonction des noms choisis
+        cls = self.cls_associee
+        if cls:
+            return trouver_elems(cls, self.choix.liste_des_textes)
+        else:
+            return self.choix.liste_des_textes
 
-def gti(nom_champ, class_obj):
+class GestionChoixDate(DatePicker):
+    def get_value(self):
+        [self.text]
+
+def gti(nom_champ, class_obj, current_values = None):
     # Si jamais, dans le design, on limite les choix à un ensemble fermé
     if getmember(class_obj, 'choices'):
         liste_de_vals = [ value for enum, value in class_obj.choices ]
-        return dropdown_btn(nom_champ, liste_de_vals)
+        return GestionListeChoixUnique(nom_champ, liste_de_vals)
     else:
         return GestionTextInput()
-def dp(nom_champ, class_obj):
-    return DatePicker(multiline='False', size_hint=(None, .1), pHint=(0.4, 0.4))
-def cb(nom_champ, class_obj):
+def dp(nom_champ, class_obj, current_values = None):
+    return GestionChoixDate(multiline='False', size_hint=(None, .1), pHint=(0.4, 0.4))
+def cb(nom_champ, class_obj, current_values = None):
     return CheckBox()
-def dc(nom_champ, class_obj):
+def dc(nom_champ, class_obj, current_values = None):
     liste_de_vals = [ u.__str__() for u in formation_db.liste_all_from(class_obj.rel_model)]
-    return dropdown_btn(nom_champ, liste_de_vals)
-def ddc(nom_champ, class_obj):
-    bx = BoxLayout()
+    return GestionListeChoixUnique(nom_champ, liste_de_vals, class_obj.rel_model)
+def ddc(nom_champ, class_obj, current_values = None):
     l = [ {'text': c.__str__()} for c in formation_db.liste_all_from(class_obj.rel_model) ]
-    bx.add_widget(ListeView(l, True))
-    return bx
+    return GestionListeChoixMultiples(l, class_obj.rel_model)
         
 
 widgetDict=dict(
@@ -86,7 +109,16 @@ E_LinkField=dc,
 E_MultiLinkField=ddc,
 )
 
-def generateForm(classe):
+def trouver_func(cls):
+    return {
+            Trombi.Eleve: formation_db.trouver_eleve
+           }.get(cls, formation_db.trouver_par_nom)
+
+def trouver_elems(cls, liste_textes):
+    func = trouver_func(cls)
+    return [ func(nom, cls) for nom in liste_textes ]
+
+def generateForm(classe, instance = None):
     box=GridLayout(cols=2)
     fdict=dict([ (name, obj)
               for name, obj in inspect.getmembers(classe,
@@ -96,12 +128,33 @@ def generateForm(classe):
     for nom_champ in classe.requis:
         box.add_widget(Label(text=fdict[nom_champ].verbose_name))
         ty=dbHelper.whatType(type(fdict[nom_champ]))
-        reponse = widgetDict[ty](nom_champ, fdict[nom_champ])
+        if instance:
+            values = getmember(instance, nom_champ)
+        else:
+            values = None
+        reponse = widgetDict[ty](nom_champ, fdict[nom_champ], values)
         reponse.champ = nom_champ
         box.add_widget(reponse)
         box.reponses.append(reponse)
     box.add_widget(Widget())
     return box
+
+def is_related(classe, elem):
+    return whatType(type(getmember(classe, elem))) == 'E_MultiLinkField' \
+            or whatType(type(getmember(classe, elem))) == 'E_LinkField'
+
+def ajouter_nouveau(classe, **elems):
+    # Malheureusement, la création d'un nouvel objet en base ne peut pas se faire
+    # directement avec des cross-reference (ManyToMany).
+    # On crée d'abord l'objet, ensuite on ajoute les cross-ref
+    cross_ref = { cr: elems[cr] for cr in elems.keys()
+                    if is_related(classe, cr) }
+    not_cross_ref = { r: elems[r] for r in elems.keys()
+                        if r not in cross_ref }
+    obj = classe.create(**not_cross_ref)
+    for elem in cross_ref.keys():
+        getmember(obj, elem).add(cross_ref[elem])
+    obj.save()
 
 def consultationElements(classe):
     elems = list()
@@ -133,10 +186,17 @@ class NouveauModele(Screen):
     def sauvegarder(self):
         nouveau = dict()
         for reponse in self.form.reponses:
+            # TODO: tester les champs qui ne sont pas ManyToMany
+            # puis créer l'objet avec uniquement les champs qui ne sont pas 
+            # ManyToMany, ensuite, pour chacun des ManyToMany, rajouter les
+            # champs... merci peewee :-)
             nouveau[reponse.champ] = reponse.get_value()
+            print('Au champ', reponse.champ, 'on a', nouveau[reponse.champ])
         try:
-            le_ptit = self.classe.create(**nouveau)
-            le_ptit.save()
+            print(nouveau)
+            ajouter_nouveau(self.classe, **nouveau)
+            #le_ptit = self.classe.create(**nouveau)
+            #le_ptit.save()
         except Exception as e:
             print('Ajout', self.classe, 'not possib:', e)
 
@@ -155,6 +215,10 @@ class GestionModele(Screen):
                                     classe=classe)
         self.parentscm.add_widget(self.nouveau)
         
+    def on_pre_enter(self):
+        self.updatelist()
+        self.propagatesize(None, None)
+
     def propagatesize(self, instance, pos):
         self.tableView.size = self.core.size
 
@@ -163,6 +227,9 @@ class GestionModele(Screen):
             self.core.remove_widget(self.tableView)
         self.tableView = TableView(data=consultationElements(self.classe))
         self.core.add_widget(self.tableView)
+
+    def supprimer_elem(self):
+        pass
 
 class GestionMenuPrincipal(Screen):
     def __init__(self, parentscm, **kwargs):

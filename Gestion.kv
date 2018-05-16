@@ -51,6 +51,10 @@
                 on_press:
                     root.parentscm.transition.direction = 'left'
                     root.parentscm.current = root.nouveau.name
+            Button:
+                text: 'Supprimer'
+                on_press:
+                    root.supprimer_elem
         Wix:
             orientation: 'vertical'
             size_hint: (1,1)

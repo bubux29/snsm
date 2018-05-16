@@ -33,6 +33,19 @@
     pos_hint: {'top': 1, 'right': .5}
 
 
+<CoursGroupeSelection>:
+    orientation: 'horizontal'
+    cols: 3
+    Label:
+        text: 'Groupes stagiaires'
+        size_hint: (1, .1)
+    Label:
+        text: 'Sélectionner les présents'
+        size_hint: (1, .1)
+    Label:
+        text: 'Sélectionner les anciens'
+        size_hint: (1, .1)
+
 <CoursGroupeExistant>:
     retour: retour
     bl: bl
@@ -40,19 +53,8 @@
         orientation: 'vertical'
         CoursTopLayout:
             id: retour
-        GridLayout:
-            orientation: 'horizontal'
-            cols: 3
+        BoxLayout:
             id: bl
-            Label:
-                text: 'Groupes stagiaires'
-                size_hint: (1, .1)
-            Label:
-                text: 'Sélectionner les présents'
-                size_hint: (1, .1)
-            Label:
-                text: 'Sélectionner les anciens'
-                size_hint: (1, .1)
         Button:
             text: 'OK'
             size_hint: (.1,.1)

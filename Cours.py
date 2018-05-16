@@ -58,6 +58,9 @@ class CoursRetourBox(BoxLayout):
         self.titre = titre
         self.manager = manager
 
+class CoursGroupeSelection(GridLayout):
+    pass
+
 class CoursGroupeExistant(Screen):
     retour = ObjectProperty(None)
     bl = ObjectProperty(None)
@@ -130,6 +133,17 @@ class CoursGroupeExistant(Screen):
         self.formation_wid = None
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
+        self.selections = None
+
+    def on_pre_enter(self):
+        self.update_panneau()
+
+    def update_panneau(self):
+        titre = self.titre
+        if self.selections:
+            self.bl.remove_widget(self.selections)
+
+        self.selections = CoursGroupeSelection()
         self.related_groupes = formation_db.trouver_groupes_par_cours([titre])
         # Liste des groupes des stagiaires
         liste_groupe = [{'text': groupe.nom, 'elem': groupe}
@@ -137,14 +151,14 @@ class CoursGroupeExistant(Screen):
                          if groupe.nom != GROUPE_ANCIENS]
         self.liste_choix_groupe = ListeView(liste_groupe,
                                             True, self.on_choix_groupe)
-        self.bl.add_widget(self.liste_choix_groupe)
+        self.selections.add_widget(self.liste_choix_groupe)
         # Liste d'appel des stagiaires
         self.liste_choix_presents = ListeView(
                               [{'text': eleve.nom + eleve.prenom, 'elem': eleve}
                               for eleve in []],
                               True, self.on_choix_presents
                               )
-        self.bl.add_widget(self.liste_choix_presents)
+        self.selections.add_widget(self.liste_choix_presents)
 
         groupes_anciens = [groupe for groupe in self.related_groupes
                               if groupe.nom == GROUPE_ANCIENS]
@@ -153,7 +167,7 @@ class CoursGroupeExistant(Screen):
             # Pour les anciens, il faut rajouter une texte entry pour pouvoir
             # chercher par nom
             ba = BoxLayout(orientation='vertical')
-            self.bl.add_widget(ba)
+            self.selections.add_widget(ba)
             ti = TextInput(size_hint=(1,.1), multiline=False)
             ti.bind(text=self.on_ancien_tri_nom)
             ba.add_widget(ti)
@@ -164,7 +178,7 @@ class CoursGroupeExistant(Screen):
                               True, self.on_choix_anciens
                               )
             ba.add_widget(self.liste_choix_anciens)
-                              
+        self.bl.add_widget(self.selections)
 
 def init_liste_cours_popup(popuplist, on_choix):
     nom_de_cours = list()
