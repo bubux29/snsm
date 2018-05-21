@@ -17,7 +17,6 @@ Builder.load_string(
 '''
 <FilePreview>:
     BoxLayout:
-        size: (400, 400)
         orientation: 'vertical'
         BoxLayout:
             orientation: 'horizontal'
@@ -83,7 +82,7 @@ class FilePreview(FloatLayout):
 
 class TestApp(App):
     def build(self):
-        return FilePreview('pics/*.jpg')
+        return FilePreview('pics/*.jpg', size = (400,400))
 
 if __name__ == '__main__':
     TestApp().run()
