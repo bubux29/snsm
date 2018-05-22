@@ -56,7 +56,6 @@ Builder.load_string(
             Button:
                 text: 'Sélectionner'
                 on_release:
-                    root.valider(liste_fichiers.selection)
 ''')
 
 def dirname(path):
