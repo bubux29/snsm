@@ -5,6 +5,7 @@ from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.dropdown import DropDown
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
@@ -31,6 +32,7 @@ from models import Cours, Trombi, dbHelper
 from models.dbHelper import whatType
 from models.dbDefs import FieldType
 from tablelayout import TableView
+from filepreview import FilePreview
 
 def err(text):
     log.err("GESTION", text)
@@ -79,7 +81,21 @@ class GestionListeChoixMultiples(BoxLayout):
 
 class GestionChoixDate(DatePicker):
     def get_value(self):
-        [self.text]
+        return self.text
+
+class GestionChoixPhoto(ButtonBehavior, Image):
+    def on_press(self):
+        content = FilePreview('pics/*.jpg', valider=self.set_image, annuler=self.fin_popup)
+        self._popup = Popup(title='Choix image', content = content,
+                            size_hint=(.9, .9))
+        self._popup.open()
+    def set_image(self, path):
+        self.source = path[0]
+        self.fin_popup()
+    def fin_popup(self):
+        self._popup.dismiss()
+    def get_value(self):
+        return self.source
 
 def gti(nom_champ, class_obj, current_values = None):
     # Si jamais, dans le design, on limite les choix à un ensemble fermé
@@ -98,6 +114,8 @@ def dc(nom_champ, class_obj, current_values = None):
 def ddc(nom_champ, class_obj, current_values = None):
     l = [ {'text': c.__str__()} for c in formation_db.liste_all_from(class_obj.rel_model) ]
     return GestionListeChoixMultiples(l, class_obj.rel_model)
+def ib(nom_champ, classe_obj, current_values = None):
+    return GestionChoixPhoto(source = current_values, height=50)
         
 
 widgetDict=dict(
@@ -107,6 +125,7 @@ E_DateField=dp,
 E_BoolField=cb,
 E_LinkField=dc,
 E_MultiLinkField=ddc,
+E_ImageField=ib,
 )
 
 def trouver_func(cls):
@@ -120,12 +139,31 @@ def trouver_elems(cls, liste_textes):
 
 def generateForm(classe, instance = None):
     box=GridLayout(cols=2)
+    box.reponses = list()
+    # D'abord, on voit s'il y a une image dans le modèle
+    try:
+        images = getmember(classe, 'image')
+    except Exception as e:
+        images = []
+
+    for image in images:
+        if image in classe.requis:
+            elem = getmember(classe, image)
+            box.add_widget(Label(text=elem.verbose_name))
+            if instance:
+                values = getmember(instance, image)
+            else:
+                values = None
+            reponse = widgetDict['E_ImageField'](image, elem, values)
+            reponse.champ = image
+            box.add_widget(reponse)
+            box.reponses.append(reponse)
+    others = [ champ for champ in classe.requis if champ not in images ]
     fdict=dict([ (name, obj)
               for name, obj in inspect.getmembers(classe,
                                         lambda x: dbHelper.isType(type(x)))
-              if classe.requis.count(name)])
-    box.reponses = list()
-    for nom_champ in classe.requis:
+              if name in others])
+    for nom_champ in others:
         box.add_widget(Label(text=fdict[nom_champ].verbose_name))
         ty=dbHelper.whatType(type(fdict[nom_champ]))
         if instance:
