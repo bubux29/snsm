@@ -128,6 +128,7 @@ class CoursGroupeExistant(Screen):
         self.parent_scm = parent_scm
         self.liste_presents = list()
         self.liste_anciens = list()
+        self.groupe_anciens = None
         self.anciens = list()
         self.liste_groupes = list()
         self.formation_wid = None
