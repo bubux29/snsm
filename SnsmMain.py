@@ -22,8 +22,6 @@ import log
 
 SnsmMain = Builder.load_file("Main.kv")
 
-# This is a test
-
 def info(text):
     log.info('MAIN', text)
 
