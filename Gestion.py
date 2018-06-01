@@ -33,6 +33,7 @@ from models.dbHelper import whatType
 from models.dbDefs import FieldType
 from tablelayout import TableView
 from filepreview import FilePreview
+from pops import question_pop
 
 def err(text):
     log.err("GESTION", text)
@@ -42,11 +43,15 @@ def info(text):
 Gestion = Builder.load_file('Gestion.kv')
 
 class GestionTextInput(TextInput):
+    current_values = ObjectProperty(None)
+    def on_current_values(self, instance, value):
+        if self.current_values:
+            self.text = self.current_values
     def get_value(self):
         return self.text
 
 class GestionListeChoixUnique(Button):
-    def __init__(self, titre, liste_de_val, cls_associee = None, **kwargs):
+    def __init__(self, titre, liste_de_val, current_values, cls_associee = None, **kwargs):
         super(GestionListeChoixUnique, self).__init__(text=titre, **kwargs)
         self.cls_associee = cls_associee
         dropdown = DropDown()
@@ -57,6 +62,9 @@ class GestionListeChoixUnique(Button):
         self.bind(on_release=dropdown.open)
         self.dropdown = dropdown
         dropdown.bind(on_select=lambda instance, x: setattr(self, 'text', x))
+        if current_values:
+            self.text = current_values
+
     def get_value(self):
         if self.cls_associee:
             # Choix unique: premier element d'une eventuelle liste
@@ -65,11 +73,13 @@ class GestionListeChoixUnique(Button):
             return self.text
 
 class GestionListeChoixMultiples(BoxLayout):
-    def __init__(self, liste_choix, cls_associee=None, **kwargs):
+    def __init__(self, liste_choix, current_values, cls_associee=None, **kwargs):
         super(GestionListeChoixMultiples, self).__init__(**kwargs)
         self.choix = ListeView(liste_choix, True)
         self.cls_associee = cls_associee
         self.add_widget(self.choix)
+        if current_values:
+            pass
     def get_value(self):
         # S'il y a une classe associée, il faut alors trouver les
         # objets en fonction des noms choisis
@@ -79,7 +89,11 @@ class GestionListeChoixMultiples(BoxLayout):
         else:
             return self.choix.liste_des_textes
 
-class GestionChoixDate(DatePicker):
+class GestionChoixDate(TextInput):
+    current_values = ObjectProperty(None)
+    def on_current_values(self, instance, value):
+        if self.current_values:
+            self.text = self.current_values
     def get_value(self):
         return self.text
 
@@ -101,19 +115,20 @@ def gti(nom_champ, class_obj, current_values = None):
     # Si jamais, dans le design, on limite les choix à un ensemble fermé
     if getmember(class_obj, 'choices'):
         liste_de_vals = [ value for enum, value in class_obj.choices ]
-        return GestionListeChoixUnique(nom_champ, liste_de_vals)
+        return GestionListeChoixUnique(nom_champ, liste_de_vals, current_values=current_values)
     else:
-        return GestionTextInput()
+        return GestionTextInput(current_values=current_values)
 def dp(nom_champ, class_obj, current_values = None):
-    return GestionChoixDate(multiline='False', size_hint=(None, .1), pHint=(0.4, 0.4))
+    return GestionChoixDate(multiline='False', size_hint=(None, .1), current_values=current_values)
 def cb(nom_champ, class_obj, current_values = None):
+    # Not implemented yet...
     return CheckBox()
 def dc(nom_champ, class_obj, current_values = None):
     liste_de_vals = [ u.__str__() for u in formation_db.liste_all_from(class_obj.rel_model)]
-    return GestionListeChoixUnique(nom_champ, liste_de_vals, class_obj.rel_model)
+    return GestionListeChoixUnique(nom_champ, liste_de_vals, current_values, class_obj.rel_model)
 def ddc(nom_champ, class_obj, current_values = None):
     l = [ {'text': c.__str__()} for c in formation_db.liste_all_from(class_obj.rel_model) ]
-    return GestionListeChoixMultiples(l, class_obj.rel_model)
+    return GestionListeChoixMultiples(l, class_obj.rel_model, current_values)
 def ib(nom_champ, classe_obj, current_values = None):
     return GestionChoixPhoto(source = current_values, height=50)
         
@@ -143,6 +158,8 @@ def generateForm(classe, instance = None):
     # D'abord, on voit s'il y a une image dans le modèle
     try:
         images = getmember(classe, 'image')
+        if not images:
+            images = []
     except Exception as e:
         images = []
 
@@ -181,6 +198,10 @@ def is_related(classe, elem):
     return whatType(type(getmember(classe, elem))) == 'E_MultiLinkField' \
             or whatType(type(getmember(classe, elem))) == 'E_LinkField'
 
+def modifier_champ(cls, inst, champ, valeur):
+    q = cls.update({getmember(cls, champ): valeur}).where(cls.id == inst.id)
+    q.execute()
+
 def ajouter_nouveau(classe, **elems):
     # Malheureusement, la création d'un nouvel objet en base ne peut pas se faire
     # directement avec des cross-reference (ManyToMany).
@@ -206,6 +227,7 @@ def consultationElements(classe):
         if chemin:
             path = getmember(elem, chemin)
             elem_details[chemin] = ImageViewCell(path, width=80, name='Photo')
+            elem_details[chemin].hidden = elem
         elem_details = cells(elem, elem_details)
         elems.append(elem_details)
     return elems
@@ -213,28 +235,42 @@ def consultationElements(classe):
 class NouveauModele(Screen):
     classe = ObjectProperty(None)
     precedent = StringProperty('')
+    instance = ObjectProperty(None)
     def __init__(self, parentscm, **kwargs):
         super(NouveauModele, self).__init__(**kwargs)
         self.parentscm = parentscm
         self.core.add_widget(self.form)
 
+    def on_instance(self, instance, value):
+        self.form = generateForm(type(self.instance), self.instance)
+
     def on_classe(self, instance, value):
         self.form = generateForm(self.classe)
 
     def sauvegarder(self):
+        if not self.instance:
+            self.sauvegarder_nouveau()
+            self.parentscm.current = self.precedent
+            self.parentscm.transition.direction = 'right'
+        else:
+            self.sauvegarder_modif()
+            self.parentscm.current = self.precedent
+            self.parentscm.transition.direction = 'right'
+            self.parentscm.remove_widget(self)
+
+    def sauvegarder_modif(self):
+        inst = self.instance
+        cls = type(inst)
+        for reponse in self.form.reponses:
+            if reponse.get_value() != getmember(inst, reponse.champ):
+                modifier_champ(cls, inst, reponse.champ, reponse.get_value())
+
+    def sauvegarder_nouveau(self):
         nouveau = dict()
         for reponse in self.form.reponses:
-            # TODO: tester les champs qui ne sont pas ManyToMany
-            # puis créer l'objet avec uniquement les champs qui ne sont pas 
-            # ManyToMany, ensuite, pour chacun des ManyToMany, rajouter les
-            # champs... merci peewee :-)
             nouveau[reponse.champ] = reponse.get_value()
-            print('Au champ', reponse.champ, 'on a', nouveau[reponse.champ])
         try:
-            print(nouveau)
             ajouter_nouveau(self.classe, **nouveau)
-            #le_ptit = self.classe.create(**nouveau)
-            #le_ptit.save()
         except Exception as e:
             print('Ajout', self.classe, 'not possib:', e)
 
@@ -254,9 +290,11 @@ class GestionModele(Screen):
         self.parentscm.add_widget(self.nouveau)
         
     def on_pre_enter(self):
+        self.refresh()
+
+    def refresh(self):
         self.updatelist()
         self.propagatesize(None, None)
-
     def propagatesize(self, instance, pos):
         self.tableView.size = self.core.size
 
@@ -266,8 +304,41 @@ class GestionModele(Screen):
         self.tableView = TableView(data=consultationElements(self.classe))
         self.core.add_widget(self.tableView)
 
+    def modifier_elem(self):
+        to_modif = self.tableView.get_selected()
+        if not to_modif:
+            return
+        # Pour l'instant, on ne gère qu'un seul élément
+        # en l'occurence le premier
+        to_modif = to_modif[0][0]
+        obj = to_modif.hidden
+        self.modif = NouveauModele(instance=obj,
+                                    parentscm=self.parentscm,
+                                    precedent=self.name,
+                                    name='modif')
+        self.parentscm.add_widget(self.modif)
+        self.parentscm.transition.direction = 'left'
+        self.parentscm.current = 'modif'
+
     def supprimer_elem(self):
-        pass
+        self.to_delete_obj = list()
+        to_delete = self.tableView.get_selected()
+        if len(to_delete) == 0:
+            return
+        text = 'Vous allez supprimer les éléments suivants:\n'
+        for row in to_delete:
+            c = row[0].hidden
+            self.to_delete_obj.append(c)
+            text += ' - ' + c.__str__() + '\n'
+        question_pop(None, 'Attention suppression', text=text, on_valider=self.suppression, valider_txt='Supprimer')
+
+    def suppression(self):
+        for obj in self.to_delete_obj:
+            try:
+                obj.delete_instance(True, True)
+            except Exception as e:
+                print('Cannot delete instance:', obj.__str__(), 'because of:', e)
+        self.refresh()
 
 class GestionMenuPrincipal(Screen):
     def __init__(self, parentscm, **kwargs):

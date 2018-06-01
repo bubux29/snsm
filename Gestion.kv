@@ -54,7 +54,11 @@
             Button:
                 text: 'Supprimer'
                 on_press:
-                    root.supprimer_elem
+                    root.supprimer_elem()
+            Button:
+                text: 'Modifier'
+                on_press:
+                    root.modifier_elem()
         Wix:
             orientation: 'vertical'
             size_hint: (1,1)
