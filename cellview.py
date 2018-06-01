@@ -110,10 +110,13 @@ class StdCellView:
 
 def getmember(obj, name):
     try:
-        return [member for _name, member in getmembers(obj) 
-                       if name == _name][0]
+        whole = [member for _name, member in getmembers(obj) 
+                       if name == _name]
+        if whole:
+            return whole[0]
     except Exception as e:
         raise(e)
+    return None
 
 def getmembertype(classe, name):
     return type(getmember(classe, name))
@@ -132,6 +135,7 @@ def cells(elem, cells=None):
             typ = whatType(getmembertype(classe,e))
             val = getmember(elem, e)
             cell = StdCellView.factory(typ, val, width=w, name=e)
+            cell.hidden = elem
             cells[e] = cell
     except Exception as e:
         tope, value, traceback = sys.exc_info()
