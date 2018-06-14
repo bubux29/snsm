@@ -426,12 +426,17 @@ class PanneauFinFormation(BoxLayout):
 
     def nom_mise_en_situation(self):
         return self.mise_en_situation.text
+    def on_size(self, instance, value):
+        self.former_bilans.width = self.width
+
     def update(self, instance):
         if self.former_bilans:
             self.recapitulatif.remove_widget(self.former_bilans)
         # Petit recap
         self.former_bilans = TableView(data=self.recap(), width=600, height=200)
         self.recapitulatif.add_widget(self.former_bilans)
+        self.recapitulatif.width = self.width
+        print('recoucou:', self.recapitulatif.width)
 
 class Formation(Screen):
     nb = ObjectProperty(None)
