@@ -22,7 +22,6 @@ if __name__ == "__main__":
         formation_db.init_db()
         formation_db.connect_to_db()
         SnsmMain().run()
-        info('DB', 'Déconnexion de la database')
 	info('DB', u'D\u00e9connexion de la database')
         formation_db.disconnect_db()
     except Exception as e:
