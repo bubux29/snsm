@@ -6,8 +6,8 @@ class FieldType(Enum):
     E_DateField = 3
     E_BoolField = 4
     E_LinkField  = 5
-    E_MultiLinkField  = 6
-    E_TestResField = 7
+    E_TestResField = 6
+    E_MultiLinkField  = 7
     E_ImageField = 8
 
 FieldsDescription = (

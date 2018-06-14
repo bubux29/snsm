@@ -20,7 +20,6 @@ def trouver_cours(nom=None):
     if nom == None:
         return list(Cours.select())
     else:
-        print('on recherche:', nom)
         return list(Cours.select().where(Cours.nom << nom))
 
 def trouver_par_nom(nom, classe):
