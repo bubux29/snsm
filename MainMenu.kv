@@ -41,7 +41,7 @@
     Label:
         size_hint: .1,.1
         pos_hint: {"top": 1, "center_x": .5}
-        text: u'Ajouter un \u00e9l\u00e8ve'
+        text: 'Ajouter un élève'
     ScrollView:
         id: sc
         pos_hint: {"top": .9, "center_x": .4}
@@ -74,11 +74,11 @@
                 id: nom
             ExpertMenuLabel:
                 halign: "right"
-                text: u'Pr\u00e9nom :'
+                text: 'Prénom :'
             ExpertMenuInput:
                 id: prenom
             ExpertMenuLabel:
-                text: u'T\u00e9l\u00e9phone :'
+                text: 'Téléphone :'
             ExpertMenuInput:
                 id: telephone
             ExpertMenuLabel:
@@ -94,7 +94,7 @@
                 size_hint: None, .1
                 pHint: 0.4, 0.4
             ExpertMenuLabel:
-                text: u'D\u00e9but formation SNSM :'
+                text: 'Début formation SNSM :'
             DatePicker:
                 id: formation
                 multiline: 'False'
@@ -122,7 +122,7 @@
     Label:
         size_hint: 1, .1
         pos_hint: {"top": .1}
-        text: u'G\u00e9rez les bases de donn\u00e9es: '
+        text: 'Gérez les bases de données: '
     GridLayout:
         spacing: 10
         size_hint: 1, .6
@@ -132,7 +132,7 @@
         lieu_modif: lieu_modif
         cols: 2
         MenuButton:
-            text: u'\u00c9l\u00e8ves'
+            text: 'Élèves'
             id: eleves_modif
         MenuButton:
             text: 'Formateurs'
@@ -189,7 +189,7 @@
         center_x: root.width/2
         orientation: 'vertical'
         Label:
-            text: "S\u00e9lectionnez un cours"
+            text: "Sélectionnez un cours"
         GridLayout:
             spacing: 10
             cols: 2

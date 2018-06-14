@@ -7,9 +7,9 @@ from SnsmMain import SnsmMain
 import formation_db
 
 if __name__ == "__main__":
-	info('DB', u'Connection \u00e0 la database')
+	info('DB', 'Connection à la database')
 	formation_db.init_db()
 	formation_db.connect_to_db()
 	SnsmMain().run()
-	info('DB', u'D\u00e9connection de la database')
+	info('DB', 'Déconnection de la database')
 	formation_db.disconnect_db()
