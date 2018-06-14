@@ -58,6 +58,9 @@ class CoursRetourBox(BoxLayout):
         self.titre = titre
         self.manager = manager
 
+class CoursGroupeSelection(GridLayout):
+    pass
+
 class CoursGroupeExistant(Screen):
     retour = ObjectProperty(None)
     bl = ObjectProperty(None)
@@ -67,6 +70,7 @@ class CoursGroupeExistant(Screen):
         # par groupe...
         self.dict_eleve = OrderedDict()
         liste_eleves = self.liste_presents + self.liste_anciens
+        print('les anciens dans la place:', self.liste_anciens)
         presents_set = set(liste_eleves)
         if self.groupe_anciens:
             self.liste_groupes.append(self.groupe_anciens)
@@ -125,11 +129,23 @@ class CoursGroupeExistant(Screen):
         self.parent_scm = parent_scm
         self.liste_presents = list()
         self.liste_anciens = list()
+        self.groupe_anciens = None
         self.anciens = list()
         self.liste_groupes = list()
         self.formation_wid = None
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
+        self.selections = None
+
+    def on_pre_enter(self):
+        self.update_panneau()
+
+    def update_panneau(self):
+        titre = self.titre
+        if self.selections:
+            self.bl.remove_widget(self.selections)
+
+        self.selections = CoursGroupeSelection()
         self.related_groupes = formation_db.trouver_groupes_par_cours([titre])
         # Liste des groupes des stagiaires
         liste_groupe = [{'text': groupe.nom, 'elem': groupe}
@@ -137,14 +153,14 @@ class CoursGroupeExistant(Screen):
                          if groupe.nom != GROUPE_ANCIENS]
         self.liste_choix_groupe = ListeView(liste_groupe,
                                             True, self.on_choix_groupe)
-        self.bl.add_widget(self.liste_choix_groupe)
+        self.selections.add_widget(self.liste_choix_groupe)
         # Liste d'appel des stagiaires
         self.liste_choix_presents = ListeView(
                               [{'text': eleve.nom + eleve.prenom, 'elem': eleve}
                               for eleve in []],
                               True, self.on_choix_presents
                               )
-        self.bl.add_widget(self.liste_choix_presents)
+        self.selections.add_widget(self.liste_choix_presents)
 
         groupes_anciens = [groupe for groupe in self.related_groupes
                               if groupe.nom == GROUPE_ANCIENS]
@@ -153,7 +169,7 @@ class CoursGroupeExistant(Screen):
             # Pour les anciens, il faut rajouter une texte entry pour pouvoir
             # chercher par nom
             ba = BoxLayout(orientation='vertical')
-            self.bl.add_widget(ba)
+            self.selections.add_widget(ba)
             ti = TextInput(size_hint=(1,.1), multiline=False)
             ti.bind(text=self.on_ancien_tri_nom)
             ba.add_widget(ti)
@@ -164,14 +180,7 @@ class CoursGroupeExistant(Screen):
                               True, self.on_choix_anciens
                               )
             ba.add_widget(self.liste_choix_anciens)
-                              
-
-def init_liste_cours_popup(popuplist, on_choix):
-    nom_de_cours = list()
-    for cours in formation_db.liste_cours_all():
-        nom_de_cours.append(cours.nom)
-    popuplist.init(nom_de_cours, "Cours existants", on_choix)
-    popuplist.hint_xy = (.3,.3)
+        self.bl.add_widget(self.selections)
 
 class ConsultationEvaluationsGroupe(TabbedPanelItem):
     def __init__(self, parentscm, liste_modules, liste_eleves, **kwargs):
@@ -181,10 +190,14 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
         self.main_box = BoxLayout(orientation='vertical')
         self.add_widget(self.main_box)
         self.recap = self.build_recap_test(liste_eleves, liste_modules)
-        self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+        #self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+        self.tabview = TableView(data=self.recap, height=400)
+        self.main_box.add_widget(self.tabview)
         prin = Button(text='Imprimer', size_hint=[.1, .2],
                       on_press=self.print_result)
         self.main_box.add_widget(prin)
+        # Il faut que la table s'élargisse en fonction de la mainbox (son contenant)
+        self.main_box.bind(width=self.tabview.setter('width'))
 
     def print_result(self, dummy):
         if not self.liste_modules: return
@@ -260,49 +273,7 @@ class CoursConsultationEvaluations(Screen):
         self.parentscm.transition.direction = 'right'
         self.parentscm.current = self.nom_cours
 
-class CoursGroupeNouveau(Screen):
-    bouton_choix_cours = ObjectProperty(None)
-    bouton_choix_eleves = ObjectProperty(None)
-    retour = ObjectProperty(None)
-
-    def on_choix_groupes(self, instance):
-        for i in self.liste_choix_cours.liste_des_index:
-            print(i)
-        
-    def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
-        # On positionne l'environnement nécessaire pour que tous les attributs
-        # soient vus initialisés par les classes sous-jacentes
-        self.titre = titre
-        self.retour_accueil = retour_accueil
-        self.parent_scm = parent_scm
-        super(CoursGroupeNouveau, self).__init__(**kwargs)
-        self.retour.init(retour_accueil, titre, parent_scm)
-        self.cours_db = formation_db.liste_cours_all()
-        liste_cours = [{'text': cour.nom} for cour in self.cours_db]
-        self.liste_choix_cours = ListeView(liste_cours, True)
-        popup_grp = Popup(content=self.liste_choix_cours, title='Liste des cours', on_dismiss=self.on_choix_groupes)
-        popup_grp.size_hint = (.3,.3)
-        self.bouton_choix_cours.bind(on_press=popup_grp.open)
-        liste_eleves = [{'nom': eleves.__str__(), 'photo': eleves.photo_path} for eleves in formation_db.liste_eleves_all()]
-        self.liste_choix_eleves = TrombiView(liste_eleves, True)
-        popup_lvs = Popup(content=self.liste_choix_eleves, title='Trombi')
-        popup_lvs.size_hint = (.3,.9)
-        self.bouton_choix_eleves.bind(on_press=popup_lvs.open)
-        
  
-class CoursChoixGroupe(Screen):
-    existant = ObjectProperty(None)
-    temporaire = ObjectProperty(None)
-    nouveau = ObjectProperty(None)
-    retour = ObjectProperty(None)
-    def __init__(self, titre, retour_accueil, parent_scm, **kwargs):
-        self.titre = titre
-        self.retour_accueil = retour_accueil
-        self.parent_scm = parent_scm
-        super(CoursChoixGroupe, self).__init__(**kwargs)
-        self.retour.init(retour_accueil, titre, parent_scm)
-        parent_scm.add_widget(CoursGroupeNouveau(name='ng', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
-
 #class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):
     retour = ObjectProperty(None)

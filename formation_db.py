@@ -20,10 +20,12 @@ def trouver_cours(nom=None):
     if nom == None:
         return list(Cours.select())
     else:
-        print('on recherche:', nom)
         return list(Cours.select().where(Cours.nom << nom))
 
-def trouver_eleve(nom):
+def trouver_par_nom(nom, classe):
+    return classe.get(classe.nom == nom)
+
+def trouver_eleve(nom, cls = None):
     eleve = Eleve.get(Eleve.prenom + ' ' + Eleve.nom == nom)
     return eleve
 
@@ -47,9 +49,9 @@ def trouver_lieux(noms=None):
 
 def liste_par_classe(cls, rule=None):
     if rule:
-        return cls.select().where(rule)
+        return list(cls.select().where(rule))
     else:
-        return cls.select()
+        return list(cls.select())
 
 def liste_cours_all():
     return Cours.select()

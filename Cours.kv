@@ -33,6 +33,19 @@
     pos_hint: {'top': 1, 'right': .5}
 
 
+<CoursGroupeSelection>:
+    orientation: 'horizontal'
+    cols: 3
+    Label:
+        text: 'Groupes stagiaires'
+        size_hint: (1, .1)
+    Label:
+        text: 'Sélectionner les présents'
+        size_hint: (1, .1)
+    Label:
+        text: 'Sélectionner les anciens'
+        size_hint: (1, .1)
+
 <CoursGroupeExistant>:
     retour: retour
     bl: bl
@@ -40,19 +53,8 @@
         orientation: 'vertical'
         CoursTopLayout:
             id: retour
-        GridLayout:
-            orientation: 'horizontal'
-            cols: 3
+        BoxLayout:
             id: bl
-            Label:
-                text: 'Groupes stagiaires'
-                size_hint: (1, .1)
-            Label:
-                text: 'Sélectionner les présents'
-                size_hint: (1, .1)
-            Label:
-                text: 'Sélectionner les anciens'
-                size_hint: (1, .1)
         Button:
             text: 'OK'
             size_hint: (.1,.1)
@@ -102,69 +104,6 @@
                 #options:
                     #[Button(text=str(x), size_hint_y=None, height=30) for x in formation_db.liste_cours_all()]
         Widget:
-
-<CoursChoixGroupe>:
-    existant: existant
-    nouveau: nouveau
-    retour: retour
-    BoxLayout:
-        orientation: 'vertical'
-        CoursTopLayout:
-            id: retour
-        MenuBouton:
-            text: 'Sélection des groupes du jour'
-            id: existant
-            on_press:
-                root.manager.transition.direction = 'left'
-                root.manager.current = 'ex'
-        MenuBouton:
-            text: 'Création d\'un nouveau groupe'
-            id: nouveau
-            on_press:
-                root.manager.transition.direction = 'left'
-                root.manager.current = 'ng'
-
-<CoursChoixGroupe_>:
-    existant: bx.existant
-    temporaire: bx.temporaire
-    nouveau: bx.nouveau
-    retour: bx.retour
-    BoxLayout:
-        # Objets
-        id: bx
-        existant: existant
-        temporaire: temporaire
-        nouveau: nouveau
-        retour: bl.retour
-        # Caractéristiques
-        orientation: 'vertical'
-        spacing: 10
-        BoxLayout:
-            id: bl
-            retour: retour
-            size_hint: (.5,.2)
-            pos_hint: {'top': 1, 'right': .5}
-            orientation: 'horizontal'
-            Button:
-                text: 'Accueil'
-                id: retour
-            Button:
-                text: 'Formation'
-                on_press:
-                    root.manager.transition.direction = 'right'
-                    root.manager.current = root.titre
-        MenuBouton:
-            text: 'Choix d\'un groupe existant'
-            id: existant
-        MenuBouton:
-            text: 'Création d\'un groupe pour la journée'
-            id: temporaire
-            on_press:
-                root.manager.transition.direction = 'left'
-                root.manager.current = 'ng'
-        MenuBouton:
-            text: 'Création d\'un nouveau groupe'
-            id: nouveau
 
 <CoursFormation>:
     date: gd.date
