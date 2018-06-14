@@ -70,6 +70,7 @@ class CoursGroupeExistant(Screen):
         # par groupe...
         self.dict_eleve = OrderedDict()
         liste_eleves = self.liste_presents + self.liste_anciens
+        print('les anciens dans la place:', self.liste_anciens)
         presents_set = set(liste_eleves)
         if self.groupe_anciens:
             self.liste_groupes.append(self.groupe_anciens)
@@ -181,13 +182,6 @@ class CoursGroupeExistant(Screen):
             ba.add_widget(self.liste_choix_anciens)
         self.bl.add_widget(self.selections)
 
-def init_liste_cours_popup(popuplist, on_choix):
-    nom_de_cours = list()
-    for cours in formation_db.liste_cours_all():
-        nom_de_cours.append(cours.nom)
-    popuplist.init(nom_de_cours, "Cours existants", on_choix)
-    popuplist.hint_xy = (.3,.3)
-
 class ConsultationEvaluationsGroupe(TabbedPanelItem):
     def __init__(self, parentscm, liste_modules, liste_eleves, **kwargs):
         super(ConsultationEvaluationsGroupe, self).__init__(**kwargs)
@@ -196,10 +190,14 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
         self.main_box = BoxLayout(orientation='vertical')
         self.add_widget(self.main_box)
         self.recap = self.build_recap_test(liste_eleves, liste_modules)
-        self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+        #self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+        self.tabview = TableView(data=self.recap, height=400)
+        self.main_box.add_widget(self.tabview)
         prin = Button(text='Imprimer', size_hint=[.1, .2],
                       on_press=self.print_result)
         self.main_box.add_widget(prin)
+        # Il faut que la table s'élargisse en fonction de la mainbox (son contenant)
+        self.main_box.bind(width=self.tabview.setter('width'))
 
     def print_result(self, dummy):
         if not self.liste_modules: return
@@ -275,49 +273,7 @@ class CoursConsultationEvaluations(Screen):
         self.parentscm.transition.direction = 'right'
         self.parentscm.current = self.nom_cours
 
-class CoursGroupeNouveau(Screen):
-    bouton_choix_cours = ObjectProperty(None)
-    bouton_choix_eleves = ObjectProperty(None)
-    retour = ObjectProperty(None)
-
-    def on_choix_groupes(self, instance):
-        for i in self.liste_choix_cours.liste_des_index:
-            print(i)
-        
-    def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
-        # On positionne l'environnement nécessaire pour que tous les attributs
-        # soient vus initialisés par les classes sous-jacentes
-        self.titre = titre
-        self.retour_accueil = retour_accueil
-        self.parent_scm = parent_scm
-        super(CoursGroupeNouveau, self).__init__(**kwargs)
-        self.retour.init(retour_accueil, titre, parent_scm)
-        self.cours_db = formation_db.liste_cours_all()
-        liste_cours = [{'text': cour.nom} for cour in self.cours_db]
-        self.liste_choix_cours = ListeView(liste_cours, True)
-        popup_grp = Popup(content=self.liste_choix_cours, title='Liste des cours', on_dismiss=self.on_choix_groupes)
-        popup_grp.size_hint = (.3,.3)
-        self.bouton_choix_cours.bind(on_press=popup_grp.open)
-        liste_eleves = [{'nom': eleves.__str__(), 'photo': eleves.photo_path} for eleves in formation_db.liste_eleves_all()]
-        self.liste_choix_eleves = TrombiView(liste_eleves, True)
-        popup_lvs = Popup(content=self.liste_choix_eleves, title='Trombi')
-        popup_lvs.size_hint = (.3,.9)
-        self.bouton_choix_eleves.bind(on_press=popup_lvs.open)
-        
  
-class CoursChoixGroupe(Screen):
-    existant = ObjectProperty(None)
-    temporaire = ObjectProperty(None)
-    nouveau = ObjectProperty(None)
-    retour = ObjectProperty(None)
-    def __init__(self, titre, retour_accueil, parent_scm, **kwargs):
-        self.titre = titre
-        self.retour_accueil = retour_accueil
-        self.parent_scm = parent_scm
-        super(CoursChoixGroupe, self).__init__(**kwargs)
-        self.retour.init(retour_accueil, titre, parent_scm)
-        parent_scm.add_widget(CoursGroupeNouveau(name='ng', titre=titre, retour_accueil=retour_accueil, parent_scm=parent_scm))
-
 #class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):
     retour = ObjectProperty(None)
