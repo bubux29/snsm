@@ -16,6 +16,11 @@ def getpreferredencoding(do_s = True):
     return 'utf-8'
 locale.getpreferredencoding = getpreferredencoding
 
+import locale
+def getpreferredencoding(do_s = True):
+    return 'utf-8'
+locale.getpreferredencoding = getpreferredencoding
+
 if __name__ == "__main__":
     try:
         import os
