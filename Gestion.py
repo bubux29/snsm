@@ -21,8 +21,8 @@ from KivyCalendar import DatePicker
 
 from collections import OrderedDict
 
-from listeview import ListeView
-from cellview import cells, ImageViewCell, getmember
+#from listeview import ListeView
+from cellview import ListView, cells, ImageViewCell, getmember
 
 import log
 import formation_db
@@ -75,19 +75,21 @@ class GestionListeChoixUnique(Button):
 class GestionListeChoixMultiples(BoxLayout):
     def __init__(self, liste_choix, current_values, cls_associee=None, **kwargs):
         super(GestionListeChoixMultiples, self).__init__(**kwargs)
-        self.choix = ListeView(liste_choix, True)
+        self.choix = ListView(liste_choix)
         self.cls_associee = cls_associee
         self.add_widget(self.choix)
         if current_values:
-            pass
+            self.choix.set_selected(current_values)
+    # On propage la largeur à la vue
+    def on_size(self, instance, value):
+        self.choix.size = self.size
     def get_value(self):
         # S'il y a une classe associée, il faut alors trouver les
         # objets en fonction des noms choisis
         cls = self.cls_associee
-        if cls:
-            return trouver_elems(cls, self.choix.liste_des_textes)
-        else:
-            return self.choix.liste_des_textes
+        # L'object ListView contient déjà les références vers les objets
+        # et non seulement vers un nom
+        return self.choix.get_selected()
 
 class GestionChoixDate(TextInput):
     current_values = ObjectProperty(None)
@@ -127,8 +129,8 @@ def dc(nom_champ, class_obj, current_values = None):
     liste_de_vals = [ u.__str__() for u in formation_db.liste_all_from(class_obj.rel_model)]
     return GestionListeChoixUnique(nom_champ, liste_de_vals, current_values, class_obj.rel_model)
 def ddc(nom_champ, class_obj, current_values = None):
-    l = [ {'text': c.__str__()} for c in formation_db.liste_all_from(class_obj.rel_model) ]
-    return GestionListeChoixMultiples(l, class_obj.rel_model, current_values)
+    l = [ c for c in formation_db.liste_all_from(class_obj.rel_model) ]
+    return GestionListeChoixMultiples(l, current_values, class_obj.rel_model)
 def ib(nom_champ, classe_obj, current_values = None):
     return GestionChoixPhoto(source = current_values, height=50)
         
@@ -185,6 +187,8 @@ def generateForm(classe, instance = None):
         ty=dbHelper.whatType(type(fdict[nom_champ]))
         if instance:
             values = getmember(instance, nom_champ)
+            if is_related(classe, nom_champ):
+                values = list(values)
         else:
             values = None
         reponse = widgetDict[ty](nom_champ, fdict[nom_champ], values)
@@ -197,6 +201,15 @@ def generateForm(classe, instance = None):
 def is_related(classe, elem):
     return whatType(type(getmember(classe, elem))) == 'E_MultiLinkField' \
             or whatType(type(getmember(classe, elem))) == 'E_LinkField'
+
+def vide_refs(elem):
+    elem.clear()
+
+def rajoute_refs_by_names(obj, names):
+    obj.add(trouver_elems(type(obj.model_class()), names))
+
+def rajoute_refs(obj, elems):
+    obj.add(elems)
 
 def modifier_champ(cls, inst, champ, valeur):
     q = cls.update({getmember(cls, champ): valeur}).where(cls.id == inst.id)
@@ -262,7 +275,12 @@ class NouveauModele(Screen):
         inst = self.instance
         cls = type(inst)
         for reponse in self.form.reponses:
-            if reponse.get_value() != getmember(inst, reponse.champ):
+            if is_related(cls, reponse.champ):
+                champ = getmember(inst, reponse.champ)
+                vide_refs(champ)
+                rajoute_refs(champ, reponse.get_value())
+                inst.save()
+            elif reponse.get_value() != getmember(inst, reponse.champ):
                 modifier_champ(cls, inst, reponse.champ, reponse.get_value())
 
     def sauvegarder_nouveau(self):
@@ -312,6 +330,8 @@ class GestionModele(Screen):
         # en l'occurence le premier
         to_modif = to_modif[0][0]
         obj = to_modif.hidden
+        if self.parentscm.has_screen('modif'):
+            self.parentscm.remove_widget(self.parentscm.get_screen('modif'))
         self.modif = NouveauModele(instance=obj,
                                     parentscm=self.parentscm,
                                     precedent=self.name,
