@@ -25,7 +25,6 @@ import formation_db
 from modelfactory import print_resultat
 from models.Cours import GROUPE_ANCIENS, BilanModule, Resultat
 from Formation import Formation
-from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
 
