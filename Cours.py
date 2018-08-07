@@ -273,7 +273,6 @@ class CoursConsultationEvaluations(Screen):
         self.parentscm.current = self.nom_cours
 
  
-#class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):
     retour = ObjectProperty(None)
     def __init__(self, titre, retour_accueil, parent_scm, **kwargs):
