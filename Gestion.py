@@ -21,11 +21,10 @@ from KivyCalendar import DatePicker
 
 from collections import OrderedDict
 
-#from listeview import ListeView
+import formation_db
 from cellview import ListView, cells, ImageViewCell, getmember
 
 import log
-import formation_db
 
 import inspect
 from models import Cours, Trombi, dbHelper
