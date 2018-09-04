@@ -25,7 +25,6 @@ import formation_db
 from modelfactory import print_resultat
 from models.Cours import GROUPE_ANCIENS, BilanModule, Resultat
 from Formation import Formation
-from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
 
@@ -274,7 +273,6 @@ class CoursConsultationEvaluations(Screen):
         self.parentscm.current = self.nom_cours
 
  
-#class MainCoursMenu(BoxLayout):
 class MainCoursMenu(Screen):
     retour = ObjectProperty(None)
     def __init__(self, titre, retour_accueil, parent_scm, **kwargs):

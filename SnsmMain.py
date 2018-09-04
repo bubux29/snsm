@@ -12,7 +12,6 @@ from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 
 from Apropos import Apropos
-from MainMenu import ExpertMenuLayout
 from Gestion import GestionSCM
 #from Cours import MainCoursMenu
 from Cours import MainCoursScreenManager
@@ -25,14 +24,14 @@ SnsmMain = Builder.load_file("Main.kv")
 def info(text):
     log.info('MAIN', text)
 
-class Menu_Principal():
-    cours = ObjectProperty(None)
+class SnsmBox(BoxLayout):
+    pass
 
 class Main(Widget):
     current_cours = ""
     notebook = ObjectProperty(None)
 
-    def bouton_presse(self, instance):
+    def selection_cours(self, instance):
         nom_cours = instance.text
         self.current_cours = nom_cours
         if not self.cours_sm.has_screen(nom_cours):
@@ -44,17 +43,15 @@ class Main(Widget):
         self.accueil_tab.text = nom_cours
  
     def retour_accueil(self, instance):
-        info('Retour accueil')
         self.cours_sm.transition.direction = 'right'
         self.cours_sm.current = 'menu_principal'
         self.accueil_tab.text = 'Accueil'
 
-    #def __init__(self, **kwargs):
-        #super(Main, self).__init__(**kwargs)
     def creer(self):
         self.cours_sm = ScreenManager()
         self.cours_sm.size_hint = (1,1)
-        menu_cours = BoxLayout(orientation="vertical", padding=40)
+        #menu_cours = BoxLayout(orientation="vertical", padding=40)
+        menu_cours = SnsmBox(orientation="vertical", padding=40)
         boutons = GridLayout(cols=2)
         menu_cours.add_widget(boutons)
 
@@ -64,7 +61,7 @@ class Main(Widget):
                     font_size=20, size_hint=(1,0.1),
                     markup=True)
             boutons.add_widget(button)
-            button.bind(on_press=self.bouton_presse)
+            button.bind(on_press=self.selection_cours)
         scm = Screen(name='menu_principal')
         scm.add_widget(menu_cours)
         self.cours_sm.add_widget(scm)
@@ -81,7 +78,6 @@ class Main(Widget):
         # Ajout de l'écran de gestion aux onglets
         tab = TabbedPanelItem()
         tab.text = "Gérer"
-        #tab.add_widget(ExpertMenuLayout().creer())
         tab.add_widget(GestionSCM())
         self.notebook.add_widget(tab)
         self.gestion_tab = tab

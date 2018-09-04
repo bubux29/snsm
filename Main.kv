@@ -8,18 +8,12 @@
     do_default_tab: False
     tab_width: self.width / 17 * 3
 
-
-<Menu_Principal>:
-    cours: coursgrid
-    BoxLayout:
-        padding: 40
-        size: root.width/2, root.height
-        center_x: root.width/2
-        orientation: 'vertical'
-        Label:
-            text: "Sélectionnez un cours"
-        GridLayout:
-            id: coursgrid
+<SnsmBox@BoxLayout>:
+    canvas:
+        Color:
+            rgb: 1,1,0
+        Line:
+            rectangle: self.x+2,self.y+2,self.width-2,self.height-2
 
 <Main>:
     notebook: bx.nb
