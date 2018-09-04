@@ -213,6 +213,11 @@ def rajoute_refs(obj, elems):
 def modifier_champ(cls, inst, champ, valeur):
     q = cls.update({getmember(cls, champ): valeur}).where(cls.id == inst.id)
     q.execute()
+    # On met à jour la valeur de l'instance qu'on vient de modifier
+    # Opération nécessaire : en cas d'absence, il n'y a pas de mise-à-jour
+    # si l'instance ne contient qu'un champ dans cette base de donnée...
+    # (va comprendre)
+    return cls.get(cls.id == inst.id)
 
 def ajouter_nouveau(classe, **elems):
     # Malheureusement, la création d'un nouvel objet en base ne peut pas se faire
@@ -280,7 +285,7 @@ class NouveauModele(Screen):
                 rajoute_refs(champ, reponse.get_value())
                 inst.save()
             elif reponse.get_value() != getmember(inst, reponse.champ):
-                modifier_champ(cls, inst, reponse.champ, reponse.get_value())
+                inst = modifier_champ(cls, inst, reponse.champ, reponse.get_value())
 
     def sauvegarder_nouveau(self):
         nouveau = dict()
@@ -332,9 +337,9 @@ class GestionModele(Screen):
         if self.parentscm.has_screen('modif'):
             self.parentscm.remove_widget(self.parentscm.get_screen('modif'))
         self.modif = NouveauModele(instance=obj,
-                                    parentscm=self.parentscm,
-                                    precedent=self.name,
-                                    name='modif')
+                                   parentscm=self.parentscm,
+                                   precedent=self.name,
+                                   name='modif')
         self.parentscm.add_widget(self.modif)
         self.parentscm.transition.direction = 'left'
         self.parentscm.current = 'modif'
