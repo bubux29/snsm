@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 #: import TabbedPanel kivy.uix.tabbedpanel
-#: import DropDownMenu dropdownmenu
 
 <Notebook@TabbedPanel>:
     cols: 1
     spacing: 5
     padding: 5
     do_default_tab: False
-    #tab_width: self.width
 
 <DefaultTab>:
     Image:
@@ -159,7 +157,6 @@
 <EcranEleve>:
     notebook: nb
     panneaueval: eval
-    #panneaueval: panel
     video: video
     Notebook:
         id: nb

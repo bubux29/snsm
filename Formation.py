@@ -5,6 +5,7 @@ from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.accordion import Accordion
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -23,12 +24,11 @@ from kivy.properties import ObjectProperty, BooleanProperty, ListProperty, Strin
 from kivy.uix.videoplayer import VideoPlayer
 
 from collections import OrderedDict
-import datetime, os, sys
+import datetime, os, sys, time
 
 import log
 import formation_db
 import scripts.poplib
-from ComboEdit import ComboEdit
 from listeview import ListeView
 from trombiview import TrombiView
 from models.dbDefs import FieldType
@@ -42,6 +42,7 @@ import pops
 from videorecorder import VideoRecorder
 
 poplib = scripts.poplib
+tototal = list()
 
 def err(text):
     log.err("FORMATION", text)
@@ -252,13 +253,19 @@ class PanneauEvaluation(ScrollView):
 
     # Des qu'on positionne la liste des modules, on établit l'affichage
     def on_liste_modules(self, instance, value):
+        start_func = time.time()
+        toto = list()
+        tutu = list()
         core = self.core
         self.liste_bilans = list()
         self.liste_tests=list()
         for module in self.liste_modules:
             try:
+                start_lolo = time.time()
                 lisres = formation_db.trouver_bilans_par_eleve([self.eleve],
                                                                [module])
+                end_lolo = time.time()
+                toto.append(end_lolo - start_lolo)
                 res = lisres[len(lisres) - 1]
             except:
                 res = BilanModule(eleve=self.eleve, module=module)
@@ -273,15 +280,18 @@ class PanneauEvaluation(ScrollView):
             core.height += bx.height
             for test in module.tests:
                 try:
-                   lisres = formation_db.trouver_resultats_tests_par_eleves(
+                    start_lulu = time.time()
+                    lisres = formation_db.trouver_resultats_tests_par_eleves(
                                                          [test], [self.eleve])
+                    end_lulu = time.time()
+                    tutu.append(end_lulu - start_lulu)
                    #resultat = Resultat.synthese(lisres)
-                   resultat = lisres[len(lisres) - 1]
+                    resultat = lisres[len(lisres) - 1]
                 except Exception as e:
                    #print('Pas de résultat pour', self.eleve.__str__(),
                          #'sur', test.nom, e)
                    # On se crée un résultat bidon
-                   resultat = Resultat(test=test, eleve=self.eleve)
+                    resultat = Resultat(test=test, eleve=self.eleve)
                 test=LigneTest(self.eleve, resultat, test, height=20)
                 self.liste_tests.append(test)
                 bx.add_widget(test)
@@ -290,7 +300,11 @@ class PanneauEvaluation(ScrollView):
             mod.commentaires = TextInput(height=50)
             bs.add_widget(mod.commentaires)
             bx.add_widget(bs)
-
+        end_func = time.time()
+        tototal.append(end_func - start_func)
+        print ('Total', len(tototal), ':', end_func - start_func)
+        print ('Subs:', sum(toto))
+        print ('Subs:', sum(tutu))
     def on_nom_eleve(self, instance, value):
         self.label_eleve.text = self.nom_eleve
         # Il nous faut simplement le chemin vers la photo...
@@ -436,7 +450,16 @@ class PanneauFinFormation(BoxLayout):
         self.former_bilans = TableView(data=self.recap(), width=600, height=200)
         self.recapitulatif.add_widget(self.former_bilans)
         self.recapitulatif.width = self.width
-        print('recoucou:', self.recapitulatif.width)
+
+class AccordeonEleves(Accordion):
+    def ajouter_eleve(self, nom, image, contenu):
+        item = AccordeonEleve
+
+class ElevesEnFormation(Accordion):
+    liste_eleves = ListProperty([])
+    orientation = 'vertical'
+    def on_liste_eleves(self, instance, value):
+        pass
 
 class Formation(Screen):
     nb = ObjectProperty(None)
