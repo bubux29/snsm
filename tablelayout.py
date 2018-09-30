@@ -4,6 +4,7 @@ kivy.require('1.10.0')
 
 from kivy.app import App
 from kivy.lang import Builder
+from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
@@ -14,6 +15,7 @@ from kivy.uix.boxlayout import BoxLayout
 
 from kivy.properties import NumericProperty, StringProperty, ObjectProperty, ListProperty, BooleanProperty
 
+import re
 from collections import OrderedDict
 import formation_db
 
@@ -60,6 +62,26 @@ class TableTop(BoxLayout):
             b.revert = True
             self.add_widget(b)
 
+class TableSearch(BoxLayout):
+    cells = ObjectProperty(None)
+
+    def __init__(self, on_textsearch, **kwargs):
+        self.orientation = 'horizontal'
+        self.size_hint = (None, None)
+        self.on_textsearch = on_textsearch
+        super(TableSearch, self).__init__(**kwargs)
+        for c in self.cells.values():
+            b = TextInput(width=c.width, height=self.height,
+                      size_hint_x=None, size_hint_y=None, multiline=False)
+            b.bind(text=self.search)
+            b.column = c.name
+            self.add_widget(b)
+
+    def search(self, instance, value):
+        if self.on_textsearch:
+            self.on_textsearch(instance.column, value)
+
+
 class TableCell(ButtonBehavior, Widget):
     name = StringProperty('unk')
     text = StringProperty('unk')
@@ -69,9 +91,10 @@ class TableCell(ButtonBehavior, Widget):
 
 class TableRow(GridLayout):
 
-    def __init__(self, dic, selection_list, **kwargs):
+    def __init__(self, dic, selection_list, on_row_selection, **kwargs):
         self.dic = dic
         self.root_selection_list = selection_list
+        self.on_row_selection = on_row_selection
         self.size_hint_y=None
         self.size_hint_x=None
         super(TableRow, self).__init__(**kwargs)
@@ -93,6 +116,8 @@ class TableRow(GridLayout):
     def on_sel(self, instance):
         is_selected = not instance.selected
         self.set_selection(instance, is_selected)
+        if self.on_row_selection:
+            self.on_row_selection(instance, is_selected)
 
     def set_selection(self, instance = None, is_selected = True):
         if is_selected:
@@ -107,6 +132,8 @@ class TableRow(GridLayout):
                 pass
             else:
                 cell.selected = is_selected
+    def keys(self):
+        return self.dic.keys()
 
     def __len__(self):
         return self.cols
@@ -132,7 +159,7 @@ class TableRow(GridLayout):
 class TableGrid(BoxLayout):
     data = ListProperty([])
     selection_list = ListProperty([])
-    def __init__(self, **kwargs):
+    def __init__(self, on_row_selection=None, **kwargs):
         self.orientation = 'vertical'
         self.rows = list()
         self.bind(minimum_height=self.setter('height'))
@@ -140,21 +167,48 @@ class TableGrid(BoxLayout):
         self.size_hint_x = None
         self.size_hint_y = None
         super(TableGrid, self).__init__(**kwargs)
+        self.late_sort = (None, None)
         keys = self.data[0].keys()
         for elem in self.data:
             # On parcourt les cellules pour trouver la plus haute et on récupère
             # sa hauteur
             maxheight = max(elem.values(), key=lambda x: x.height).height
-            row = TableRow(dic=elem, height=maxheight, width=self.width, selection_list=self.selection_list)
+            row = TableRow(dic=elem, on_row_selection=on_row_selection, height=maxheight, width=self.width, selection_list=self.selection_list)
             self.rows.append(row)
             self.add_widget(row)
+        # On se garde la liste complète pour la recherche
+        self.whole_rows = self.rows[:]
 
     def select(self, selection_dic):
-        print(selection_dic)
         for row in self.rows:
-            print(row)
             if row.has_elem_in(selection_dic):
                 row.cells[0].selected = True
+
+    def sorting(self, instance):
+        key = instance.text
+        ordered_rows = sorted(self.rows, key=lambda row: row.dic[key].text)
+
+        if not instance.revert:
+            ordered_rows = reversed(ordered_rows)
+        instance.revert = not instance.revert
+        self.update_rows(ordered_rows)
+        self.late_sort = ( key, instance.revert )
+
+    def searching(self, key, value_to_search):
+        # Y a-t-il eu avant un tri
+        if self.late_sort[0]:
+            rows = sorted ([ row for row in self.whole_rows
+                    if re.search( value_to_search, row[key], re.M|re.I) ])
+        else:
+            rows = [ row for row in self.whole_rows
+                    if re.search( value_to_search, row[key].text, re.M|re.I) ]
+        self.update_rows(rows)
+
+    def update_rows(self, rows):
+        self.clear_widgets()
+        for row in rows:
+            self.add_widget(row)
+
 
 class TableView(ScrollView):
     data = ListProperty([])
@@ -162,27 +216,19 @@ class TableView(ScrollView):
     tg = ObjectProperty(None)
     topheight = NumericProperty(20)
 
-    def sorting(self, instance):
-        key = instance.text
-        ordered_rows = sorted(self.tg.rows, key=lambda row: row.dic[key].text)
-
-        if not instance.revert:
-            ordered_rows = reversed(ordered_rows)
-        instance.revert = not instance.revert
-        self.tg.clear_widgets()
-        for row in ordered_rows:
-            self.tg.add_widget(row)
-
-    def __init__(self, has_top=True, **kwargs):
+    def __init__(self, has_top=True, has_search=False, **kwargs):
         super(TableView, self).__init__(**kwargs)
         if len(self.data) == 0:
             return
-        if has_top:
-            tb = TableTop(cells=self.data[0], height=self.topheight,
-                                              on_release=self.sorting)
-            self.table.add_widget(tb)
         total_width = sum([ c.width for c in self.data[0].values() ])
         self.tg = TableGrid(data=self.data, width=total_width, height=30)
+        if has_top:
+            tb = TableTop(cells=self.data[0], height=self.topheight,
+                                              on_release=self.tg.sorting)
+            self.table.add_widget(tb)
+        if has_search:
+            ts = TableSearch(on_textsearch=self.tg.searching, cells=self.data[0], height=self.topheight + 12)
+            self.table.add_widget(ts)
         self.table.add_widget(self.tg)
 
 #    def __len__(self):
@@ -232,7 +278,7 @@ class TestApp(App):
            'pudu' : TestApp.Cell(name='pudu', text='oh oui', width=300)
            })
              for eleve in formation_db.liste_eleves_all()]
-        return TableView(data=l, width=600, height=300)
+        return TableView(data=l, has_search=True, width=600, height=300)
 
 if __name__ == '__main__':
     TestApp().run()

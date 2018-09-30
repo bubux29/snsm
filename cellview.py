@@ -149,14 +149,14 @@ def cells(elem, cells=None):
     return cells
 
 class ListView(TableView):
-    def __init__(self, data):
+    def __init__(self, data, **kwargs):
         # Pour sûr qu'il y a une technique python pour faire ça en une ligne...
         self.data = list()
         for d in data:
-            c = CharViewCell(d.__str__())
+            c = CharViewCell(d.__str__(), name='text')
             c.hidden = d
             self.data.append({'text': c})
-        super(ListView, self).__init__(has_top=False)
+        super(ListView, self).__init__(has_top=False, **kwargs)
 
     # Special case: if there is only one case
     # we can expand them to the width of the boxlayout
@@ -171,6 +171,8 @@ class ListView(TableView):
             e = r[0].hidden
             if e in list_elem:
                 r.set_selection(is_selected=True)
+            else:
+                r.set_selection(is_selected=False)
     def get_selected(self):
         return [ r[0].hidden for r in self.tg.selection_list ]
 

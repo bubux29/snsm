@@ -9,6 +9,35 @@
         Line:
             rectangle: self.x+1,self.y+1,self.width-1,self.height-1
 
+[GroupeAccordionTitle@TitreEtButton]:
+    Label:
+        text: ctx.title
+        canvas.before:
+            Color:
+                rgb: 1, 1, 1
+            BorderImage:
+                source:
+                    ctx.item.background_normal \
+                    if ctx.item.collapse \
+                    else ctx.item.background_selected
+                pos: self.pos
+                size: self.size
+            PushMatrix
+            Translate:
+                xy: self.center_x, self.center_y
+            Rotate:
+                angle: 90 if ctx.item.orientation == 'horizontal' else 0
+                axis: 0, 0, 1
+            Translate:
+                xy: -self.center_x, -self.center_y
+        canvas.after:
+            PopMatrix
+    ToggleButton:
+        size_hint: .1, 1
+        groupe: None
+        text: 'Tous'
+        on_state: root.on_selection_tous(self)
+
 <CoursRetourBox>:
     bl: bl
     retour: bl.retour
@@ -34,15 +63,9 @@
 
 <CoursGroupeSelection>:
     orientation: 'horizontal'
-    cols: 3
+    cols: 1
     Label:
         text: 'Groupes stagiaires'
-        size_hint: (1, .1)
-    Label:
-        text: 'Sélectionner les présents'
-        size_hint: (1, .1)
-    Label:
-        text: 'Sélectionner les anciens'
         size_hint: (1, .1)
 
 <CoursGroupeExistant>:

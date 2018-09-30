@@ -36,6 +36,7 @@ from models.Cours import Resultat, BilanModule
 from dropdownmenu import DropDownMenu
 from cellview import StdCellView
 from tablelayout import TableView
+from choix import ChoixUnique
 
 import pops
 
@@ -155,7 +156,12 @@ class LigneModule(BoxLayout):
         else:
             return BilanModule.NONFAIT
 
-class ValidationResultat(Button):
+class ValidationResultat(ChoixUnique):
+    def __init__(self, **kwargs):
+        liste_choix=[ u[0] for u in Resultat.TEST_RESULTAT_CHOIX ]
+        super(ValidationResultat, self).__init__(liste_choix, **kwargs)
+
+class _ValidationResultat(Button):
     def __init__(self, statut, **kwargs):
         self.text = 'Res'
         self.height = 10
@@ -180,7 +186,7 @@ class ResultatTest(BoxLayout):
             bx=TextInput(multiline=False, height=10, width=30)
             self.value = self._textToText
             self.ti = bx
-            bu = ValidationResultat(test_eleve.statut)
+            bu = ValidationResultat(prechoix=test_eleve.statut)
             self.add_widget(bu)
             self.tv = bu
             self.statut = self._statut
@@ -189,7 +195,7 @@ class ResultatTest(BoxLayout):
                 bx.text = test_eleve.resultat
             self.add_widget(bx)
         elif(test_class.mode == FieldType.E_TestResField.value):
-            bx = ValidationResultat(test_eleve.statut)
+            bx = ValidationResultat(prechoix=test_eleve.statut)
             self.add_widget(bx)
             self.value = self._textToText
             self.ti = bx
@@ -583,7 +589,7 @@ class Formation(Screen):
         self.parent_scm.transition.direction = 'right'
         self.parent_scm.current = self.retour_selection
 
-    def __init__(self, retour_selection, titre, parent_scm, dict_eleves_par_groupe, liste_presents, **kwargs):
+    def __init__(self, retour_selection, titre, parent_scm, dict_eleves_par_groupe, **kwargs):
         self.titre = titre
         self.retour_selection = retour_selection
         self.parent_scm = parent_scm

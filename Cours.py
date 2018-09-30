@@ -2,12 +2,14 @@
 #!/usr/bin/env python3
 
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.uix.label import Label
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.accordion import Accordion, AccordionItem
 from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelHeader, TabbedPanelItem
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.textinput import TextInput
@@ -18,7 +20,7 @@ from kivy.lang import Builder
 
 from collections import OrderedDict
 
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, BooleanProperty
 
 import log
 import formation_db
@@ -29,7 +31,7 @@ from listeview import ListeView
 from trombiview import TrombiView
 
 from tablelayout import TableView
-from cellview import StdCellView
+from cellview import StdCellView, ListView
 
 MainCoursMenu = Builder.load_file("Cours.kv")
 
@@ -60,6 +62,38 @@ class CoursRetourBox(BoxLayout):
 class CoursGroupeSelection(GridLayout):
     pass
 
+class GroupesAccordion(Accordion):
+    orientation = 'vertical'
+
+class TitreEtButton(BoxLayout):
+    def on_selection_tous(self, button):
+        self.parent.parent.parent.on_selection_tous(button.state)
+
+class GroupeAccordionTitle(TitreEtButton):
+    pass
+
+class GroupeAccordion(AccordionItem):
+    groupe = ObjectProperty(None)
+    title_template = 'GroupeAccordionTitle'
+    def __init__(self, groupe, **kwargs):
+        self.groupe = groupe
+        self.title=self.groupe.__str__()
+        data = sorted([ e for e in self.groupe.participants ], key=lambda x: x.nom)
+        self.listview = ListView(data=data, has_search=True)
+        self.eleves = data[:]
+        super(GroupeAccordion, self).__init__(**kwargs)
+        self.add_widget(self.listview)
+
+    def on_width(self, instance, value):
+        self.listview.width = self.width
+    def on_height(self, instance, value):
+        self.listview.height = self.height - self.container_title.height
+    def on_selection_tous(self, value):
+        if value == 'down':
+            self.listview.set_selected(self.eleves)
+        else:
+            self.listview.set_selected([])
+
 class CoursGroupeExistant(Screen):
     retour = ObjectProperty(None)
     bl = ObjectProperty(None)
@@ -68,17 +102,11 @@ class CoursGroupeExistant(Screen):
         # Pour la formation, nous avons besoin de trier l'ensemble des présents
         # par groupe...
         self.dict_eleve = OrderedDict()
-        liste_eleves = self.liste_presents + self.liste_anciens
-        print('les anciens dans la place:', self.liste_anciens)
-        presents_set = set(liste_eleves)
-        if self.groupe_anciens:
-            self.liste_groupes.append(self.groupe_anciens)
-        for groupe in sorted(self.liste_groupes, key=lambda x: x.nom):
-            eleves_set = set(groupe.participants)
-            eleves_pour_ce_groupe = list(eleves_set & presents_set)
-            # On ajoute le groupe uniquement s'il contient des élèves présents
-            if eleves_pour_ce_groupe:
-                self.dict_eleve[groupe.nom] = eleves_pour_ce_groupe
+        liste_selectionnes = list()
+        for grp_table in self.root_accordion.children:
+            selected = grp_table.listview.get_selected()
+            if selected:
+                self.dict_eleve[grp_table.groupe.nom] = list(selected)
 
         # Si la formation n'a pas déjà débuté
         if not self.formation_wid:
@@ -86,32 +114,12 @@ class CoursGroupeExistant(Screen):
                                       retour_selection=self.name,
                                       titre=self.titre,
                                       parent_scm=self.parent_scm,
-                                      dict_eleves_par_groupe=self.dict_eleve,
-                                      liste_presents=liste_eleves)
+                                      dict_eleves_par_groupe=self.dict_eleve)
             self.parent_scm.add_widget(self.formation_wid)
         else:
             self.formation_wid.change_data_set(self.dict_eleve)
         self.parent.transition.direction = 'left'
         self.parent.current = 'fo'
-
-    def on_choix_presents(self, liste_noms, liste_eleves):
-        # A chaque fois, la liste des groupes (donc la liste complète des élèves
-        # peut avoir été augmentée, du coup, pour être sûr, on reprend cette
-        # liste
-        self.liste_presents = liste_eleves[:]
-
-    def on_choix_groupe(self, liste_noms, liste_groupes):
-        # Des qu'on sélectionne ou déselectionne un groupe, il faut mettre à
-        # jour la liste des élèves... cette liste permettra de choisir les
-        # absents.
-        self.eleves = list(formation_db.liste_eleves_by_groupe(liste_noms))
-        # On gère l'unicité des noms d'élèves grâce au 'set' du python...
-        # Fort pratique!!
-        ll = set(self.eleves)
-        dic = sorted([{'text': participant.__str__(), 'elem': participant}
-               for participant in ll], key=lambda x: x['text'])
-        self.liste_choix_presents.setDataDict(dic)
-        self.liste_groupes = liste_groupes
 
     def on_ancien_tri_nom(self, ti, value):
         dic = sorted([{'text': participant.__str__(), 'elem': participant}
@@ -119,8 +127,11 @@ class CoursGroupeExistant(Screen):
             if value in participant.__str__().lower()], key=lambda x: x['text'])
         self.liste_choix_anciens.setDataDict(dic)
 
-    def on_choix_anciens(self, liste_noms, liste_anciens):
-        self.liste_anciens = liste_anciens[:]
+    def on_enter(self, *args):
+        if self.formation_wid and self.formation_wid.deja_enregistre:
+            # Si le formateur a enregistré les résultats de la mise en situation
+            # on peut remettre à jour la sélection
+            pass
 
     def __init__(self, retour_accueil, titre, parent_scm, **kwargs):
         self.titre = titre
@@ -132,6 +143,8 @@ class CoursGroupeExistant(Screen):
         self.anciens = list()
         self.liste_groupes = list()
         self.formation_wid = None
+        self.root_accordion = GroupesAccordion()
+        self.groupe_accordion = list()
         super(CoursGroupeExistant, self).__init__(**kwargs)
         self.retour.init(retour_accueil, titre, parent_scm)
         self.selections = None
@@ -139,46 +152,27 @@ class CoursGroupeExistant(Screen):
     def on_pre_enter(self):
         self.update_panneau()
 
+    def liste_groupe_accordion(self):
+        return [accItem.groupe for accItem in self.root_accordion.children]
+
+    # Quand on entre sur le panneau, on le construit
+    # Cela permet de le mettre à jour quand un groupe ou un élève a été ajouté
     def update_panneau(self):
         titre = self.titre
         if self.selections:
+            self.selections.remove_widget(self.root_accordion)
             self.bl.remove_widget(self.selections)
 
         self.selections = CoursGroupeSelection()
+        self.selections.add_widget(self.root_accordion)
         self.related_groupes = formation_db.trouver_groupes_par_cours([titre])
         # Liste des groupes des stagiaires
-        liste_groupe = [{'text': groupe.nom, 'elem': groupe}
-                      for groupe in self.related_groupes
-                         if groupe.nom != GROUPE_ANCIENS]
-        self.liste_choix_groupe = ListeView(liste_groupe,
-                                            True, self.on_choix_groupe)
-        self.selections.add_widget(self.liste_choix_groupe)
-        # Liste d'appel des stagiaires
-        self.liste_choix_presents = ListeView(
-                              [{'text': eleve.nom + eleve.prenom, 'elem': eleve}
-                              for eleve in []],
-                              True, self.on_choix_presents
-                              )
-        self.selections.add_widget(self.liste_choix_presents)
-
-        groupes_anciens = [groupe for groupe in self.related_groupes
-                              if groupe.nom == GROUPE_ANCIENS]
-        if groupes_anciens:
-            self.groupe_anciens = groupes_anciens[0]
-            # Pour les anciens, il faut rajouter une texte entry pour pouvoir
-            # chercher par nom
-            ba = BoxLayout(orientation='vertical')
-            self.selections.add_widget(ba)
-            ti = TextInput(size_hint=(1,.1), multiline=False)
-            ti.bind(text=self.on_ancien_tri_nom)
-            ba.add_widget(ti)
-            self.anciens = self.groupe_anciens.participants[:]
-            self.liste_choix_anciens = ListeView(
-                       sorted([{'text': eleve.nom + eleve.prenom, 'elem': eleve}
-                          for eleve in self.anciens], key=lambda x: x['text']),
-                              True, self.on_choix_anciens
-                              )
-            ba.add_widget(self.liste_choix_anciens)
+        liste_groupe = [groupe for groupe in self.related_groupes]
+        liste_groupe_accordion = self.liste_groupe_accordion()
+        liste_nouveaux_groupes = [ grp for grp in liste_groupe if grp not in liste_groupe_accordion ]
+        for grp in liste_nouveaux_groupes:
+            it = GroupeAccordion(groupe=grp)
+            self.root_accordion.add_widget(it)
         self.bl.add_widget(self.selections)
 
 class ConsultationEvaluationsGroupe(TabbedPanelItem):
