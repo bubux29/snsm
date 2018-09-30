@@ -66,7 +66,7 @@ class Categorie (BaseModel):
 class ModuleFormation (BaseModel):
     nom = peewee.CharField(max_length=32, null=False, unique=True)
     categorie = peewee.CharField(max_length=32, null=True)
-    description = peewee.TextField(null=False, verbose_name=u"D\u00e9tail du module de formation \u00e0 r\u00e9aliser")
+    description = peewee.TextField(null=False, verbose_name=u"Détail du module de formation à réaliser")
     cours = peewee.ForeignKeyField(Cours, related_name="modules")
     requis = ['nom', 'categorie', 'description', 'cours']
     affichage = [('nom', 200), ('cours', 100), ('categorie', 100)]
@@ -86,7 +86,7 @@ class ModuleFormation (BaseModel):
 class Test (BaseModel):
     mode = peewee.IntegerField (choices=FieldsDescription, default=FieldType.E_CharField)
     nom = peewee.CharField(max_length=32, null=False)
-    description = peewee.TextField(null=False, verbose_name=u"D\u00e9tail du test \u00e0 passer par l'\u00e9valu\u00e9")
+    description = peewee.TextField(null=False, verbose_name=u"Détail du test à passer par l'évalué")
     #cours = peewee.ForeignKeyField(Cours, related_name="tests")
     module = peewee.ForeignKeyField(ModuleFormation, related_name="tests")
     requis = ['nom', 'description', 'module']
@@ -111,7 +111,7 @@ class Lieu (BaseModel):
 
 class Groupe (BaseModel):
      nom = peewee.CharField(unique=True)
-     date_creation = peewee.DateTimeField(verbose_name=u"Date de cr\u00e9ation du groupe", default=datetime.datetime.now)
+     date_creation = peewee.DateTimeField(verbose_name=u"Date de création du groupe", default=datetime.datetime.now)
      participants = ManyToManyField(Eleve, related_name="fait_partie")
      cours = ManyToManyField(Cours, related_name="groupes_attaches")
 
@@ -140,7 +140,7 @@ class JourneeFormation (BaseModel):
      formateur = peewee.ForeignKeyField(Eleve,
                                    null=True,
                                    related_name="formateur_sur",
-                                   verbose_name=u"Nom du formateur pr\u00e9sent pour la journ\u00e9e (un seul nom autoris\u00e9)",)
+                                   verbose_name=u"Nom du formateur présent pour la journée (un seul nom autorisé)",)
      #groupe_participants = peewee.ForeignKeyField(Groupe, related_name="a_participe_le")
      #modules_vus = ManyToManyField(ModuleFormation, related_name="etudie_le")
      #notes = peewee.TextField(verbose_name="Notes prises lors du cours")
@@ -157,21 +157,20 @@ class JourneeFormation (BaseModel):
 # d'un élève aux tests d'un cours
 # Elle peut s'appeler: "Inscription d'un élève à un cours" (par exemple)
 class Resultat (BaseModel):
-    SUCCES = 'OK'
-    ECHEC = 'KO'
+    SUCCES = 'I'
+    ECHEC = '0'
     NONFAIT = 'NT'
     TEST_RESULTAT_CHOIX = (
-       (SUCCES, u'succ\u00e8s'),
-       (ECHEC, u'\u00e9chec'),
-       (NONFAIT, u'non pass\u00e9'),
+       (SUCCES, u'succès'),
+       (ECHEC, u'échec'),
     )
     statut = peewee.CharField (max_length=2, choices=TEST_RESULTAT_CHOIX, default=NONFAIT)
     eleve = peewee.ForeignKeyField(Eleve)
     test  = peewee.ForeignKeyField(Test)
-    resultat = peewee.TextField(null=True, verbose_name=u"R\u00e9sultat du test")
+    resultat = peewee.TextField(null=True, verbose_name=u"Résultat du test")
     date = peewee.ForeignKeyField(JourneeFormation)
     commentaires = peewee.TextField(null=True,
-                   verbose_name=u"Avis de l'examinateur quant au passage de l'\u00e9l\u00e8ve sur ce test")
+                   verbose_name=u"Avis de l'examinateur quant au passage de l'élève sur ce test")
     affichage = [('eleve', 200), ('test', 120), ('statut', 60), ('commentaires', 300)]
     class Meta:
         order_by = ('eleve',)
@@ -195,14 +194,13 @@ class BilanModule (BaseModel):
     NONFAIT = 'NT'
     MODULE_RESULTAT_CHOIX = (
        (SUCCES, 'succès'),
-       (ECHEC, u'\u00e9chec'),
-       (NONFAIT, u'non pass\u00e9'),
+       (ECHEC, u'échec'),
     )
     statut = peewee.CharField (max_length=2, choices=MODULE_RESULTAT_CHOIX, default=NONFAIT)
     eleve = peewee.ForeignKeyField(Eleve)
     module  = peewee.ForeignKeyField(ModuleFormation)
     date = peewee.ForeignKeyField(JourneeFormation)
-    commentaires = peewee.TextField(null=True, verbose_name=u"Avis de l'examinateur quant au passage de l'\u00e9lève sur ce module")
+    commentaires = peewee.TextField(null=True, verbose_name=u"Avis de l'examinateur quant au passage de l'élève sur ce module")
     class Meta:
         order_by = ('date',)
         #indexes = (
