@@ -20,6 +20,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
+from texteentree import TexteEntree
 from kivy.properties import ObjectProperty, BooleanProperty, ListProperty, StringProperty
 from kivy.uix.videoplayer import VideoPlayer
 
@@ -27,6 +28,7 @@ from collections import OrderedDict
 import datetime, os, sys, time
 
 import log
+import copy
 import formation_db
 import scripts.poplib
 from listeview import ListeView
@@ -142,6 +144,7 @@ class LigneModule(BoxLayout):
         ###       faire une comparaison complète avant d'enregistrer un nouveau
         ###       bilan
         self.origine = resultat.statut
+        self.bilan_origine = copy.copy(resultat)
         self.nom_groupe_toggle = eleve.__str__()
         super(LigneModule, self).__init__(**kwargs)
         if resultat.statut == BilanModule.SUCCES:
@@ -183,7 +186,7 @@ class ResultatTest(BoxLayout):
         super(ResultatTest, self).__init__(**kwargs)
         bx=None
         if(test_class.mode == FieldType.E_CharField.value):
-            bx=TextInput(multiline=False, height=10, width=30)
+            bx=TexteEntree(multiline=False, height=10, width=30)
             self.value = self._textToText
             self.ti = bx
             bu = ValidationResultat(prechoix=test_eleve.statut)
@@ -216,6 +219,7 @@ class ResultatTest(BoxLayout):
        return self.ti.text
 
     def _statut(self):
+       print(self.tv.text)
        if(self.tv == None): return
        return self.tv.text
 
@@ -294,16 +298,18 @@ class PanneauEvaluation(ScrollView):
                    #resultat = Resultat.synthese(lisres)
                     resultat = lisres[len(lisres) - 1]
                 except Exception as e:
-                   #print('Pas de résultat pour', self.eleve.__str__(),
-                         #'sur', test.nom, e)
-                   # On se crée un résultat bidon
+                    #print('Pas de résultat pour', self.eleve.__str__(),
+                          #'sur', test.nom, e)
+                    # On se crée un résultat bidon
                     resultat = Resultat(test=test, eleve=self.eleve)
                 test=LigneTest(self.eleve, resultat, test, height=20)
                 self.liste_tests.append(test)
                 bx.add_widget(test)
             bs=BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
             bs.add_widget(Label(text='Note:', size_hint_x=.1, pos_hint={'right':1}))
-            mod.commentaires = TextInput(height=50)
+            if not res.commentaires:
+                res.commentaires = ''
+            mod.commentaires = TextInput(height=50, text=res.commentaires)
             bs.add_widget(mod.commentaires)
             bx.add_widget(bs)
         end_func = time.time()
@@ -321,7 +327,7 @@ class PanneauEvaluation(ScrollView):
     def calcule_bilans(self):
         # On retourne, par module: le tuple:
         #         (module, SUCCES/ECHEC/NT)
-        return [ (bil.module, bil.bilan(), bil.commentaires, bil.origine) 
+        return [ (bil.module, bil.bilan(), bil.commentaires.text, bil.bilan_origine) 
                  for bil in self.liste_bilans ]
     def calcule_resultats(self):
         # On retourne, par tests, le tuple:
@@ -388,6 +394,7 @@ class PanneauGroupe(BoxLayout):
         self.liste_choix_eleves.setDataDict(
                                        [{'text': eleve.__str__(), 'elem': eleve}
                                         for eleve in self.liste_eleves])
+        self.scm.current = 'default'
 
     def ajoute_nouvel_eleve(self, eleve):
         self.liste_eleves.append(eleve)
@@ -395,7 +402,8 @@ class PanneauGroupe(BoxLayout):
         self.liste_choix_eleves.setDataDict(
                                        [{'text': eleve.__str__(), 'elem': eleve}
                                         for eleve in self.liste_eleves])
-        self.scm.add_widget(EcranEleve(name=eleve.__str__(), nom_cours=self.nom_cours))
+        if not self.scm.has_screen(eleve.__str__()):
+            self.scm.add_widget(EcranEleve(name=eleve.__str__(), nom_cours=self.nom_cours))
 
     def __init__(self, liste_eleves, nom_cours, **kwargs):
         super(PanneauGroupe, self).__init__(**kwargs)
@@ -542,25 +550,24 @@ class Formation(Screen):
             current_scm = pangr.scm
             for eleve in pangr.liste_eleves:
                 s = current_scm.get_screen(eleve.__str__())
-                for module, resultat, commentaires, origine in s.bilan_eleve():
+                for module, bilan, commentaires, origine in s.bilan_eleve():
                     #bilan = BilanModule(module=module, statut=resultat,
                     # Si le bilan est NT, on ne crée pas de Bilan
-                    if resultat == BilanModule.NONFAIT:
+                    if bilan == origine.statut and commentaires == origine.commentaires:
                         continue
-                    if resultat == origine: 
-                        continue
-                    bilan = poplib.ajout_bilan(module=module, statut=resultat,
+                    bilandb = poplib.ajout_bilan(module=module, statut=bilan,
                                              commentaires=commentaires,
                                              eleve=eleve, date=jf)
                 for test, statut, resultat, origine in s.resultats_eleve():
                     # Si le statut est NT, on ne crée pas de Resultat
-                    if statut == Resultat.NONFAIT:
+                    if statut == Resultat.NONFAIT or statut == '':
                         continue
                     if statut == origine:
                         continue
                     res = poplib.ajout_res(test=test, eleve=eleve, date=jf,
                                            resultat=resultat, statut=statut)
         self.deja_enregistre = True
+        self.retour(None)
 
     def recapitulatif(self):
         # Pour l'affichage du récapitulatif, on utilise le tablelayout

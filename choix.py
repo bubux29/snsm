@@ -15,6 +15,7 @@ class ChoixUnique(BoxLayout):
     button_pos_hint = ObjectProperty({})
     liste_choix = ListProperty([])
     prechoix = ObjectProperty(None)
+    text = StringProperty('')
     def __init__(self, liste_choix, *args, **kwargs):
         self.liste_choix = liste_choix
         self.liste_widgets = list()
@@ -26,7 +27,7 @@ class ChoixUnique(BoxLayout):
     def on_liste_choix(self, liste):
         if not self: return
         for choix in liste:
-            c = Choix(text=choix, pos_hint=self.button_pos_hint,
+            c = Choix(text=choix, on_release=self.set_text, pos_hint=self.button_pos_hint,
                     size_hint=self.button_size_hint, group=self.group)
             self.liste_widgets.append(c)
             self.add_widget(c)
@@ -35,12 +36,16 @@ class ChoixUnique(BoxLayout):
         for c in self.liste_widgets:
             if self.prechoix == c.text:
                 c.state = 'down'
+                self.text = self.prechoix
 
-    def text(self):
+    def set_text(self, state):
         for w in self.liste_widgets:
             if w.state == 'down':
-                return w.text
-        return ''
+                print('et c"est:', w.text)
+                self.text = w.text
+                return
+        print ("la deception")
+        self.text = ''
 
 class TestApp(App):
     def build(self):

@@ -121,7 +121,9 @@ class TableRow(GridLayout):
 
     def set_selection(self, instance = None, is_selected = True):
         if is_selected:
-            self.root_selection_list.append(self)
+            # Add only once
+            if self not in self.root_selection_list:
+                self.root_selection_list.append(self)
         else:
             try:
                 self.root_selection_list.remove(self)
@@ -132,6 +134,7 @@ class TableRow(GridLayout):
                 pass
             else:
                 cell.selected = is_selected
+
     def keys(self):
         return self.dic.keys()
 

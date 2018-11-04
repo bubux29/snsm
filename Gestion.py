@@ -21,6 +21,8 @@ from KivyCalendar import DatePicker
 
 from collections import OrderedDict
 
+from texteentree import TexteEntree
+
 import formation_db
 from cellview import ListView, cells, ImageViewCell, getmember
 
@@ -41,8 +43,9 @@ def info(text):
 
 Gestion = Builder.load_file('Gestion.kv')
 
-class GestionTextInput(TextInput):
+class GestionTextInput(TexteEntree):
     current_values = ObjectProperty(None)
+    multiline = False
     def on_current_values(self, instance, value):
         if self.current_values:
             self.text = self.current_values
@@ -90,7 +93,7 @@ class GestionListeChoixMultiples(BoxLayout):
         # et non seulement vers un nom
         return self.choix.get_selected()
 
-class GestionChoixDate(TextInput):
+class GestionChoixDate(TexteEntree):
     current_values = ObjectProperty(None)
     def on_current_values(self, instance, value):
         if self.current_values:

@@ -121,12 +121,6 @@ class CoursGroupeExistant(Screen):
         self.parent.transition.direction = 'left'
         self.parent.current = 'fo'
 
-    def on_ancien_tri_nom(self, ti, value):
-        dic = sorted([{'text': participant.__str__(), 'elem': participant}
-            for participant in self.anciens
-            if value in participant.__str__().lower()], key=lambda x: x['text'])
-        self.liste_choix_anciens.setDataDict(dic)
-
     def on_enter(self, *args):
         if self.formation_wid and self.formation_wid.deja_enregistre:
             # Si le formateur a enregistré les résultats de la mise en situation

@@ -13,6 +13,11 @@ from kivy.properties import ObjectProperty, StringProperty, BooleanProperty
 
 Builder.load_string(
 '''
+<LinedLayout@BoxLayout>:
+    canvas:
+        Line:
+            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+
 <MenuComment>:
     comments_txt: comments
     valider_btn: valider
@@ -31,6 +36,43 @@ Builder.load_string(
         pos_hint: {"top": .1, "center_x": .8}
         text: 'Valider'
         
+<Texte>:
+    textinput: textinput
+    annuler_btn: annuler_btn
+    valider_btn: valider_btn
+    btn_boite: btn_boite
+    size_hint: 1, 1
+    BoxLayout:
+        orientation: 'vertical'
+        TextInput:
+            id: textinput
+            text: root.text
+            valign: 'top'
+            halign: 'left'
+            pos_hint: {'top': 1, 'center_x': .5, 'center_y': .8}
+            size: (root.width * .9, root.height * .2)
+            text_size: root.width, None
+            multiline: root.multiline
+        BoxLayout:
+            id: btn_boite
+            size_hint: .5, .1
+            pos_hint: {'top': .1, 'center_x': .5}
+            orientation: 'horizontal'
+            valign: 'bottom'
+            Button:
+                id: annuler_btn
+                size_hint: 1, 1
+                #pos_hint: {'top': .1, 'center_x': .1}
+                text: root.annuler_txt
+                on_release:
+                    root.annuler_()
+            Button:
+                id: valider_btn
+                size_hint: 1, 1
+                #pos_hint: {'top': .1, 'center_x': .5}
+                text: root.valider_txt
+                on_release:
+                    root.valider_()
 <Question>:
     description: description
     valider_btn: valider_btn
@@ -119,6 +161,13 @@ class MenuComment(BoxLayout):
         if self.popup != None:
             self.popup.dismiss()
 
+def texte_pop(popup, title, text, on_valider, **kwargs):
+    content = Texte(text=text, valider=on_valider, in_popup=True, **kwargs)
+    if popup == None:
+        popup = Popup(title_size=0, size_hint=(.5, .5), pos_hint={'top': 1})
+    popup.content = content
+    popup.open()
+
 def question_pop(popup, title, text, on_valider, **kwargs):
     content = Question(text=text, valider=on_valider, in_popup=True, **kwargs)
     if popup == None:
@@ -143,11 +192,63 @@ def pop_ok(popup, text):
     _pop_(popup, "Validé", text)
 
 def show(*args):
-    print('coucou', args)
+    print('lucien', ' '.join(args))
+
+class LinedLayout(BoxLayout):
+    pass
+
+class Texte(BoxLayout):
+    text = StringProperty(None)
+    textinput = ObjectProperty(None)
+    btn_boite = ObjectProperty(None)
+    valider = ObjectProperty(None)
+    valider_txt = StringProperty('Valider')
+    valider_btn = ObjectProperty(None)
+    annuler = ObjectProperty(None)
+    annuler_txt = StringProperty('Annuler')
+    annuler_btn = ObjectProperty(None)
+    in_popup = BooleanProperty(False)
+    multiline = BooleanProperty(True)
+
+    def on_valider_btn(self, instance, value):
+        self.valider_btn.text = self.valider_txt
+    def on_annuler_btn(self, instance, value):
+        self.annuler_btn.text = self.annuler_txt
+    def on_annuler_txt(self, instance, value):
+        if self.annuler_btn:
+            self.annuler_btn.text = value
+    def on_valider_txt(self, instance, value):
+        if self.valider_btn:
+            self.valider_btn.text = value
+
+    def annuler_(self):
+        if self.annuler:
+            self.annuler()
+        if self.in_popup:
+            self.parent.parent.parent.dismiss()
+
+    def valider_(self):
+        if self.valider:
+            self.valider(self.textinput.text)
+        if self.in_popup:
+            self.parent.parent.parent.dismiss()
+
+    def on_text(self, instance, value):
+        if self.textinput:
+            self.textinput.text = value
+
+    def on_size(self, instance, value):
+        #self.textinput.width = self.width - 10
+        #self.textinput.height = self.height * .8
+        self.btn_boite.size = (self.width - 10, self.height * .2)
+
+    def on_pos(self, instance, value):
+        self.textinput.pos = (self.x + 100, self.y)
 
 class TestApp(App):
     def build(self):
         #return pop_warn(None, "Attention les cons!!!")
-        return question_pop(None, "Attention les cons!!!", 'Etes-vous sur de continuer bande de cons?!\nsinon taper 1', on_valider=show)
+        #return question_pop(None, "Attention les cons!!!", 'Etes-vous sur de continuer bande de cons?!\nsinon taper 1', on_valider=show)
+        return texte_pop(None, "Attention les cons!!!", 'Etes-vous sur de continuer bande de cons?!\nsinon taper 1', on_valider=show)
 if __name__ == '__main__':
     TestApp().run()
