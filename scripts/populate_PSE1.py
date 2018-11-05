@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from models.dbDefs import FieldType
-from scripts.poplib import ajout_mf, ajout_cours, ajout_test
+from scripts.poplib import ajout_mf, ajout_cours, ajout_test, modict, tesdic, tesresdict
 
 NOM_COURS='PSE1 Technicités'
 DETAILS_COURS='Technicités'
@@ -13,9 +13,6 @@ MOD6='Positions d\'attente'
 MOD7='Immobilisations'
 MOD8='Relevages et brancardages'
 
-def modict(nom, desc, width):
-    return {'nom': nom, 'desc': desc, 'width': width}
-
 MODULES=[
    modict(MOD1, 'Protection et sécurité', 160),
    modict(MOD2, MOD2, 180),
@@ -26,12 +23,6 @@ MODULES=[
    modict(MOD7, MOD7, 140),
    modict(MOD8, MOD8, 180),
 ]
-
-def tesdict(nom, module, desc, typ):
-    return { 'nom': nom, 'module': module, 'desc': desc, 'type': typ }
-
-def tesresdict(nom, module, desc):
-    return tesdict(nom, module, desc, FieldType.E_TestResField.value)
 
 TESTS=[
     # MOD1

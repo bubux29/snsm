@@ -1,3 +1,4 @@
+from models.dbDefs import FieldType
 from models.Cours import Cours, Lieu, Groupe, BilanModule, ModuleFormation, Resultat, Test, JourneeFormation
 from models.Trombi import Eleve
 
@@ -163,3 +164,24 @@ def initier_resultats():
     for t in liste_tests:
         for e in liste_eleves:
             ajout_res(t,e)
+
+def modict(nom, desc, width):
+    return {'nom': nom, 'desc': desc, 'width': width}
+
+def tesdict(nom, module, desc, typ):
+    return { 'nom': nom, 'module': module, 'desc': desc, 'type': typ }
+
+def tesresdict(nom, module, desc):
+    return tesdict(nom, module, desc, FieldType.E_TestResField.value)
+
+class SNSMCours(object):
+    def initier_cours(self):
+        ajout_cours(self.NOM_COURS)
+
+    def initier_modules(self):
+        for modic in self.MODULES:
+            ajout_mf(modic['nom'], self.NOM_COURS, self.DETAILS_COURS, modic['desc'], modic['width'])
+
+    def initier_tests(self):
+        for tesdic in self.TESTS:
+            ajout_test(tesdic['nom'], tesdic['module'], tesdic['desc'], tesdic['type'])
