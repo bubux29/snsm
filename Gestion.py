@@ -103,7 +103,7 @@ class GestionChoixDate(TexteEntree):
 
 class GestionChoixPhoto(ButtonBehavior, Image):
     def on_press(self):
-        content = FilePreview('pics/*.jpg', valider=self.set_image, annuler=self.fin_popup)
+        content = FilePreview('pics/*.png', valider=self.set_image, annuler=self.fin_popup)
         self._popup = Popup(title='Choix image', content = content,
                             size_hint=(.9, .9))
         self._popup.open()

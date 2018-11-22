@@ -65,6 +65,13 @@ class CoursGroupeSelection(GridLayout):
 class GroupesAccordion(Accordion):
     orientation = 'vertical'
 
+    def empty(self):
+        self.clear_widgets()
+        self.show_off()
+
+    def show_off(self):
+        print('on a', ' '.join([c.__str__() for c in self.children]))
+
 class TitreEtButton(BoxLayout):
     def on_selection_tous(self, button):
         self.parent.parent.parent.on_selection_tous(button.state)
@@ -84,6 +91,8 @@ class GroupeAccordion(AccordionItem):
         super(GroupeAccordion, self).__init__(**kwargs)
         self.add_widget(self.listview)
 
+    def __str__(self):
+        return self.groupe.__str__()
     def on_width(self, instance, value):
         self.listview.width = self.width
     def on_height(self, instance, value):
@@ -154,6 +163,9 @@ class CoursGroupeExistant(Screen):
     def update_panneau(self):
         titre = self.titre
         if self.selections:
+            #if self.formation_wid and self.formation_wid.deja_enregistre:
+            print ('on supprime tout et on recommence')
+            self.root_accordion.empty()
             self.selections.remove_widget(self.root_accordion)
             self.bl.remove_widget(self.selections)
 
@@ -162,11 +174,13 @@ class CoursGroupeExistant(Screen):
         self.related_groupes = formation_db.trouver_groupes_par_cours([titre])
         # Liste des groupes des stagiaires
         liste_groupe = [groupe for groupe in self.related_groupes]
-        liste_groupe_accordion = self.liste_groupe_accordion()
+        liste_groupe_accordion = [] #self.liste_groupe_accordion()
         liste_nouveaux_groupes = [ grp for grp in liste_groupe if grp not in liste_groupe_accordion ]
         for grp in liste_nouveaux_groupes:
+            print('on rajoute', grp.__str__())
             it = GroupeAccordion(groupe=grp)
             self.root_accordion.add_widget(it)
+        self.root_accordion.show_off()
         self.bl.add_widget(self.selections)
 
 class ConsultationEvaluationsGroupe(TabbedPanelItem):

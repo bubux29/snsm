@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from models.dbDefs import FieldType
-from scripts.poplib import ajout_mf, ajout_cours, ajout_test, modict, tesdic, tesresdict
+from scripts.poplib import ajout_mf, ajout_cours, ajout_test, modict, tesresdict
 
 NOM_COURS='PSE1 Technicités'
 DETAILS_COURS='Technicités'

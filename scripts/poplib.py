@@ -46,15 +46,29 @@ def ajout_lieu(**kwargs):
         print('Ajout lieu:', kwargs['nom'], 'impossib:', e)
         return
 
-def ajout_eleve(nom, prenom, naissance, tel, courriel, statut, entree, photo, nom_cfi=''):
+def ajout_eleve(nom, prenom, naissance, tel, courriel, statut, entree, photo, nom_cfi='', groupes=[], cours=[]):
    try:
      pp=Eleve.create(nom=nom, prenom=prenom, date_naissance=naissance, telephone=tel, courriel=courriel, statut=statut, date_entree=entree, photo_path=photo, nom_cfi=nom_cfi)
      pp.save()
      print("Ajout élève", prenom, nom, ": OK")
-     return pp
    except Exception as e:
      print("Ajout élève", prenom, nom, " impossib:", e)
      return None
+   if not groupes:
+     print("Pas groupe précisé pour machin", pp)
+     return pp
+
+   if not cours:
+       cours = formation_db.trouver_cours()
+       print('tous les cours sont dans la nature')
+
+   for groupe in groupes:
+      print('I rajoute the groupe', groupe, 'in', cours)
+      gr = ajout_groupe(groupe, cours)
+      try:
+          gr.participants.add(pp)
+      except Exception as e:
+          pass
 
 def ajout_groupe(nom_groupe, cours):
     try:
@@ -62,7 +76,10 @@ def ajout_groupe(nom_groupe, cours):
         groupe.save()
         for c in cours:
             try:
-                cc=Cours.get(nom=c)
+                if type(c) is str:
+                    cc=Cours.get(nom=c)
+                else:
+                    cc=c
                 groupe.cours.add(cc)
                 print('Ajout', nom_groupe, 'dans: ', cc.__str__())
             except Exception as e:

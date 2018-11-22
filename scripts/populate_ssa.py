@@ -173,5 +173,15 @@ class SSATPC(SNSMCours):
                "réalise une action de sauvetage en tant que pilote d'une embarcation motorisée (UNIQUEMENT POUR LA MENTION PILOTAGE)"),
     ]
 
+def initier_ssa():
+    C = SSATech()
+    C.initier_cours()
+    C.initier_modules()
+    C.initier_tests()
+    C = SSATPC()
+    C.initier_cours()
+    C.initier_modules()
+    C.initier_tests()
+
 if __name__ == '__main__':
     initier_ssa()

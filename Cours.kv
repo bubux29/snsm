@@ -48,11 +48,11 @@
         Button:
             text: 'Accueil'
             id: retour
-            on_press:
+            on_release:
                 root.retour_accueil(self)
         Button:
             text: 'Formation'
-            on_press:
+            on_release:
                 root.manager.transition.direction = 'right'
                 root.manager.current = root.titre
 
@@ -81,7 +81,7 @@
             text: 'OK'
             size_hint: (.1,.1)
             pos_hint: {'top': 1, 'right': .8}
-            on_press:
+            on_release:
                 root.on_selection()
 
 <MainCoursMenu>:
@@ -95,17 +95,17 @@
             text: 'Retour'
             size_hint: .2, .2
             pos_hint: {'center_x': .5}
-            on_press:
+            on_release:
                 root.retour_accueil(self)
         Button:
             text: "Démarrer une mise en situation"
             id: demarrer_formation
-            on_press:
+            on_release:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ex'
         Button:
             text: "Consulter les évaluations"
             id: consulter_evaluation
-            on_press:
+            on_release:
                 root.manager.transition.direction = 'left'
                 root.manager.current = 'ce'

@@ -20,7 +20,6 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.lang import Builder
 
-from texteentree import TexteEntree
 from kivy.properties import ObjectProperty, BooleanProperty, ListProperty, StringProperty
 from kivy.uix.videoplayer import VideoPlayer
 
@@ -28,7 +27,6 @@ from collections import OrderedDict
 import datetime, os, sys, time
 
 import log
-import copy
 import formation_db
 import scripts.poplib
 from listeview import ListeView
@@ -42,7 +40,7 @@ from choix import ChoixUnique
 
 import pops
 
-#from videorecorder import VideoRecorder
+from videorecorder import VideoRecorder
 
 poplib = scripts.poplib
 tototal = list()
@@ -65,14 +63,12 @@ class Video():
         except:
             pass
 
-from kivy.uix.camera import Camera
 class PanneauVideo(BoxLayout):
     capture_bouton = ObjectProperty(None)
     consultation = ObjectProperty(None)
-    #camera = ObjectProperty(None)
+    camera = ObjectProperty(None)
     enregistrement_en_cours = False
     name = ObjectProperty(None)
-    #pann = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PanneauVideo, self).__init__(**kwargs)
@@ -82,10 +78,6 @@ class PanneauVideo(BoxLayout):
         self.current_video = None
         self.popup = Popup(title='Video', on_dismiss=self.resume_video)
         self.popup.size_hint = (.8, .8)
-        self.camera = Camera(resolution=(640, 480), play=False)
-
-    #def on_pann(self, instance, value):
-        #self.pann.add_widget(self.camera)
 
     def on_affiche_video(self, nom_video, video):
         if not video : return
@@ -116,10 +108,10 @@ class PanneauVideo(BoxLayout):
         self.capture_bouton.text = "Stop Capture"
         self.enregistrement_en_cours = True
         timestr = datetime.datetime.now().strftime('%Hh%Mm%Ss')
-        #self.current_video = Video(self.name, timestr)
+        self.current_video = Video(self.name, timestr)
         #self.enreg_thread = VideoRecorder("foformation.avi")
-        #self.enreg_thread = VideoRecorder(self.current_video.path)
-        #self.enreg_thread.start()
+        self.enreg_thread = VideoRecorder(self.current_video.path)
+        self.enreg_thread.start()
 
     def resume_video(self, *extras):
         self.play_video(True)
@@ -128,7 +120,6 @@ class PanneauVideo(BoxLayout):
         self.liste_video_view.clear_selection()
 
     def play_video(self, bo):
-        print('coucou on start:', bo)
         self.camera.play=bo
         if bo == False:
             self.stop_enreg()
@@ -151,7 +142,6 @@ class LigneModule(BoxLayout):
         ###       faire une comparaison complète avant d'enregistrer un nouveau
         ###       bilan
         self.origine = resultat.statut
-        self.bilan_origine = copy.copy(resultat)
         self.nom_groupe_toggle = eleve.__str__()
         super(LigneModule, self).__init__(**kwargs)
         if resultat.statut == BilanModule.SUCCES:
@@ -193,7 +183,7 @@ class ResultatTest(BoxLayout):
         super(ResultatTest, self).__init__(**kwargs)
         bx=None
         if(test_class.mode == FieldType.E_CharField.value):
-            bx=TexteEntree(multiline=False, height=10, width=30)
+            bx=TextInput(multiline=False, height=10, width=30)
             self.value = self._textToText
             self.ti = bx
             bu = ValidationResultat(prechoix=test_eleve.statut)
@@ -226,7 +216,6 @@ class ResultatTest(BoxLayout):
        return self.ti.text
 
     def _statut(self):
-       print(self.tv.text)
        if(self.tv == None): return
        return self.tv.text
 
@@ -249,8 +238,10 @@ class LigneTest(BoxLayout):
         self.result = ResultatTest(resultat, test_class, pos_hint={'left': 1}, size_hint_x=.3)
         self.add_widget(self.result)
     def statut(self):
+        print("on  recherche le resultat")
         return self.result.statut()
     def value(self):
+        print("on  recherche le resultus")
         return self.result.value()
 
 class LinedBox(BoxLayout):
@@ -305,18 +296,16 @@ class PanneauEvaluation(ScrollView):
                    #resultat = Resultat.synthese(lisres)
                     resultat = lisres[len(lisres) - 1]
                 except Exception as e:
-                    #print('Pas de résultat pour', self.eleve.__str__(),
-                          #'sur', test.nom, e)
-                    # On se crée un résultat bidon
+                   #print('Pas de résultat pour', self.eleve.__str__(),
+                         #'sur', test.nom, e)
+                   # On se crée un résultat bidon
                     resultat = Resultat(test=test, eleve=self.eleve)
                 test=LigneTest(self.eleve, resultat, test, height=20)
                 self.liste_tests.append(test)
                 bx.add_widget(test)
             bs=BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
             bs.add_widget(Label(text='Note:', size_hint_x=.1, pos_hint={'right':1}))
-            if not res.commentaires:
-                res.commentaires = ''
-            mod.commentaires = TextInput(height=50, text=res.commentaires)
+            mod.commentaires = TextInput(height=50)
             bs.add_widget(mod.commentaires)
             bx.add_widget(bs)
         end_func = time.time()
@@ -334,7 +323,7 @@ class PanneauEvaluation(ScrollView):
     def calcule_bilans(self):
         # On retourne, par module: le tuple:
         #         (module, SUCCES/ECHEC/NT)
-        return [ (bil.module, bil.bilan(), bil.commentaires.text, bil.bilan_origine) 
+        return [ (bil.module, bil.bilan(), bil.commentaires, bil.origine) 
                  for bil in self.liste_bilans ]
     def calcule_resultats(self):
         # On retourne, par tests, le tuple:
@@ -401,7 +390,6 @@ class PanneauGroupe(BoxLayout):
         self.liste_choix_eleves.setDataDict(
                                        [{'text': eleve.__str__(), 'elem': eleve}
                                         for eleve in self.liste_eleves])
-        self.scm.current = 'default'
 
     def ajoute_nouvel_eleve(self, eleve):
         self.liste_eleves.append(eleve)
@@ -409,8 +397,7 @@ class PanneauGroupe(BoxLayout):
         self.liste_choix_eleves.setDataDict(
                                        [{'text': eleve.__str__(), 'elem': eleve}
                                         for eleve in self.liste_eleves])
-        if not self.scm.has_screen(eleve.__str__()):
-            self.scm.add_widget(EcranEleve(name=eleve.__str__(), nom_cours=self.nom_cours))
+        self.scm.add_widget(EcranEleve(name=eleve.__str__(), nom_cours=self.nom_cours))
 
     def __init__(self, liste_eleves, nom_cours, **kwargs):
         super(PanneauGroupe, self).__init__(**kwargs)
@@ -485,24 +472,18 @@ class ElevesEnFormation(Accordion):
 class Formation(Screen):
     nb = ObjectProperty(None)
     deja_enregistre = BooleanProperty(False)
+    dict_eleves = ObjectProperty(None)
 
-    def change_data_set(self, new_dic):
+    def on_dict_eleves(self, instance, value):
+        # On se crée une liste à partir des listes par groupe
+        new_dic = self.dict_eleves
+        list_eleves = from_dic_to_list(new_dic)
+
+    # Cette fonction dans le cas où on souhaite un affichage par groupe durant la formation
+    def change_data_set_(self, new_dic):
         liste_groupe = [{'text': nom_groupe}
                         for nom_groupe in new_dic.keys()]
-        print('tododo:', liste_groupe)
         current_groupes = self.dict_panneau_groupe.keys()
-        self.deja_enregistre = False
-        print ('tadada:', new_dic.keys())
-        print (current_groupes)
-        for nom_groupe in current_groupes:
-            # Si le groupe n'est plus dans la liste
-            # il faut retirer le panneau
-            if nom_groupe not in new_dic:
-                # Mais d'abord il faut le retrouver !
-                tabbed = [ tb for tb in self.nb.get_tab_list() if tb.text == nom_groupe ]
-                if tabbed:
-                    self.nb.remove_widget(tabbed[0])
-        print (liste_groupe)
         for groupe in liste_groupe:
             nom_groupe = groupe['text']
             if not new_dic[nom_groupe]:
@@ -527,7 +508,6 @@ class Formation(Screen):
                                  if not eleve in self.dict_eleves[nom_groupe]]
                 rejetes = [ eleve for eleve in self.dict_eleves[nom_groupe]
                             if not eleve in new_dic[nom_groupe] ]
-                self.dict_eleves = dict(new_dic)
                 panneaugr = self.dict_panneau_groupe[nom_groupe]
                 for ne in nouveaux_eleves:
                     panneaugr.ajoute_nouvel_eleve(ne)
@@ -571,24 +551,25 @@ class Formation(Screen):
             current_scm = pangr.scm
             for eleve in pangr.liste_eleves:
                 s = current_scm.get_screen(eleve.__str__())
-                for module, bilan, commentaires, origine in s.bilan_eleve():
+                for module, resultat, commentaires, origine in s.bilan_eleve():
                     #bilan = BilanModule(module=module, statut=resultat,
                     # Si le bilan est NT, on ne crée pas de Bilan
-                    if bilan == origine.statut and commentaires == origine.commentaires:
+                    if resultat == BilanModule.NONFAIT:
                         continue
-                    bilandb = poplib.ajout_bilan(module=module, statut=bilan,
+                    if resultat == origine: 
+                        continue
+                    bilan = poplib.ajout_bilan(module=module, statut=resultat,
                                              commentaires=commentaires,
                                              eleve=eleve, date=jf)
                 for test, statut, resultat, origine in s.resultats_eleve():
                     # Si le statut est NT, on ne crée pas de Resultat
-                    if statut == Resultat.NONFAIT or statut == '':
+                    if statut == Resultat.NONFAIT:
                         continue
                     if statut == origine:
                         continue
                     res = poplib.ajout_res(test=test, eleve=eleve, date=jf,
                                            resultat=resultat, statut=statut)
         self.deja_enregistre = True
-        self.retour(None)
 
     def recapitulatif(self):
         # Pour l'affichage du récapitulatif, on utilise le tablelayout
@@ -621,24 +602,38 @@ class Formation(Screen):
         self.titre = titre
         self.retour_selection = retour_selection
         self.parent_scm = parent_scm
-        self.dict_eleves = dict_eleves_par_groupe
+        #self.dict_eleves = dict_eleves_par_groupe
         self.dict_panneau_groupe = dict()
         super(Formation, self).__init__(**kwargs)
 
-        for nom_groupe in self.dict_eleves.keys():
-            tb = TabbedPanelItem(text=nom_groupe)
-            panneaugr = PanneauGroupe(self.dict_eleves[nom_groupe], nom_cours=titre)
-            self.dict_panneau_groupe[nom_groupe] = panneaugr
-            tb.add_widget(panneaugr)
-            self.nb.add_widget(tb)
+#        for nom_groupe in self.dict_eleves.keys():
+#            tb = TabbedPanelItem(text=nom_groupe)
+#            panneaugr = PanneauGroupe(self.dict_eleves[nom_groupe], nom_cours=titre)
+#            self.dict_panneau_groupe[nom_groupe] = panneaugr
+#            tb.add_widget(panneaugr)
+#            self.nb.add_widget(tb)
 
-        fin = TabbedPanelItem(text='Terminer')
+        liste_eleves = from_dic_to_list(self.dict_eleves)
+        formation = TabbedPanelItem(text='Participants')
+        self.nb.add_widget(formation)
+        self.panneau_formation = formation
+        panneaugr = PanneauGroupe([], nom_cours=self.titre)
+        formation.add_widget(panneaugr)
+
+        fin = TabbedPanelItem(text='Bilan')
         self.panfin = PanneauFinFormation(self.terminaison, self.recapitulatif)
         fin.add_widget(self.panfin)
         fin.bind(on_release=self.panfin.update)
         self.nb.add_widget(fin)
         self.panneau_fin = fin
+
         retour = TabbedPanelHeader(text='Retour')
         retour.bind(on_release=self.retour)
         self.nb.add_widget(retour)
         self.panneau_retour = retour
+
+def from_dic_to_list(dic):
+    l = list()
+    # Provided dic contains list
+    for e in dic.values():
+        l = l + e
