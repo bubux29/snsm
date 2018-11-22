@@ -472,6 +472,13 @@ class PanneauFinFormation(BoxLayout):
         self.recapitulatif.add_widget(self.former_bilans)
         self.recapitulatif.width = self.width
 
+    def raz(self):
+        if self.former_bilans:
+            self.recapitulatif.remove_widget(self.former_bilans)
+        self.dpl.text = ''
+        self.dpf.text = ''
+        self.mise_en_situation.text = ''
+
 class AccordeonEleves(Accordion):
     def ajouter_eleve(self, nom, image, contenu):
         item = AccordeonEleve
@@ -500,9 +507,12 @@ class Formation(Screen):
             if nom_groupe not in new_dic:
                 # Mais d'abord il faut le retrouver !
                 tabbed = [ tb for tb in self.nb.get_tab_list() if tb.text == nom_groupe ]
+                try:
+                    del self.dict_panneau_groupe[nom_groupe]
+                except KeyError:
+                    pass
                 if tabbed:
                     self.nb.remove_widget(tabbed[0])
-        print (liste_groupe)
         for groupe in liste_groupe:
             nom_groupe = groupe['text']
             if not new_dic[nom_groupe]:
@@ -588,6 +598,8 @@ class Formation(Screen):
                     res = poplib.ajout_res(test=test, eleve=eleve, date=jf,
                                            resultat=resultat, statut=statut)
         self.deja_enregistre = True
+        # On vide le panneau de recap
+        self.panfin.raz()
         self.retour(None)
 
     def recapitulatif(self):
