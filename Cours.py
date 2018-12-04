@@ -27,7 +27,6 @@ import formation_db
 from modelfactory import print_resultat
 from models.Cours import GROUPE_ANCIENS, BilanModule, Resultat
 from Formation import Formation
-from listeview import ListeView
 from trombiview import TrombiView
 
 from tablelayout import TableView
@@ -67,10 +66,6 @@ class GroupesAccordion(Accordion):
 
     def empty(self):
         self.clear_widgets()
-        self.show_off()
-
-    def show_off(self):
-        print('on a', ' '.join([c.__str__() for c in self.children]))
 
 class TitreEtButton(BoxLayout):
     def on_selection_tous(self, button):
@@ -164,7 +159,6 @@ class CoursGroupeExistant(Screen):
         titre = self.titre
         if self.selections:
             #if self.formation_wid and self.formation_wid.deja_enregistre:
-            print ('on supprime tout et on recommence')
             self.root_accordion.empty()
             self.selections.remove_widget(self.root_accordion)
             self.bl.remove_widget(self.selections)
@@ -177,10 +171,9 @@ class CoursGroupeExistant(Screen):
         liste_groupe_accordion = [] #self.liste_groupe_accordion()
         liste_nouveaux_groupes = [ grp for grp in liste_groupe if grp not in liste_groupe_accordion ]
         for grp in liste_nouveaux_groupes:
-            print('on rajoute', grp.__str__())
             it = GroupeAccordion(groupe=grp)
             self.root_accordion.add_widget(it)
-        self.root_accordion.show_off()
+        #self.root_accordion.show_off()
         self.bl.add_widget(self.selections)
 
 class ConsultationEvaluationsGroupe(TabbedPanelItem):
@@ -190,21 +183,34 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
         self.liste_eleves = liste_eleves
         self.main_box = BoxLayout(orientation='vertical')
         self.add_widget(self.main_box)
-        self.recap = self.build_recap_test(liste_eleves, liste_modules)
-        #self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
-        self.tabview = TableView(data=self.recap, height=400)
-        self.main_box.add_widget(self.tabview)
-        prin = Button(text='Imprimer', size_hint=[.1, .2],
+#        self.recap = self.build_recap_test(liste_eleves, liste_modules)
+#        #self.main_box.add_widget(TableView(data=self.recap, width=700, height=400))
+#        self.tabview = TableView(data=self.recap, height=400)
+#        self.main_box.add_widget(self.tabview)
+        self.prin = Button(text='Imprimer', size_hint=[.1, .2],
                       on_press=self.print_result)
-        self.main_box.add_widget(prin)
-        # Il faut que la table s'élargisse en fonction de la mainbox (son contenant)
+#        self.main_box.add_widget(self.prin)
+#        # Il faut que la table s'élargisse en fonction de la mainbox (son contenant)
+#        self.main_box.bind(width=self.tabview.setter('width'))
+
+    def update(self):
+        self.recap = self.build_recap_test(self.liste_eleves, self.liste_modules)
+        self.tabview = TableView(data=self.recap, height=400, width=self.main_box.width)
+        self.main_box.clear_widgets()
+        self.main_box.add_widget(self.tabview)
+        self.main_box.add_widget(self.prin)
         self.main_box.bind(width=self.tabview.setter('width'))
 
     def print_result(self, dummy):
         if not self.liste_modules: return
         nom_cours = self.liste_modules[0].cours.nom
-        for eleve in self.liste_eleves:
-            print_resultat(self.liste_modules[0].cours.nom, self.liste_modules, eleve.__str__())
+        # On n'imprime que les sélectionnés
+        liste_eleves = [line[0].hidden for line in self.tabview.get_selected()]
+        if not liste_eleves:
+            liste_eleves = self.liste_eleves
+        for eleve in liste_eleves:
+            print_resultat(self.liste_modules[0].cours.nom, eleve.__str__(),
+                            self.liste_modules)
 
     def build_recap_test(self, liste_eleves, liste_modules):
         recap = list()
@@ -213,13 +219,13 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
             eleve_dict['nom'] = StdCellView.factory('E_CharField',
                                                     eleve.__str__(),
                                                     width=180, name='nom')
+            eleve_dict['nom'].hidden = eleve
             for module in liste_modules:
                 for test in formation_db.trouver_tests_par_modules([module]):
                     try:
                         lr = formation_db.trouver_resultats_tests_par_eleves([test], [eleve])
                         r = Resultat.synthese(lr)
                     except Exception as e:
-                        print("prout", e)
                         r = Resultat(eleve=eleve, test=test).statut
                     nom_test = test.nom
                     eleve_dict[nom_test] = StdCellView.factory(
@@ -263,12 +269,18 @@ class CoursConsultationEvaluations(Screen):
         self.add_widget(nb)
         liste_groupes = formation_db.trouver_groupes_par_cours([nom_cours])
         liste_modules = formation_db.trouver_modules_par_cours(formation_db.trouver_cours([nom_cours]))
+        self.liste_obj_recap = list()
         for gr in liste_groupes:
             ce = ConsultationEvaluationsGroupe(parentscm, liste_modules, gr.participants, text=gr.__str__())
             nb.add_widget(ce)
+            self.liste_obj_recap.append(ce)
         retour = TabbedPanelHeader(text='Retour')
         retour.bind(on_release=self.retour)
         nb.add_widget(retour)
+
+    def on_pre_enter(self, *args):
+        for c in self.liste_obj_recap:
+            c.update()
 
     def retour(self, instance):
         self.parentscm.transition.direction = 'right'

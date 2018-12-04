@@ -1,5 +1,5 @@
 import xlsxwriter
-from diplomes.base import BLUE, GREEN, ORANGE, ORANGE1, GREY, WHITE, DARK, IMG_PATH, set_rows, pic, _Implem
+from diplomes.base import BLUE, GREEN, ORANGE, ORANGE1, GREY, WHITE, DARK, IMG_PATH, set_rows, pic, _Implem, CA_VALIDE, CA_VALIDE_PAS_ENCORE
 
 import os, sys, inspect
 # realpath() will make your script run, even if you symlink it :)
@@ -12,8 +12,6 @@ cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(insp
 if cmd_subfolder not in sys.path:
     sys.path.insert(0, cmd_subfolder)
 
-CA_VALIDE='☒'
-CA_VALIDE_PAS_ENCORE='☐'
 #worksheet.write(0, 0, CA_VALIDE)
 FONT_NAME='Liberation Sans'
 
@@ -182,11 +180,24 @@ class pse1_tech(_Implem):
         # set paper: A4
         worksheet.set_paper(9)
 
-    def populate_file(filename, **bilan_eleve):
-        workbook = xlsxwriter.Workbook(filename)
-        worksheet = workbook.add_worksheet()
-        pt = pse1_tech(workbook, worksheet, **bilan_eleve)
-        pt.populate_workbook()
+def populate_file(filename, **bilan_eleve):
+    workbook = xlsxwriter.Workbook(filename)
+    worksheet = workbook.add_worksheet()
+    pt = pse1_tech(workbook, worksheet, **bilan_eleve)
+    pt.populate_workbook()
 
 if __name__ == '__main__':
-    populate_file('Example_pse1.xlsx')
+    import formation_db
+    cours = formation_db.trouver_cours(['PSE1 Technicités'])
+    modules = formation_db.trouver_modules_par_cours(cours)
+    if not modules:
+        exit
+    bilan = list()
+    groupes = formation_db.trouver_groupe(['1A'])
+    if not groupes:
+        exit
+    eleves = sorted(set([gr.participants for gr in groupes]))
+    bilans = formation_db.trouver_bilans_par_eleve(eleves, modules)
+    bilans_par_eleve = dict()
+    for bilan in bilans:
+        populate_file('Example_pse1.xlsx', bilan.eleve.__str__())

@@ -1,6 +1,23 @@
 import xlsxwriter
-from diplomes.base import BLUE, GREEN, ORANGE, ORANGE1, GREY, WHITE, DARK, IMG_PATH, set_rows, pic, _Implem
+from diplomes.base import BLUE, GREEN, ORANGE, ORANGE1, GREY, WHITE, DARK, IMG_PATH, set_rows, pic, _Implem, CA_VALIDE, CA_VALIDE_PAS_ENCORE
 
+def set_column_widths(worksheet):
+    # Set column A width
+    worksheet.set_column(0, 0, 49)
+    # B:I
+    worksheet.set_column(1, 8, 4.7)
+    # Set column J width
+    worksheet.set_column(9, 9, 1)
+    # K:L
+    worksheet.set_column(10, 11, 4.7)
+    # Set column M width
+    worksheet.set_column(12, 12, 29)
+    # N
+    worksheet.set_column(13, 13, 2.5)
+    # Set column O width
+    worksheet.set_column(14, 14, 22)
+    # P:Q
+    worksheet.set_column(15, 16, 4.7)
 
 class ssa_tech(_Implem):
     def header(self):
@@ -19,22 +36,7 @@ class ssa_tech(_Implem):
         worksheet.set_row(2,17)
         set_rows(worksheet, 4, 41, 17)
     
-        # Set column A width
-        worksheet.set_column(0, 0, 49)
-        # B:I
-        worksheet.set_column(1, 8, 4.7)
-        # Set column J width
-        worksheet.set_column(9, 9, 1)
-        # K:L
-        worksheet.set_column(10, 11, 4.7)
-        # Set column M width
-        worksheet.set_column(12, 12, 29)
-        # N
-        worksheet.set_column(13, 13, 2.5)
-        # Set column O width
-        worksheet.set_column(14, 14, 22)
-        # P:Q
-        worksheet.set_column(15, 16, 4.7)
+        set_column_widths(worksheet)
     
         worksheet.insert_image('A1', 'static/img/logo_snsm_240x240.png',
                                {'y_offset': 20, 'x_scale': .4, 'y_scale': .4,
@@ -59,7 +61,9 @@ class ssa_tech(_Implem):
                                                   'align': 'center', 
                                                   'valign': 'vcenter', 
                                                  })
-        worksheet.merge_range('A2:I2', 'Participant :', HEADER_PARTICIPANT_FORMAT)
+        worksheet.merge_range('A2:I2', 'Participant : ' +
+                                       ' '.join([self.prenom_eleve, self.nom_eleve]),
+                                       HEADER_PARTICIPANT_FORMAT)
         worksheet.merge_range('K2:M2', 'Date du', HEADER_DATE_FORMAT)
         worksheet.merge_range('N2:Q2', 'au', HEADER_DATE_FORMAT)
     
@@ -68,6 +72,7 @@ class ssa_tech(_Implem):
         worksheet.write('I4', 'Fait⁽¹⁾', HEADER_FAIT_FORMAT)
         worksheet.write('Q4', 'Fait⁽¹⁾', HEADER_FAIT_FORMAT)
     
+
     def body(self):
         workbook = self.workbook
         worksheet = self.worksheet
@@ -102,22 +107,42 @@ class ssa_tech(_Implem):
                                                   'valign': 'vcenter', 
                                                   'fg_color': ORANGE1,
                                                  })
-        worksheet.merge_range('A6:I6', 'SANS MATERIEL', HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('K6:Q6', 'MONTAGE ET PREPARATION',
-                              HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('A20:I20', 'RESCUE TUBE',
-                              HEADER_FOREIGN_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('K9:Q9', 'VERIFICATION PRE-OPERATIONNELLES',
-                              HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('K14:Q14', 'MANOEUVRES D\'URGENCE',
-                              HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('K19:Q19', 'MISE EN OEUVRE',
-                              HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('K30:Q30', 'RECUPERATION DE VICTIME',
-                              HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('A30:I30', 'PLANCHE DE SAUVETAGE',
-                              HEADER_SUBSUBTITLE_FORMAT)
-        worksheet.merge_range('A38:I38', 'COMMUNICATION', HEADER_SUBSUBTITLE_FORMAT)
+        HEADER_TEST_DESCRIPTION_FORMAT = workbook.add_format({
+                                                  'font_name': 'Liberation Sans',
+                                                  'font_size': 11,
+                                                  'bold': 0,
+                                                  'border': 1,
+                                                  'italic': 1,
+                                                  'valign': 'vcenter', 
+                                                  'fg_color': WHITE,
+                                                 })
+        self.ajout_tech_module('Sans matériel',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'A', 'I', 5)
+        self.ajout_tech_module('Montage et préparation',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'K', 'Q', 5)
+        self.ajout_tech_module('Rescue Tube',
+                               HEADER_FOREIGN_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'A', 'I', 19)
+        self.ajout_tech_module('Vérifications pré-opérationnelles',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'K', 'Q', 8)
+        self.ajout_tech_module('Manoeuvres d\'urgence',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'K', 'Q', 13)
+        self.ajout_tech_module('Mise en oeuvre',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'K', 'Q', 18)
+        self.ajout_tech_module('Récupération de victime',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'K', 'Q', 29)
+        self.ajout_tech_module('Planche de sauvetage',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'A', 'I', 29)
+        self.ajout_tech_module('Communication',
+                               HEADER_SUBSUBTITLE_FORMAT, HEADER_TEST_DESCRIPTION_FORMAT,
+                               'A', 'I', 37)
     
     def footer(self):
         workbook = self.workbook
@@ -146,6 +171,9 @@ class ssa_tpc(_Implem):
         _first_row = first_row + 1 # On compte différemment selon les formats
         workbook = self.workbook
         worksheet = self.worksheet
+
+        set_column_widths(worksheet)
+
         HEADER_FORMAT = workbook.add_format({'font_name': 'Liberation Sans',
                                              'font_size': 14,
                                              'align': 'center', 
@@ -193,114 +221,22 @@ class ssa_tpc(_Implem):
         _first_row = 46
         workbook = self.workbook
         worksheet = self.worksheet
-        set_rows(worksheet, _first_row - 1, _first_row, 13)
-        HEADER_SUBTITLE_FORMAT_BLUE = workbook.add_format({
-                                                 'font_name': 'Liberation Sans',
-                                                 'font_size': 14,
-                                                 'font_color': '#FFFFFF',
-                                                 'bold': 1,
-                                                 'border': 1,
-                                                 'align': 'center', 
-                                                 'valign': 'vcenter', 
-                                                 'fg_color': BLUE,
-                                                 })
-        HEADER_SUBTITLE_FORMAT_GREEN = workbook.add_format({
-                                                 'font_name': 'Liberation Sans',
-                                                 'font_size': 14,
-                                                 'font_color': '#FFFFFF',
-                                                 'bold': 1,
-                                                 'border': 1,
-                                                 'align': 'center', 
-                                                 'valign': 'vcenter', 
-                                                 'fg_color': GREEN,
-                                                 })
-        HEADER_SUBTITLE_FORMAT_NORMAL = workbook.add_format({
-                                                 'font_name': 'Liberation Sans',
-                                                 'font_size': 10,
-                                                 'border': 1,
-                                                 'align': 'center', 
-                                                 'valign': 'vcenter', 
-                                                 })
-        HEADER_SUBTITLE_FORMAT_VALIDATION_BLUE = workbook.add_format({
-                                                 'font_name': 'Liberation Sans',
-                                                 'font_size': 9,
-                                                 'font_color': BLUE,
-                                                 'bold': 1,
-                                                 'border': 1,
-                                                 'align': 'center', 
-                                                 'valign': 'vcenter', 
-                                                 })
-        HEADER_SUBTITLE_FORMAT_VALIDATION_GREEN = workbook.add_format({
-                                                 'font_name': 'Liberation Sans',
-                                                 'font_size': 9,
-                                                 'font_color': GREEN,
-                                                 'border': 1,
-                                                 'align': 'center', 
-                                                 'valign': 'vcenter', 
-                                                 })
-        worksheet.merge_range('A' + str(_first_row) + ':A' + str(_first_row + 1),
-                              'CRITERES', HEADER_SUBTITLE_FORMAT_BLUE)
-        worksheet.merge_range('M' + str(_first_row) + ':O' + str(_first_row + 1),
-                              'CAPACTIES', HEADER_SUBTITLE_FORMAT_GREEN)
-        worksheet.merge_range('B' + str(_first_row) + ':G' + str(_first_row),
-                             'MISE EN SITUATION', HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.write('B' + str(_first_row+1), 'MS1⁽¹⁾',
-                                                 HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.write('C' + str(_first_row+1), 'MS2⁽¹⁾',
-                                                 HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.write('D' + str(_first_row+1), 'MS3⁽¹⁾',
-                                                 HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.write('E' + str(_first_row+1), 'MS4⁽¹⁾',
-                                                 HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.write('F' + str(_first_row+1), 'MS5⁽¹⁾',
-                                                 HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.write('G' + str(_first_row+1), 'MS...⁽¹⁾',
-                                                 HEADER_SUBTITLE_FORMAT_NORMAL)
-        worksheet.merge_range('H' + str(_first_row) + ':I' + str(_first_row+1),
-                              'Validation des\ncritères⁽¹⁾⁽²⁾',
-                              HEADER_SUBTITLE_FORMAT_VALIDATION_BLUE)
-        worksheet.merge_range('P' + str(_first_row) + ':Q' + str(_first_row+1),
-                              'Validation des\ncapacités⁽¹⁾',
-                              HEADER_SUBTITLE_FORMAT_VALIDATION_BLUE)
+        self._body_tpc(_first_row)
 
         # On descend dans le tableau
         _row = _first_row + 2
         set_rows(worksheet, _row - 1, _row+16, 26)
 
-        _row += self.module(_row, GREY,
-                        "Situer son rôle et sa mission au sein d'un dispositif évolutif et adaptable aux conditions du moment",
-                        ["met en œuvre les différentes missions du SSA littoral",
-                        "rend compte à son responsable / autorité d'emploi"])
-
-        _row += self.module(_row, WHITE,
-                        "Effectuer une analyse des risques particuliers présents sur sa zone",
-                        ["identifie les risques liés à l'environnement et aux phénomènes naturels",
-                        "identifie les risques d'une activité par rapport à l'environnement observé"])
-
-        _row += self.module(_row, GREY,
-                         "Développer des actions de prévention adaptées aux risques et pratiques sur zone",
-                        ["renseigne le tableau d'information à partir d'un bulletin météo",
-                         "réalise l'action de prévention adaptée",
-                         "respecte les règles de communication et de construction du message de prévention"])
-
-        _row += self.module(_row, WHITE,
-                         "Participer à un dispositif de surveillance en mettant en œuvre des techniques opérationnelles adaptées et mettant éventuellement en œuvre des moyens spécifiques",
-                         ["réalise une surveillance active et constante en tenant compte des contraintes liées au milieu naturel",
-                          "se positionne dans un dispositif de surveillance en respectant le rôle défini et en utilisant le matériel adapté si nécessaire",
-                          "détecte les signes visibles d'une détresse"])
-        _row += self.module(_row, GREY,
-                         "Réaliser des gestes de premier secours adaptés",
-                         ["prend en compte les contraintes du milieu naturel dans les gestes de premier secours",
-                          "réalise les gestes adaptés conformément au référentiel technique SNSM"])
-        _row += self.module(_row, WHITE,
-                         "Participer à une action coordonnée de sauvetage, dans sa zone, ou à proximité immédiate de celle-ci, à l'aide de techniques opérationnelles adaptées ou en mettant en œuvre des matériels spécifiques",
-                         ["applique les procédures en respectant les différentes étapes",
-                          "évolue en sécurité sur la plage et dans l'eau (à la nage et en planche de sauvetage)",
-                          "réalise une action de sauvetage avec ou sans matériel",
-                          "participe à une action coordonnée de sauvetage"])
-        _row += self.module(_row, GREY,
-                          "",
-                          ["réalise une action de sauvetage en tant que pilote d'une embarcation motorisée (UNIQUEMENT POUR LA MENTION PILOTAGE)"])
+        colsel = 0
+        for (description, module) in self.infos.items():
+            if colsel:
+                color = WHITE
+            else:
+                color = GREY
+            colsel = not colsel
+            _row += self.module(_row, color, description,
+                    [test.description_test for test in module.liste_tests])
+        return
 
     def footer(self):
         workbook = self.workbook
@@ -316,6 +252,7 @@ class ssa_tpc(_Implem):
                               FORMAT_INFO)
 
     def module(self, rownum, color, module_desc, criteres):
+
         worksheet = self.worksheet
         workbook = self.workbook
         _first_row = rownum
