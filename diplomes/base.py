@@ -174,12 +174,13 @@ class _Implem():
                               HEADER_SUBTITLE_FORMAT_VALIDATION_BLUE)
 
 def exporte_resultat(classe, filedir, nom_eleve, prenom_eleve, bilans_par_module):
+    import os
+    BASE = '/sdcard/SNSM/'
     try:
-        import os
-        os.makedirs(filedir)
+        os.makedirs(BASE + filedir, exist_ok=True)
     except:
-        pass
-    filename = filedir + '/' + '_'.join([nom_eleve, prenom_eleve])
+        raise
+    filename = BASE + filedir + '/' + '_'.join([nom_eleve, prenom_eleve])
     workbook = xlsxwriter.Workbook(filename + '.xlsx')
     worksheet = workbook.add_worksheet()
     pt = classe(workbook, worksheet, bilans_par_module, prenom_eleve, nom_eleve)
