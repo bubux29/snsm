@@ -15,18 +15,7 @@ if cmd_subfolder not in sys.path:
 #worksheet.write(0, 0, CA_VALIDE)
 FONT_NAME='Liberation Sans'
 
-MANDATORY_PSE1_TECHN = [
-  'nom_eleve',
-  'prenom_eleve',
-  'bilans_modules',
-]
-
 class pse1_tech(_Implem):
-    def check_dic(self, bilans):
-        for key in MANDATORY_PSE1_TECHN:
-            if key not in bilans:
-                raise KeyError('Il manque : ' + key)
-
     def header(self):
         workbook = self.workbook
         worksheet = self.worksheet
@@ -74,7 +63,7 @@ class pse1_tech(_Implem):
         worksheet.write(7, 0, 'Date formation :   du ', DETAILS_FORMAT)
         worksheet.write(7, 2, 'au', DETAILS_FORMAT_CENTER)
         worksheet.merge_range(5, 1, 5, 3,
-                       self.infos['nom_eleve'] + ' ' + self.infos['prenom_eleve'],
+                       self.nom_eleve + ' ' + self.prenom_eleve,
                        NOM_PARTICIPANT_FORMAT)
 
     def body(self):
@@ -82,17 +71,36 @@ class pse1_tech(_Implem):
         worksheet = self.worksheet
         _first_line=12
 
-        desc = ('Dégagement d\'urgence', 'FT 02 D 01')
-        desclist = [desc]
-        momo = {'titre':'PROTECTION ET SECURITE ⁽¹⁾', 'descs': desclist}
+        TITRE_FORMAT = workbook.add_format({
+                                          'font_name': FONT_NAME,
+                                          'font_size': 11,
+                                          'valign': 'vcenter',
+                                          'fg_color': ORANGE1,
+                                          'border': 1,
+                                          })
+        DESC_FORMAT = workbook.add_format({
+                                          'font_name': FONT_NAME,
+                                          'font_size': 11,
+                                          'valign': 'vcenter',
+                                          'border': 1,
+                                          })
+        DESC_FORMAT_CENTER = workbook.add_format({
+                                          'font_name': FONT_NAME,
+                                          'font_size': 14,
+                                          'align': 'center', 'valign': 'vcenter',
+                                          'border': 1,
+                                          })
+
         at = _first_line
         columns=(0, 3)
         nmomo = 0
-        for momo in self.infos['bilans_modules']:
+        for module_name, bilan in self.infos.items():
             if nmomo == 4:
                 at = _first_line
                 columns = (5, 7)
-            at = self._add_module(at, columns[0], columns[1], momo)
+            at += self.ajout_tech_module(module_name, TITRE_FORMAT, DESC_FORMAT,
+                    columns[0], columns[1], at)
+            #at = self._add_module(at, columns[0], columns[1], bilan)
             nmomo += 1
 
         worksheet.write(35, 5,
@@ -137,8 +145,12 @@ class pse1_tech(_Implem):
 
         line  = first_line + 1
         for test in module.liste_tests:
+            if test.synthese() == 1:
+                resultat = CA_VALIDE 
+            else:
+                resultat = CA_VALIDE_PAS_ENCORE
             worksheet.write(line, last_column,
-                            CA_VALIDE_PAS_ENCORE, DESC_FORMAT_CENTER)
+                            resultat, DESC_FORMAT_CENTER)
             worksheet.write(line, last_column - 1,
                             'FT', DESC_FORMAT_SMALL)
             if last_column - 2 == first_column:

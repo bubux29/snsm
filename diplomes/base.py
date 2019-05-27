@@ -52,6 +52,8 @@ class _Implem():
         except:
             raise
         def en_int(ascii_char):
+            if isinstance(ascii_char, int):
+                return ascii_char
             return ord(ascii_char) - ord('A')
         col_debut = en_int(col_debut)
         col_fin   = en_int(col_fin)
@@ -70,6 +72,7 @@ class _Implem():
                 c = CA_VALIDE
             worksheet.write(ligne, col_fin+1, c, mise_en_page_test)
             ligne += 1
+        return ligne - ligne_debut
 
     def page_layout(self):
         worksheet = self.worksheet
