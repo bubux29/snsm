@@ -55,6 +55,13 @@ class PrintModule(object):
         self.liste_bilans = liste_bilans
         self.liste_tests = liste_tests
 
+    def synthese_bilans(self):
+        for bilan in self.liste_bilans:
+            if bilan.statut == BilanModule.SUCCES:
+                return 1
+        return 0
+
+
 class PrintDate(object):
     date = None
     nom_formateur = None
@@ -74,6 +81,7 @@ class PrintBilan(object):
             self.date = PrintDate(date)
         self.commentaires = commentaires
  
+
 # For the moment, on ne se fait pas ierch'
 class PrintResultat(PrintBilan):
     pass
@@ -115,6 +123,7 @@ def _print_resultat(cours, liste_modules, eleve):
         print ("Oups... no printer function for cours :", cours.nom)
         return
     model = _MODELS[cours.nom]
-    exporte_resultat(model, 'imprim', nom_eleve=eleve.nom, prenom_eleve = eleve.prenom,
+    exporte_resultat(model, 'imprim/' + cours.nom,
+                        nom_eleve=eleve.nom, prenom_eleve = eleve.prenom,
                         bilans_par_module = les_modules)
 

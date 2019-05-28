@@ -22,6 +22,7 @@ from collections import OrderedDict
 
 from kivy.properties import ObjectProperty, BooleanProperty
 
+import pops
 import log
 import formation_db
 from modelfactory import print_resultat
@@ -202,7 +203,8 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
         self.main_box.bind(width=self.tabview.setter('width'))
 
     def print_result(self, dummy):
-        if not self.liste_modules: return
+        if not self.liste_modules: 
+            return
         nom_cours = self.liste_modules[0].cours.nom
         # On n'imprime que les sélectionnés
         liste_eleves = [line[0].hidden for line in self.tabview.get_selected()]
@@ -211,6 +213,7 @@ class ConsultationEvaluationsGroupe(TabbedPanelItem):
         for eleve in liste_eleves:
             print_resultat(self.liste_modules[0].cours.nom, eleve.__str__(),
                             self.liste_modules)
+        pops.pop_ok(None, "Les fichiers ont été générés avec succès")
 
     def build_recap_test(self, liste_eleves, liste_modules):
         recap = list()

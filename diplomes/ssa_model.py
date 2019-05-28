@@ -211,7 +211,8 @@ class ssa_tpc(_Implem):
                                                   'valign': 'vcenter', 
                                                  })
         worksheet.merge_range('A' + str(_first_row+1) + ':I' + str(_first_row+1),
-                              'Participant :', HEADER_PARTICIPANT_FORMAT)
+                              'Participant : ' + ' '.join([self.prenom_eleve, self.nom_eleve]),
+                              HEADER_PARTICIPANT_FORMAT)
         worksheet.merge_range('K' + str(_first_row + 1) + ':M' + str(_first_row + 1) + '',
                               'Date du', HEADER_DATE_FORMAT)
         worksheet.merge_range('N' + str(_first_row + 1) + ':Q' + str(_first_row + 1) + '',
@@ -228,14 +229,13 @@ class ssa_tpc(_Implem):
         set_rows(worksheet, _row - 1, _row+16, 26)
 
         colsel = 0
-        for (description, module) in self.infos.items():
+        for description, bilan in self.infos.items():
             if colsel:
                 color = WHITE
             else:
                 color = GREY
             colsel = not colsel
-            _row += self.module(_row, color, description,
-                    [test.description_test for test in module.liste_tests])
+            _row += self.module(_row, color, description, bilan)
         return
 
     def footer(self):
@@ -251,7 +251,160 @@ class ssa_tpc(_Implem):
                               "⁽¹⁾ Renseigner les cases avec A ou B (A = Acquis / B = en cours d'acquisition) - ⁽²⁾ La présence d'au moins un A sur la ligne valide le critère - ⁽³⁾ Renseigner les cases avec OUI lorsque l'ensemble des critères de la capacité est acquis et NON dans le cas contraire",
                               FORMAT_INFO)
 
-    def module(self, rownum, color, module_desc, criteres):
+        start_row = 66
+        FORMAT_TITLE = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 14,
+                                      'bold': 1, 'fg_color': ORANGE1, 'align': 'center',
+                                      'valign': 'vcenter', 'border': 1,
+                                    })
+        FORMAT_TITLE_SMALL = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 12,
+                                      'bold': 1, 'fg_color': ORANGE1, 'align': 'center',
+                                      'valign': 'vcenter', 'border': 1,
+                                    })
+        FORMAT_TITLE_ORANGE = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 12,
+                                      'bold': 1, 'fg_color': ORANGE, 'align': 'center',
+                                      'valign': 'vcenter', 'border': 1,
+                                    })
+        FORMAT_PARTICIPANT = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 12,
+                                       'align': 'left', 'valign': 'top',
+                                    })
+
+        FORMAT_EVALUATION = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 12,
+                                       'align': 'left', 'valign': 'vcenter', 'bold': 1,
+                                      'indent': 1, 'border': 1,
+                                    })
+        FORMAT_EVALUATION_REPONSE = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 12,
+                                      'align': 'center', 'valign': 'vcenter', 'border': 1,
+                                    })
+        FORMAT_EVALUATION_BIS = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 12,
+                                      'align': 'center', 'valign': 'vcenter', 'bold': 1,
+                                      'border': 1,
+                                    })
+        FORMAT_NOTE = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 8,
+                                       'align': 'left', 'valign': 'top', 
+                                    })
+        FORMAT_NOMS_SIGNATURES = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 10,
+                                      'align': 'left', 'valign': 'top', 'bold': 1, 'underline': 1,
+                                    })
+        FORMAT_NOMS_SIGNATURES_RIGHT = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 10,
+                                      'align': 'left', 'valign': 'top', 'bold': 1, 'underline': 1,
+                                      'right': 1
+                                    })
+        FORMAT_LIEUX_COMMENTAIRES = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 10,
+                                      'align': 'left', 'valign': 'top'
+                                    })
+        FORMAT_LIEUX_COMMENTAIRES_RIGHT = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 10,
+                                      'align': 'left', 'valign': 'top', 'right': 1,
+                                      'right_color': DARK
+                                    })
+        FORMAT_OBSERVATIONS_LEFT = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 10,
+                                      'align': 'left', 'valign': 'top', 'bottom_color': DARK,
+                                      'border_color': DARK
+                                    })
+        FORMAT_OBSERVATIONS_RIGHT = workbook.add_format({
+                                      'font_name': 'Liberation Sans', 'font_size': 10,
+                                      'align': 'left', 'valign': 'top', 'bottom': 1, 'right': 1,
+                                      'right_color': DARK
+                                    })
+
+        worksheet.set_row(start_row, 12)
+        worksheet.merge_range('A' + str(start_row) + ':Q' + str(start_row),
+                              'EVALUATION DE CERTIFICATION', FORMAT_TITLE)
+        worksheet.merge_range(start_row, 0, start_row + 1, 11,
+                              'LE CANDIDAT : ' + self.prenom_eleve + ' ' + self.nom_eleve,
+                              FORMAT_PARTICIPANT)
+        start_row += 1
+        worksheet.set_row(start_row, 17)
+        worksheet.merge_range(start_row, 12, start_row, 16,
+                              'APTITUDE INTERMEDIAIRE ⁽⁶⁾',
+                              FORMAT_TITLE_SMALL)
+
+        start_row += 1
+        worksheet.set_row(start_row, 17)
+        worksheet.merge_range(start_row, 0, start_row, 11,
+                        'maîtrise les techniques et procédures relatives au "SSA LITTORAL" ⁽⁴⁾',
+                        FORMAT_EVALUATION)
+        worksheet.merge_range(start_row, 12, start_row, 13,
+                        'OUI',
+                        FORMAT_EVALUATION_REPONSE)
+        worksheet.merge_range(start_row, 14, start_row, 16,
+                        'NON',
+                        FORMAT_EVALUATION_REPONSE)
+        start_row += 1
+        worksheet.set_row(start_row, 17)
+        worksheet.merge_range(start_row, 0, start_row, 11,
+                  'maîtrise les techniques et procédures relatives à la "MENTION PILOTAGE" ⁽⁴⁾',
+                  FORMAT_EVALUATION)
+        worksheet.merge_range(start_row, 12, start_row, 13,
+                        'OUI',
+                        FORMAT_EVALUATION_REPONSE)
+        worksheet.merge_range(start_row, 14, start_row, 16,
+                        'NON',
+                        FORMAT_EVALUATION_REPONSE)
+        start_row += 1
+        worksheet.set_row(start_row, 17)
+        worksheet.merge_range(start_row, 0, start_row, 11,
+                  'met en oeuvre les capacités demandées ⁽⁵⁾', FORMAT_EVALUATION)
+        worksheet.merge_range(start_row, 12, start_row, 13,
+                        'OUI',
+                        FORMAT_EVALUATION_REPONSE)
+        worksheet.merge_range(start_row, 14, start_row, 16,
+                        'NON',
+                        FORMAT_EVALUATION_REPONSE)
+        start_row += 1
+        set_rows(worksheet, start_row, start_row + 2, 17)
+        worksheet.merge_range(start_row, 0, start_row + 2, 7,
+                  "⁽⁴⁾ a obtenu une croix à chaque technique sur la fiche individuelle de l'évaluation des techniques\n"
+                  "⁽⁵⁾ a obtenu un OUI dans chacune des capacités définies dans l'arrêté du 19 février 2014\n"
+                  "⁽⁶⁾ rayer la mention inutile", FORMAT_NOTE)
+
+        worksheet.merge_range(start_row, 12, start_row, 16, 'APTITUDE FINALE⁽⁶⁾',
+                              FORMAT_TITLE_ORANGE)
+        start_row += 1
+        worksheet.merge_range(start_row, 8, start_row, 11, 'SSA LITTORAL', FORMAT_EVALUATION)
+        worksheet.merge_range(start_row, 12, start_row, 13,
+                        'OUI',
+                        FORMAT_EVALUATION_REPONSE)
+        worksheet.merge_range(start_row, 14, start_row, 16,
+                        'NON',
+                        FORMAT_EVALUATION_REPONSE)
+        start_row += 1
+        worksheet.merge_range(start_row, 8, start_row, 11, 'Mention Pilotage', FORMAT_EVALUATION_BIS)
+        worksheet.merge_range(start_row, 12, start_row, 13,
+                        'OUI',
+                        FORMAT_EVALUATION_REPONSE)
+        worksheet.merge_range(start_row, 14, start_row, 16,
+                        'NON',
+                        FORMAT_EVALUATION_REPONSE)
+
+        start_row += 1
+        worksheet.set_row(start_row, 25)
+        worksheet.merge_range(start_row, 0, start_row, 11,
+                             'Noms et signatures de l\'équipe pédagogique :', FORMAT_NOMS_SIGNATURES)
+        worksheet.merge_range(start_row, 12, start_row, 16, 'Nom et signature du candidat',
+                              FORMAT_NOMS_SIGNATURES_RIGHT)
+        start_row += 1
+        worksheet.set_row(start_row, 25)
+        worksheet.merge_range(start_row, 0, start_row, 11, 'Lieu et date :', FORMAT_LIEUX_COMMENTAIRES)
+        worksheet.merge_range(start_row, 12, start_row, 16, "Lieu et date :", FORMAT_LIEUX_COMMENTAIRES_RIGHT)
+        start_row += 1
+        worksheet.set_row(start_row, 37)
+        worksheet.merge_range(start_row, 0, start_row, 11, 'Observations :', FORMAT_OBSERVATIONS_LEFT)
+        worksheet.merge_range(start_row, 12, start_row, 16, 'Observations :', FORMAT_OBSERVATIONS_RIGHT)
+
+    def module(self, rownum, color, module_desc, bilan):
 
         worksheet = self.worksheet
         workbook = self.workbook
@@ -346,31 +499,48 @@ class ssa_tpc(_Implem):
                                {'y_offset': 30, 'x_offset': 0,
                                 'x_scale': .5, 'y_scale': .6,
                                 'positioning': 2})
-        self._fill_criteres(_row, criteres[0], CRITERE_FORMAT_TOP, VALIDATION_FORMAT_TOP)
+        tests = bilan.liste_tests
+        self._fill_criteres(_row, tests[0], CRITERE_FORMAT_TOP, VALIDATION_FORMAT_TOP)
         _row += 1
-        for c in criteres[1:-1]:
+        for c in tests[1:-1]:
             self._fill_criteres(_row, c, CRITERE_FORMAT, VALIDATION_FORMAT)
             _row += 1
-        self._fill_criteres(_row, criteres[-1], CRITERE_FORMAT_BOTTOM, VALIDATION_FORMAT_BOTTOM)
+        self._fill_criteres(_row, tests[-1], CRITERE_FORMAT_BOTTOM, VALIDATION_FORMAT_BOTTOM)
 
-        tot = len(criteres)
+        tot = len(tests)
         deb = rownum; end = rownum + tot - 1
         _DUMMY = workbook.add_format({'fg_color': WHITE, 'border': 1})
         worksheet.merge_range('J' + str(deb) + ':L' + str(end), '', _DUMMY)
         worksheet.merge_range('M' + str(deb) + ':O' + str(end),
                               module_desc, CAPACITE_FORMAT)
+        if bilan.synthese_bilans():
+            ch = 'OUI'
+        else:
+            ch = 'NON'
         worksheet.merge_range('P' + str(deb) + ':Q' + str(end),
-                              'NON', VALIDATION_CAP_FORMAT)
-        return len(criteres)
+                              ch, VALIDATION_CAP_FORMAT)
+        return tot
 
     def _fill_criteres(self, _row, c, f, fv):
         worksheet = self.worksheet
-        worksheet.write('A' + str(_row), c, f)
-        for col in ['B', 'C', 'D', 'E', 'F', 'G']:
+        worksheet.write('A' + str(_row), c.description_test, f)
+        for index, col in enumerate(['B', 'C', 'D', 'E', 'F', 'G']):
             #worksheet.write_blank(col + str(_first_row), VALIDATION_FORMAT)
             worksheet.write(col + str(_row), ' ', fv)
+            if index < len(c.liste_resultats):
+                if c.conversion(c.liste_resultats[index].statut) == 1:
+                    ch = 'A'
+                else:
+                    ch = 'B'
+            else:
+                ch = ' '
+            worksheet.write(col + str(_row), ch, fv)
+        if c.synthese() == 1:
+            ch = 'A'
+        else:
+            ch = 'B'
         worksheet.merge_range('H' + str(_row) + ':I' + str(_row),
-                              '', fv)
+                              ch, fv)
 
 class ssa_bilan(_Implem):
     def header(self):
