@@ -13,6 +13,8 @@ IMG_PATH='static/img'
 CA_VALIDE=u'☒'
 CA_VALIDE_PAS_ENCORE=u'☐'
 
+from common import sans_accents as sans_accents
+
 def set_rows(worksheet, first, last, height):
     for i in range(first, last+1):
         worksheet.set_row(i, height)
@@ -175,14 +177,21 @@ class _Implem():
 
 def exporte_resultat(classe, filedir, nom_eleve, prenom_eleve, bilans_par_module):
     import os
-    BASE = '/sdcard/SNSM/'
+    from config import CONF
+    BASE = CONF.base_path
     try:
         os.makedirs(BASE + filedir, exist_ok=True)
     except:
         raise
-    filename = BASE + filedir + '/' + '_'.join([nom_eleve, prenom_eleve])
-    workbook = xlsxwriter.Workbook(filename + '.xlsx')
+    unom_eleve = sans_accents(nom_eleve)
+    uprenom_eleve = sans_accents(prenom_eleve)
+    filename = BASE + '/' + filedir + '/' + '_'.join([unom_eleve, uprenom_eleve])
+    workbook = xlsxwriter.Workbook(filename + '.xlsx', {'in_memory': True})
+    workbook.set_properties({
+        'author': 'SnSm_Formation',
+        'comments': 'Fiche de résultat générée'
+    })
     worksheet = workbook.add_worksheet()
     pt = classe(workbook, worksheet, bilans_par_module, prenom_eleve, nom_eleve)
     pt.populate_workbook()
-
+    workbook.close()
