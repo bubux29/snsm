@@ -8,6 +8,13 @@
     do_default_tab: False
     tab_width: self.width / 17 * 3
 
+<SnsmBox@BoxLayout>:
+    canvas:
+        Color:
+            rgb: 1,1,0
+        Line:
+            rectangle: self.x+2,self.y+2,self.width-2,self.height-2
+
 <Main>:
     notebook: bx.nb
     BoxLayout:
