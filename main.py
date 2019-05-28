@@ -28,11 +28,11 @@ if __name__ == "__main__":
             os.makedirs(CONF.exception_path)
         except:
             pass
-	info('DB', u'Connexion \u00e0 la database')
+        info('DB', u'Connexion \u00e0 la database')
         formation_db.init_db()
         formation_db.connect_to_db()
         SnsmMain().run()
-	info('DB', u'D\u00e9connexion de la database')
+        info('DB', u'D\u00e9connexion de la database')
         formation_db.disconnect_db()
     except Exception as e:
         timestr = time.strftime('%Y%m%d-%H%M%S')
